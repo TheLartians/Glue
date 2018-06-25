@@ -39,10 +39,14 @@ namespace lars{
 }
 
 
-class DukTapeSticker:public lars::Glue{
+class DuktapeGlue:public lars::Glue{
 public:
   
   duk_context * context = nullptr;
+  
+  template <class T> void add_class(){
+    
+  }
   
   static lars::Any extract_value(duk_context * ctx,duk_idx_t idx,lars::TypeIndex type){
     if(type == lars::get_type_index<std::string>()){
@@ -61,10 +65,15 @@ public:
   static void push_value(duk_context * ctx,lars::Any value){
     using namespace lars;
     
-    struct PushVisitor:public ConstVisitor<AnyScalarData<double>,AnyScalarData<std::string>>{
+    struct PushVisitor:public ConstVisitor<AnyScalarData<double>,AnyScalarData<std::string>,AnyScalarData<lars::AnyFunction>>{
       duk_context * ctx;
       void visit(const AnyScalarData<double> &data){ duk_push_number(ctx, data.data); }
       void visit(const AnyScalarData<std::string> &data){ duk_push_string(ctx, data.data.c_str()); }
+      void visit(const AnyScalarData<lars::AnyFunction> &data){
+        // auto &f = data.data;
+        assert(false && "todo");
+        
+      }
     } visitor;
     
     visitor.ctx = ctx;
@@ -80,7 +89,7 @@ public:
       const lars::AnyFunction *f = static_cast<const lars::AnyFunction *>(duk_get_pointer(ctx, -1));
       duk_pop(ctx);
       duk_pop(ctx);
-
+      
       std::vector<lars::Any> args;
       for(int i=0;i<f->argument_count();++i) args.emplace_back(extract_value(ctx, i, f->argument_type(i)));
       auto result = f->call(args);
@@ -115,10 +124,10 @@ int main(int argc, char *argv[]) {
 
   duk_context *ctx = duk_create_heap(NULL, NULL, NULL, NULL, NULL);
   
-  DukTapeSticker sticker;
-  sticker.context = ctx;
+  DuktapeGlue glue;
+  glue.context = ctx;
   
-  module.connect(sticker);
+  module.connect(glue);
 
   duk_eval_string_noresult(ctx, "log('2+3=' + add(2, 3)); log('hello world!');");
 
