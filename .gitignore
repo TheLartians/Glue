@@ -17,3 +17,4 @@ Makefile
 CPackSourceConfig.cmake
 CPackConfig.cmake
 env
+build
