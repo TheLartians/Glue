@@ -17,9 +17,9 @@ set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 # ---- add sources ----
 
 file (GLOB sources ${PROJECT_SOURCE_DIR}/*.cpp)
-file (GLOB headers ${PROJECT_INCUDE_DIR}/tape/*.h ${PROJECT_SOURCE_DIR}/tape/*.h)
+file (GLOB headers ${PROJECT_INCUDE_DIR}/lars/*.h ${PROJECT_SOURCE_DIR}/*.h)
 
-file (GLOB ducktape_sources ${PROJECT_LIB_DIR}/ducktape/*.c ${PROJECT_LIB_DIR}/ducktape/*.cpp)
+file (GLOB ducktape_sources ${PROJECT_LIB_DIR}/ducktape/*.cpp)
 file (GLOB ducktape_headers ${PROJECT_LIB_DIR}/ducktape/*.h)
 
 set (DUCKTAPE_INCUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ducktape)

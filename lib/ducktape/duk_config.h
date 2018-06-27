@@ -2817,6 +2817,7 @@ typedef struct duk_hthread duk_context;
  *  Forced options
  */
 
+#define DUK_USE_ALIGN_4
 #define DUK_USE_CPP_EXCEPTIONS
 #define DUK_USE_FATAL_HANDLER
 
