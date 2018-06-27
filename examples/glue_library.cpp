@@ -99,12 +99,28 @@ int main(int argc, char *argv[]) {
   });
   extensions_extension->add_function("add_function",[](std::shared_ptr<lars::Extension> extension,std::string name,lars::AnyFunction f){ extension->add_function(name, f); });
   
+  // call javascript function without return value
   assert(evaluate_string("var extension = extensions.create_extension('duk_extension')"));
   assert(evaluate_string("extensions.add_function(extension,'f',function(x,y){ log('called f(' + x + ',' + y + ')' ) })"));
+  assert(evaluate_string("duk_extension.f(1,'x')")); // -> called f(1,x)
   auto f = extension.get_extension("duk_extension")->get_function("f");
   assert(f);
   f(std::string("x"),42); // -> called f(x,42)
-  f(); // -> called f(42)
+  f(1); // -> called f(1,undefined)
+  
+  // call javascript function with return value
+  assert(evaluate_string("extensions.add_function(extension,'g',function(x,y){ return x+y })"));
+  assert(evaluate_string("log(duk_extension.g('x',1))"));
+  auto res = extension.get_extension("duk_extension")->get_function("g")(2,std::string("x"));
+  assert(res);
+  assert(res.get<std::string>() == "2x");
+  
+  // call and return javascript object
+  assert(evaluate_string("extensions.add_function(extension,'h',function(x){ log('called h'); return x; })"));
+  assert(evaluate_string("var map = { key1: 'value1', key2: 'value2' };"));
+  assert(evaluate_string("log(map['key1']);"));
+  assert(evaluate_string("log(duk_extension.h(map)['key1']);"));
+  assert(evaluate_string("log(duk_extension.g(map,map));"));
 
   return 0;
 }

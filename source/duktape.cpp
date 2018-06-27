@@ -9,7 +9,7 @@
 
 #define DUK_MEMORY_DEBUG_LOG(X)
 #define DUK_VERBOSE_LOG(X)
-//#define DUK_VERBOSE_LOG(X) LARS_LOG(X)
+// #define DUK_VERBOSE_LOG(X) LARS_LOG(X)
 #define DUK_DETAILED_ERRORS
 
 
@@ -118,13 +118,13 @@ namespace {
       return result;
     }
     
-    std::string add_to_stash(duk_context * ctx){
+    std::string add_to_stash(duk_context * ctx,int idx = -1){
       static int obj_id = 0;
       auto key = std::to_string(obj_id);
       obj_id++;
-      DUK_VERBOSE_LOG("add " << key << " to stash: " << as_string(ctx, -1));
+      DUK_VERBOSE_LOG("add " << key << " to stash: " << as_string(ctx, idx));
       duk_push_global_stash(ctx);
-      duk_dup(ctx, -2);
+      duk_dup(ctx, idx < 0 ? idx-1 : idx);
       duk_put_prop_string(ctx, -2, key.c_str());
       duk_pop(ctx);
       return key;
@@ -133,6 +133,7 @@ namespace {
     void push_from_stash(duk_context * ctx,const std::string &key){
       duk_push_global_stash(ctx);
       duk_get_prop_string(ctx, -1, key.c_str());
+      duk_replace(ctx, -2);
       DUK_VERBOSE_LOG("push " << key << " from stash: " << as_string(ctx, -1));
     }
     
@@ -143,12 +144,21 @@ namespace {
       duk_pop(ctx);
     }
     
+    struct StashedObject{
+      duk_context * ctx;
+      std::string key;
+      StashedObject(duk_context * c,const std::string k):ctx(c),key(k){ DUK_VERBOSE_LOG("create stashed object: " << key); }
+      StashedObject(const StashedObject &) = delete;
+      ~StashedObject(){ DUK_VERBOSE_LOG("delete stashed object: " << key); remove_from_stash(ctx, key); }
+      void push()const{ push_from_stash(ctx, key); }
+    };
+    
     void push_function(duk_context * ctx,const lars::AnyFunction &f);
     
     void push_value(duk_context * ctx,lars::Any value){
       using namespace lars;
       
-      struct PushVisitor:public ConstVisitor<lars::AnyScalarData<double>,lars::AnyScalarData<std::string>,lars::AnyScalarData<lars::AnyFunction>,lars::AnyScalarData<int>,lars::AnyScalarData<bool>,lars::AnyScalarBase>{
+      struct PushVisitor:public ConstVisitor<lars::AnyScalarData<double>,lars::AnyScalarData<std::string>,lars::AnyScalarData<lars::AnyFunction>,lars::AnyScalarData<int>,lars::AnyScalarData<bool>,lars::AnyScalarData<StashedObject>,lars::AnyScalarBase>{
         duk_context * ctx;
         bool push_any = false;
         void visit(const lars::AnyScalarBase &data)override{ DUK_VERBOSE_LOG("push any: '" << data.type().name() << "'"); push_any = true; }
@@ -157,6 +167,7 @@ namespace {
         void visit(const lars::AnyScalarData<double> &data)override{ DUK_VERBOSE_LOG("push double"); duk_push_number(ctx, data.data); }
         void visit(const lars::AnyScalarData<std::string> &data)override{ DUK_VERBOSE_LOG("push string"); duk_push_string(ctx, data.data.c_str()); }
         void visit(const lars::AnyScalarData<lars::AnyFunction> &data)override{ DUK_VERBOSE_LOG("push function"); push_function(ctx,data.data); }
+        void visit(const lars::AnyScalarData<StashedObject> &data)override{ DUK_VERBOSE_LOG("push object"); data.data.push(); }
       } visitor;
       
       visitor.ctx = ctx;
@@ -168,21 +179,40 @@ namespace {
       auto assert_value_exists = [](auto && v){ if(!v) throw std::runtime_error("invalid argument type"); return v; };
       DUK_VERBOSE_LOG("extract " << type.name());
       
-      if(auto ptr = get_object_ptr<lars::Any>(ctx,idx)) if(ptr->type() == type){
-        DUK_VERBOSE_LOG("extracted any");
-        return *ptr;
+      if(auto ptr = get_object_ptr<lars::Any>(ctx,idx)){
+        if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
+          DUK_VERBOSE_LOG("extracted any");
+          return *ptr;
+        }
+      }
+      
+      if(type == lars::get_type_index<lars::Any>()){
+        switch (duk_get_type(ctx, idx)) {
+          case DUK_TYPE_NUMBER: type = lars::get_type_index<double>(); break;
+          case DUK_TYPE_STRING: type = lars::get_type_index<std::string>(); break;
+          case DUK_TYPE_BOOLEAN: type = lars::get_type_index<bool>(); break;
+          case DUK_TYPE_OBJECT: type = lars::get_type_index<StashedObject>(); break;
+          default: break;
+        }
       }
       
       if(type == lars::get_type_index<std::string>()){ return lars::make_any<std::string>(assert_value_exists(duk_to_string(ctx, idx))); }
       else if(type == lars::get_type_index<double>()){ return lars::make_any<double>(assert_value_exists(duk_to_number(ctx, idx))); }
       else if(type == lars::get_type_index<int>()){ return lars::make_any<int>(assert_value_exists(duk_to_int(ctx, idx))); }
       else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>(assert_value_exists(duk_to_boolean(ctx, idx))); }
+      else if(type == lars::get_type_index<StashedObject>()){ return lars::make_any<StashedObject>(ctx,add_to_stash(ctx,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
         auto key = add_to_stash(ctx);
         lars::AnyFunction f = [=,destructor = lars::make_shared_destructor([=](){ remove_from_stash(ctx, key); })](lars::AnyArguments &args){
           push_from_stash(ctx, key.c_str());
+          DUK_VERBOSE_LOG("calling captured function " << key << ": " << as_string(ctx));
           for(auto && arg:args) push_value(ctx, arg);
           duk_call(ctx, args.size());
+          if(duk_is_undefined(ctx, -1)){ DUK_VERBOSE_LOG("call has no return value"); return lars::Any(); }
+          auto result = extract_value(ctx, -1, lars::get_type_index<lars::Any>());
+          DUK_VERBOSE_LOG("result type: " << result.type().name());
+          duk_pop(ctx);
+          return result;
         };
         return lars::make_any<lars::AnyFunction>(f);
       }
