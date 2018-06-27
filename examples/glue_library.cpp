@@ -38,16 +38,20 @@ int main(int argc, char *argv[]) {
     return complete;
   };
   
+  // assertion and sanity check
+  assert(evaluate_string("function assert(x){ if(x) return; else throw 'assertion failed'; }"));
+  assert(evaluate_string("assert(1==1)"));
+  assert(!evaluate_string("assert(1==0)"));
+  
   // call functions
-  assert(evaluate_string("var value = meaning_of_life(); if(value != 42) throw 'wrong universe!'"));
-  assert(!evaluate_string("var value = meaning_of_life(); if(value == 42) throw 'correct universe!'"));
+  assert(evaluate_string("var value = meaning_of_life(); assert(value == 42)"));
   assert(evaluate_string("log('hello world!')"));
-  assert(evaluate_string("log('2+3=' + add(2, 3))"));
+  assert(evaluate_string("assert(add(2,3) == 5);"));
   
   // callbacks
   assert(evaluate_string("var new_log = get_log_function('test'); new_log(add(2,40))"));
   assert(evaluate_string("function myLog(x){ log('myLog: ' + x); }; call_callback(myLog)"));
-  assert(evaluate_string("store_callback(function(){ log('stored callback has been called') }); log('stored callback');"));
+  assert(evaluate_string("store_callback(function(){ log('stored callback has been called') });"));
   assert(evaluate_string("call_stored_callback()"));
     
   // classes and auto update
@@ -110,17 +114,22 @@ int main(int argc, char *argv[]) {
   
   // call javascript function with return value
   assert(evaluate_string("extensions.add_function(extension,'g',function(x,y){ return x+y })"));
-  assert(evaluate_string("log(duk_extension.g('x',1))"));
+  assert(evaluate_string("assert(duk_extension.g('x',1) == 'x1')"));
   auto res = extension.get_extension("duk_extension")->get_function("g")(2,std::string("x"));
-  assert(res);
-  assert(res.get<std::string>() == "2x");
-  
-  // call and return javascript object
-  assert(evaluate_string("extensions.add_function(extension,'h',function(x){ log('called h'); return x; })"));
-  assert(evaluate_string("var map = { key1: 'value1', key2: 'value2' };"));
-  assert(evaluate_string("log(map['key1']);"));
-  assert(evaluate_string("log(duk_extension.h(map)['key1']);"));
-  assert(evaluate_string("log(duk_extension.g(map,map));"));
+  assert(res && res.get<std::string>() == "2x");
+  res = extension.get_extension("duk_extension")->get_function("g")(2,40);
+  assert(res && res.get<double>() == 42);
 
+  // call and return javascript object
+  assert(evaluate_string("extensions.add_function(extension,'h',function(x){ return x.key2; })"));
+  assert(evaluate_string("var map = { key1: 'value1', key2: 'value2' };"));
+  assert(evaluate_string("assert(duk_extension.h(map) == 'value2');"));
+  
+  assert(evaluate_string("extensions.add_function(extension,'create_table',function(){ return { key1: 'value1', key2: 'value2' }; })"));
+  assert(evaluate_string("extensions.add_function(extension,'to_json',function(x){ return JSON.stringify(x); })"));
+
+  auto table = extension.get_extension("duk_extension")->get_function("create_table")();
+  LARS_LOG(extension.get_extension("duk_extension")->get_function("to_json")(table).get<std::string>());
+  
   return 0;
 }

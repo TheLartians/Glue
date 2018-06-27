@@ -9,7 +9,7 @@
 
 #define DUK_MEMORY_DEBUG_LOG(X)
 #define DUK_VERBOSE_LOG(X)
-// #define DUK_VERBOSE_LOG(X) LARS_LOG(X)
+//#define DUK_VERBOSE_LOG(X) LARS_LOG_WITH_PROMPT(X,"duk glue: ")
 #define DUK_DETAILED_ERRORS
 
 
@@ -99,9 +99,7 @@ namespace {
     
     template <class T> T & get_object(duk_context *ctx,int idx = -1){
       auto ptr = get_object_ptr<T>(ctx,idx);
-      if(!ptr){
-        throw std::runtime_error("cannot extract c++ object");
-      }
+      if(!ptr) throw std::runtime_error("cannot extract c++ object of type " + lars::get_type_name<T>());
       return *ptr;
     }
     
@@ -113,7 +111,7 @@ namespace {
     
     std::string as_string(duk_context * ctx,int idx = -1){
       duk_dup(ctx, idx);
-      std::string result = duk_to_string(ctx, idx);
+      std::string result = duk_to_string(ctx, -1);
       duk_pop(ctx);
       return result;
     }
@@ -158,10 +156,15 @@ namespace {
     void push_value(duk_context * ctx,lars::Any value){
       using namespace lars;
       
+      if(!value){
+        duk_push_undefined(ctx);
+        return;
+      }
+      
       struct PushVisitor:public ConstVisitor<lars::AnyScalarData<double>,lars::AnyScalarData<std::string>,lars::AnyScalarData<lars::AnyFunction>,lars::AnyScalarData<int>,lars::AnyScalarData<bool>,lars::AnyScalarData<StashedObject>,lars::AnyScalarBase>{
         duk_context * ctx;
         bool push_any = false;
-        void visit(const lars::AnyScalarBase &data)override{ DUK_VERBOSE_LOG("push any: '" << data.type().name() << "'"); push_any = true; }
+        void visit(const lars::AnyScalarBase &data)override{ DUK_VERBOSE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
         void visit(const lars::AnyScalarData<bool> &data)override{ DUK_VERBOSE_LOG("push bool"); duk_push_boolean(ctx, data.data); }
         void visit(const lars::AnyScalarData<int> &data)override{ DUK_VERBOSE_LOG("push int"); duk_push_int(ctx, data.data); }
         void visit(const lars::AnyScalarData<double> &data)override{ DUK_VERBOSE_LOG("push double"); duk_push_number(ctx, data.data); }
@@ -181,7 +184,7 @@ namespace {
       
       if(auto ptr = get_object_ptr<lars::Any>(ctx,idx)){
         if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
-          DUK_VERBOSE_LOG("extracted any");
+          DUK_VERBOSE_LOG("extracted any<" << ptr->type().name() << ">");
           return *ptr;
         }
       }
@@ -217,7 +220,7 @@ namespace {
         return lars::make_any<lars::AnyFunction>(f);
       }
       else{
-        DUK_VERBOSE_LOG("cannot extract from: " << duk_to_string(ctx, idx));
+        DUK_VERBOSE_LOG("cannot extract from: " << as_string(ctx, idx));
 #ifdef DUK_DETAILED_ERRORS
         throw std::runtime_error("cannot convert argument " + std::to_string(idx) + ": '" + lars::stream_to_string(type.name()) + "' from '" + as_string(ctx, idx) + "'");
 #else
@@ -235,7 +238,7 @@ namespace {
         duk_pop(ctx);
         duk_pop(ctx);
         
-        std::vector<lars::Any> args;
+        lars::AnyArguments args;
         
         auto argc = f.argument_count();
         if(argc == -1) argc = duk_get_top(ctx);

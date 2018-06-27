@@ -20,5 +20,4 @@ namespace lars {
     void connect_extension(const Extension *parent,const std::string &name,const Extension &e)override;
   };
 
-  
 }
