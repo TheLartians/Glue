@@ -153,7 +153,7 @@ namespace {
     
     void push_function(duk_context * ctx,const lars::AnyFunction &f);
     
-    void push_value(duk_context * ctx,lars::Any value){
+    void push_value(duk_context * ctx,const lars::Any &value){
       using namespace lars;
       
       if(!value){

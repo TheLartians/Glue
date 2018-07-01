@@ -3,6 +3,8 @@
 #include <lars/duktape.h>
 #include <iostream>
 
+#include <duktape/duktape.h>
+
 int main(int argc, char *argv[]) {
   lars::Extension extension;
   
@@ -118,18 +120,27 @@ int main(int argc, char *argv[]) {
   auto res = extension.get_extension("duk_extension")->get_function("g")(2,std::string("x"));
   assert(res && res.get<std::string>() == "2x");
   res = extension.get_extension("duk_extension")->get_function("g")(2,40);
-  assert(res && res.get<double>() == 42);
-
+  assert(res && res.get_numeric<double>() == 42);
+  
   // call and return javascript object
   assert(evaluate_string("extensions.add_function(extension,'h',function(x){ return x.key2; })"));
   assert(evaluate_string("var map = { key1: 'value1', key2: 'value2' };"));
   assert(evaluate_string("assert(duk_extension.h(map) == 'value2');"));
   
-  assert(evaluate_string("extensions.add_function(extension,'create_table',function(){ return { key1: 'value1', key2: 'value2' }; })"));
+  assert(evaluate_string("extensions.add_function(extension,'create_table',function(){ return { }; })"));
+  assert(evaluate_string("extensions.add_function(extension,'set_key_value',function(t,k,v){ t[k] = v; })"));
   assert(evaluate_string("extensions.add_function(extension,'to_json',function(x){ return JSON.stringify(x); })"));
 
-  auto table = extension.get_extension("duk_extension")->get_function("create_table")();
-  LARS_LOG(extension.get_extension("duk_extension")->get_function("to_json")(table).get<std::string>());
+  auto create_table = extension.get_extension("duk_extension")->get_function("create_table");
+  auto to_json = extension.get_extension("duk_extension")->get_function("to_json");
+  auto set_key_value = extension.get_extension("duk_extension")->get_function("set_key_value");
+  
+  auto table = create_table();
+  LARS_LOG(to_json(table).get<std::string>());
+  set_key_value(table,"a",1);
+  set_key_value(table,"b","2");
+  set_key_value(table,"c",create_table());
+  LARS_LOG(to_json(table).get<std::string>());
   
   return 0;
 }
