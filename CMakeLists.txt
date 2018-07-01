@@ -38,17 +38,17 @@ set_source_files_properties($${ducktape_sources} PROPERTIES LANGUAGE CXX )
 add_library(duktape STATIC ${ducktape_sources} ${ducktape_headers})
 
 
-# tape
-add_library(glue STATIC ${sources} ${headers})
-target_link_libraries(glue duktape)  
+add_library(lars_glue STATIC ${sources} ${headers})
+target_link_libraries(lars_glue duktape)  
 
 
 # ---- includes ----
 
 IF(LARS_LIBRARY)
   SET(lars_include_dirs ${lars_include_dirs} ${PROJECT_INCUDE_DIR} PARENT_SCOPE)
-  SET(lars_libraries ${lars_libraries} glue duktape PARENT_SCOPE)
+  SET(lars_libraries ${lars_libraries} lars_glue duktape PARENT_SCOPE)
   SET(Lars_INCLUDE_DIRS ${lars_include_dirs})
+  include_directories(${lars_include_dirs})
 ELSE()
   message("Glue has to be built as a lars library module")
 ENDIF()
@@ -63,7 +63,7 @@ IF(LARS_BUILD_EXAMPLES)
     set(examplename lars_glue_${examplename})
     add_executable( ${examplename} ${examplesourcefile})
     include_directories(${Lars_INCLUDE_DIRS} "${PROJECT_INCUDE_DIR}")
-    target_link_libraries(${examplename} glue duktape)
+    target_link_libraries(${examplename} lars_glue duktape)
   endforeach()
 ENDIF()
 
