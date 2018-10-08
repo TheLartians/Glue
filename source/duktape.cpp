@@ -7,10 +7,17 @@
 #include <unordered_map>
 #include <duktape/duktape.h>
 
-#define DUK_MEMORY_DEBUG_LOG(X)
-#define DUK_VERBOSE_LOG(X)
-//#define DUK_VERBOSE_LOG(X) LARS_LOG_WITH_PROMPT(X,"duk glue: ")
+//#define LARS_GLUE_DUK_DEBUG
+
+#ifdef LARS_GLUE_DUK_DEBUG
+#define DUK_VERBOSE_LOG(X) LARS_LOG_WITH_PROMPT(X,"duk glue: ")
+#define DUK_MEMORY_DEBUG_LOG(X) LARS_LOG_WITH_PROMPT(X,"duk glue: ")
 #define DUK_DETAILED_ERRORS
+#else
+#define DUK_VERBOSE_LOG(X)
+#define DUK_MEMORY_DEBUG_LOG(X)
+#endif
+
 
 
 namespace {
@@ -109,7 +116,7 @@ namespace {
       return get_object<T>(ctx);
     }
     
-    std::string as_string(duk_context * ctx,int idx = -1){
+    std::string UNUSED as_string(duk_context * ctx,int idx = -1){
       duk_dup(ctx, idx);
       std::string result = duk_to_string(ctx, -1);
       duk_pop(ctx);
@@ -222,7 +229,7 @@ namespace {
       else{
         DUK_VERBOSE_LOG("cannot extract from: " << as_string(ctx, idx));
 #ifdef DUK_DETAILED_ERRORS
-        throw std::runtime_error("cannot convert argument " + std::to_string(idx) + ": '" + lars::stream_to_string(type.name()) + "' from '" + as_string(ctx, idx) + "'");
+        throw std::runtime_error("cannot convert argument " + std::to_string(idx) + ": \"" + lars::stream_to_string(type.name()) + "\" from \"" + as_string(ctx, idx) + "\"");
 #else
         throw std::runtime_error("cannot convert argument");
 #endif
