@@ -6,6 +6,11 @@
 
 #include <duktape/duktape.h>
 
+#include <lua/lua.h>
+#include <lua/lualib.h>
+#include <lua/lauxlib.h>
+
+
 int main(int argc, char *argv[]) {
   lars::Extension extension;
   
