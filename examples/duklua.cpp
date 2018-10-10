@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
   lars::LuaGlue lua_glue(L);
   extension.connect(lua_glue);
   
+  extension.add_function("rawprint", [](const std::string &str){ std::cout << str << std::endl; });
   
   auto lua = [&](std::string str){
     if(luaL_dostring(L, str.c_str())){
@@ -60,18 +61,27 @@ int main(int argc, char *argv[]) {
   assert(javascript("var javascript_extension = extensions.create_extension('javascript')"));
   assert(lua("lua_extension = extensions.create_extension('lua')"));
 
-  assert(javascript("extensions.add_function(javascript_extension,'add',function(x,y){ return x + y })"));
+  assert(javascript("extensions.add_function(javascript_extension,'add',function(x,y){ return x + y; })"));
+  assert(javascript("extensions.add_function(javascript_extension,'log',function(str){ rawprint('log: ' + str); })"));
+  assert(lua("extensions.add_function(lua_extension,'add',function(x,y) return x + y end)"));
   assert(lua("extensions.add_function(lua_extension,'log',function(str) print('log: ' .. str) end)"));
 
   // call javascript from lua
-  assert(lua("lua.log(javascript.add(2,'x'))")); // log: 2x
-  // call lua from javascript
-  assert(javascript("lua.log(javascript.add(2,'x'))")); // log: 2x
+  assert(lua("lua.log(javascript.add(4,2))")); // log: 6.0
+  assert(lua("lua.log(javascript.add(4,'2'))")); // log: 42
 
-  // call javascript->lua from c
-  auto  add = extension.get_extension("javascript")->get_function("add");
-  auto  log = extension.get_extension("lua")->get_function("log");
-  log(add(2,"x")); // log: 2x
+  // call lua from javascript
+  assert(javascript("javascript.log(lua.add(4,2))")); // log: 6
+  assert(javascript("javascript.log(lua.add(4,'2'))")); // log: 6.0
+
+
+  // call javascript and lua from c
+  auto js_add = extension.get_extension("javascript")->get_function("add");
+  auto lua_add = extension.get_extension("lua")->get_function("add");
+  auto log = extension.get_extension("lua")->get_function("log");
+  
+  log(js_add(2,"3")); // log: 23
+  log(lua_add(2,"3")); // log: 5.0
 
   return 0;
 }
