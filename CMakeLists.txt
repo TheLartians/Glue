@@ -5,6 +5,13 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
       message(FATAL_ERROR "Source and build directories cannot be the same.")
 endif()
 
+
+# ---- Configuration variables ----
+set(LARS_GLUE_USE_DUKTAPE FALSE CACHE BOOL "build glue for use with duktape")
+set(LARS_GLUE_USE_LUA FALSE CACHE BOOL "build glue for use with lua")
+set(LARS_GLUE_BUILD_LUA TRUE CACHE BOOL "build lua with glue")
+set(LARS_GLUE_BUILD_DUKTAPE TRUE CACHE BOOL "build duktape with glue")
+
 # ---- create project ----
 
 project(Tape)
@@ -16,8 +23,8 @@ set(PROJECT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 # ---- add sources ----
 
-file (GLOB sources ${PROJECT_SOURCE_DIR}/*.cpp)
-file (GLOB headers ${PROJECT_INCUDE_DIR}/lars/*.h ${PROJECT_SOURCE_DIR}/*.h)
+set(sources ${PROJECT_SOURCE_DIR}/glue.cpp)
+file(GLOB headers ${PROJECT_INCUDE_DIR}/lars/*.h ${PROJECT_SOURCE_DIR}/*.h)
 
 # ---- enable c++14 ----
 
@@ -28,12 +35,22 @@ endif()
 # ---- create module ----
 
 # duktape
-ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/lib/duktape)
-include_directories(${duktape_INCLUDE_DIRS})  
+if(LARS_GLUE_USE_DUKTAPE)
+  set(sources ${sources} ${PROJECT_SOURCE_DIR}/duktape.cpp)
+  if(LARS_GLUE_BUILD_LUA)
+    ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/lib/duktape)
+    include_directories(${duktape_INCLUDE_DIRS})
+  endif()
+endif()
 
 # lua
-ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/lib/lua)
-include_directories(${lua_INCLUDE_DIRS})  
+if(LARS_GLUE_USE_LUA)
+  set(sources ${sources} ${PROJECT_SOURCE_DIR}/lua.cpp)
+  if(LARS_GLUE_BUILD_LUA)
+    ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/lib/lua)
+    include_directories(${lua_INCLUDE_DIRS})
+  endif()
+endif()
 
 # glue
 add_library(lars_glue STATIC ${sources} ${headers})

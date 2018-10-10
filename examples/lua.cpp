@@ -52,21 +52,18 @@ int main(int argc, char *argv[]) {
   std::cout << "... as planned" << std::endl;
 
   assert(run_string("local value = meaning_of_life(); assert(value == 42)"));
-
-  
-  /*
-   
-  // call functions
-  assert(run_string("var value = meaning_of_life(); assert(value == 42)"));
-  assert(run_string("log('hello world!')"));
+  assert(run_string("log('hello lua!')"));
+  assert(run_string("log(meaning_of_life())"));
   assert(run_string("assert(add(2,3) == 5);"));
 
+  
   // callbacks
-  assert(run_string("var new_log = get_log_function('test'); new_log(add(2,40))"));
-  assert(run_string("function myLog(x){ log('myLog: ' + x); }; call_callback(myLog)"));
-  assert(run_string("store_callback(function(){ log('stored callback has been called') });"));
+  assert(run_string("local new_log = get_log_function('test'); new_log(add(2,40))"));
+  assert(run_string("local function myLog(x) log('myLog: ' .. x) print('test 2123') end call_callback(myLog)"));
+
+  assert(run_string("store_callback(function() log('stored callback has been called') end);"));
   assert(run_string("call_stored_callback()"));
-    
+
   // classes and auto update
   static unsigned my_class_instances = 0;
   struct MyClass{
@@ -79,21 +76,22 @@ int main(int argc, char *argv[]) {
   extension.add_function("get_my_class_data",[](const MyClass &my_class){ return my_class.data; });
   extension.add_function("set_my_class_data",[](MyClass &my_class,const std::string &str){ my_class.data = str; });
   
-  assert(run_string("var my_class = create_my_class()"));
+  assert(run_string("my_class = create_my_class()"));
   assert(my_class_instances == 1);
   assert(run_string("set_my_class_data(my_class,'data')"));
   assert(run_string("log(get_my_class_data(my_class))"));
-  assert(run_string("my_class = undefined"));
+  assert(run_string("my_class = nil"));
+  lua_gc(L, LUA_GCCOLLECT, 0);
 
   // destructor called
   assert(my_class_instances == 0);
   
   // capture and free
-  assert(run_string("function test(x){ store_callback(function(){ set_my_class_data(x,'data') }); } test(create_my_class())"));
-  duk_gc(ctx, 0);
+  assert(run_string("function test(x) store_callback(function() set_my_class_data(x,'data') end); end test(create_my_class())"));
+  lua_gc(L, LUA_GCCOLLECT, 0);
   assert(my_class_instances == 1);
-  assert(run_string("store_callback(function(){ })"));
-  duk_gc(ctx, 0);
+  assert(run_string("store_callback(function()end)"));
+  lua_gc(L, LUA_GCCOLLECT, 0);
   assert(my_class_instances == 0);
   
   // inner extensions
@@ -116,43 +114,41 @@ int main(int argc, char *argv[]) {
   });
   extensions_extension->add_function("add_function",[](std::shared_ptr<lars::Extension> extension,std::string name,lars::AnyFunction f){ extension->add_function(name, f); });
   
-  // call javascript function without return value
-  assert(run_string("var extension = extensions.create_extension('duk_extension')"));
-  assert(run_string("extensions.add_function(extension,'f',function(x,y){ log('called f(' + x + ',' + y + ')' ) })"));
-  assert(run_string("duk_extension.f(1,'x')")); // -> called f(1,x)
-  auto f = extension.get_extension("duk_extension")->get_function("f");
+  // call lua function without return value
+  assert(run_string("extension = extensions.create_extension('lua_extension')"));
+  assert(run_string("extensions.add_function(extension,'f',function(x,y) log('called f(' .. tostring(x) .. ',' .. tostring(y) .. ')' ) end)"));
+  assert(run_string("lua_extension.f(1,'x')")); // -> called f(1,x)
+  auto f = extension.get_extension("lua_extension")->get_function("f");
   assert(f);
   f(std::string("x"),42); // -> called f(x,42)
-  f(1); // -> called f(1,undefined)
+  f(1); // -> called f(1,nil)
   
-  // call javascript function with return value
-  assert(run_string("extensions.add_function(extension,'g',function(x,y){ return x+y })"));
-  assert(run_string("assert(duk_extension.g('x',1) == 'x1')"));
-  auto res = extension.get_extension("duk_extension")->get_function("g")(2,std::string("x"));
+  // call lua function with return value
+  assert(run_string("extensions.add_function(extension,'g',function(x,y) return tostring(x) .. tostring(y) end)"));
+  assert(run_string("assert(lua_extension.g('x','1') == 'x1')"));
+  auto res = extension.get_extension("lua_extension")->get_function("g")(2,std::string("x"));
   assert(res && res.get<std::string>() == "2x");
-  res = extension.get_extension("duk_extension")->get_function("g")(2,40);
-  assert(res && res.get_numeric<double>() == 42);
+  res = extension.get_extension("lua_extension")->get_function("g")(2,40);
+  assert(res && res.get<std::string>() == "240");
   
-  // call and return javascript object
-  assert(run_string("extensions.add_function(extension,'h',function(x){ return x.key2; })"));
-  assert(run_string("var map = { key1: 'value1', key2: 'value2' };"));
-  assert(run_string("assert(duk_extension.h(map) == 'value2');"));
+  // call and return lua object
+  assert(run_string("extensions.add_function(extension,'h',function(x) return x.key2; end)"));
+  assert(run_string("map = { key1 = 'value1', key2 = 'value2' };"));
+  assert(run_string("assert(lua_extension.h(map) == 'value2');"));
   
-  assert(run_string("extensions.add_function(extension,'create_table',function(){ return { }; })"));
-  assert(run_string("extensions.add_function(extension,'set_key_value',function(t,k,v){ t[k] = v; })"));
-  assert(run_string("extensions.add_function(extension,'to_json',function(x){ return JSON.stringify(x); })"));
+  assert(run_string("extensions.add_function(extension,'create_table',function() return { } end)"));
+  assert(run_string("extensions.add_function(extension,'set_key_value',function(t,k,v) t[k] = v end)"));
+  assert(run_string("extensions.add_function(extension,'table_to_string',function(x) local res = '' for k,v in pairs(x) do res = res .. tostring(k) .. '=' .. tostring(v) .. ',' end return res end)"));
 
-  auto create_table = extension.get_extension("duk_extension")->get_function("create_table");
-  auto to_json = extension.get_extension("duk_extension")->get_function("to_json");
-  auto set_key_value = extension.get_extension("duk_extension")->get_function("set_key_value");
-  
+  auto create_table = extension.get_extension("lua_extension")->get_function("create_table");
+  auto set_key_value = extension.get_extension("lua_extension")->get_function("set_key_value");
+  auto table_to_string = extension.get_extension("lua_extension")->get_function("table_to_string");
+
   auto table = create_table();
-  LARS_LOG(to_json(table).get<std::string>());
   set_key_value(table,"a",1);
   set_key_value(table,"b","2");
   set_key_value(table,"c",create_table());
-  LARS_LOG(to_json(table).get<std::string>());
-  */
-   
+  LARS_LOG(table_to_string(table).get<std::string>());
+  
   return 0;
 }

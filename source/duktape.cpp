@@ -212,7 +212,7 @@ namespace {
       else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>(assert_value_exists(duk_to_boolean(ctx, idx))); }
       else if(type == lars::get_type_index<StashedObject>()){ return lars::make_any<StashedObject>(ctx,add_to_stash(ctx,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
-        auto key = add_to_stash(ctx);
+        auto key = add_to_stash(ctx,idx);
         lars::AnyFunction f = [=,destructor = lars::make_shared_destructor([=](){ remove_from_stash(ctx, key); })](lars::AnyArguments &args){
           push_from_stash(ctx, key.c_str());
           DUK_VERBOSE_LOG("calling captured function " << key << ": " << as_string(ctx));
