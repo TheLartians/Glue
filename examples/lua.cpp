@@ -13,10 +13,10 @@ int main(int argc, char *argv[]) {
   // call functions and get return values
   extension.add_function("meaning_of_life",[](){ return 42; });
   extension.add_function("log",[](const std::string &str){ std::cout << "log: " << str << std::endl; });
-  extension.add_function("add",[](double a,int b){ return a+b; });
+  extension.add_function("add",[](float a,int b){ return a+b; });
 
-  assert(extension.get_function("add").return_type() == lars::get_type_index<decltype(double(1)+int(2))>());
-  assert(extension.get_function("add").argument_type(0) == lars::get_type_index<double>());
+  assert(extension.get_function("add").return_type() == lars::get_type_index<decltype(float(1)+int(2))>());
+  assert(extension.get_function("add").argument_type(0) == lars::get_type_index<float>());
   assert(extension.get_function("add").argument_type(1) == lars::get_type_index<int>());
   assert(extension.get_function("add")(lars::make_any<double>(2),lars::make_any<int>(3)).get_numeric<int>() == 5);
 

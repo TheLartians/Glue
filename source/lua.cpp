@@ -195,12 +195,14 @@ namespace {
         return lua_pushnil(L);
       }
       
-      struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<RegistryObject>>{
+      struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<char>,lars::VisitableType<float>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<RegistryObject>>{
         lua_State * L;
         bool push_any = false;
         void visit_default(const lars::VisitableBase &data)override{ LARS_LUA_GLUE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
         void visit(const lars::VisitableType<bool> &data)override{ LARS_LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data.data); }
         void visit(const lars::VisitableType<int> &data)override{ LARS_LUA_GLUE_LOG("push int"); lua_pushinteger(L, data.data); }
+        void visit(const lars::VisitableType<char> &data)override{ LARS_LUA_GLUE_LOG("push char"); lua_pushnumber(L, data.data); }
+        void visit(const lars::VisitableType<float> &data)override{ LARS_LUA_GLUE_LOG("push float"); lua_pushnumber(L, data.data); }
         void visit(const lars::VisitableType<double> &data)override{ LARS_LUA_GLUE_LOG("push double"); lua_pushnumber(L, data.data); }
         void visit(const lars::VisitableType<std::string> &data)override{ LARS_LUA_GLUE_LOG("push string"); lua_pushstring(L, data.data.c_str()); }
         void visit(const lars::VisitableType<lars::AnyFunction> &data)override{ LARS_LUA_GLUE_LOG("push function"); push_function(L,data.data); }
@@ -241,13 +243,15 @@ namespace {
       
       if(type == lars::get_type_index<std::string>()){ return lars::make_any<std::string>(assert_value_exists(lua_tostring(L, idx))); }
       else if(type == lars::get_type_index<double>()){ return lars::make_any<double>(assert_value_exists(lua_tonumber(L, idx))); }
+      else if(type == lars::get_type_index<float>()){ return lars::make_any<float>(assert_value_exists(lua_tonumber(L, idx))); }
+      else if(type == lars::get_type_index<char>()){ return lars::make_any<char>(assert_value_exists(lua_tonumber(L, idx))); }
       else if(type == lars::get_type_index<int>()){ return lars::make_any<int>(assert_value_exists(lua_tointeger(L, idx))); }
       else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>(assert_value_exists(lua_toboolean(L, idx))); }
       else if(type == lars::get_type_index<RegistryObject>()){ return lars::make_any<RegistryObject>(L,add_to_registry(L,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
         auto captured = std::make_shared<RegistryObject>(L,add_to_registry(L,idx));
         lars::AnyFunction f = [captured](lars::AnyArguments &args){
-          auto L = captured->L;
+          lua_State * L = captured->L;
           captured->push();
           LARS_LUA_GLUE_LOG("calling registry " << captured->key << " with " << args.size() << " arguments: " << as_string(L));
           for(auto && arg:args) push_value(L, arg);
