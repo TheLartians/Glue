@@ -9,8 +9,8 @@ endif()
 # ---- Configuration variables ----
 set(LARS_GLUE_USE_DUKTAPE FALSE CACHE BOOL "build glue for use with duktape")
 set(LARS_GLUE_USE_LUA FALSE CACHE BOOL "build glue for use with lua")
-set(LARS_GLUE_BUILD_LUA TRUE CACHE BOOL "build lua with glue")
-set(LARS_GLUE_BUILD_DUKTAPE TRUE CACHE BOOL "build duktape with glue")
+set(LARS_GLUE_BUILD_LUA FALSE CACHE BOOL "build lua with glue")
+set(LARS_GLUE_BUILD_DUKTAPE FALSE CACHE BOOL "build duktape with glue")
 
 # ---- create project ----
 
@@ -39,8 +39,8 @@ if(LARS_GLUE_USE_DUKTAPE)
   set(sources ${sources} ${PROJECT_SOURCE_DIR}/duktape.cpp)
   if(LARS_GLUE_BUILD_LUA)
     ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/lib/duktape)
-    include_directories(${duktape_INCLUDE_DIRS})
   endif()
+  include_directories(${duktape_INCLUDE_DIRS})
 endif()
 
 # lua
@@ -48,8 +48,8 @@ if(LARS_GLUE_USE_LUA)
   set(sources ${sources} ${PROJECT_SOURCE_DIR}/lua.cpp)
   if(LARS_GLUE_BUILD_LUA)
     ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/lib/lua)
-    include_directories(${lua_INCLUDE_DIRS})
   endif()
+  include_directories(${lua_INCLUDE_DIRS})
 endif()
 
 # glue
