@@ -4,12 +4,11 @@
 #include <lars/lua.h>
 #include <iostream>
 
-#include <lua/lua.h>
-#include <lua/lualib.h>
-#include <lua/lauxlib.h>
+#include <lua.hpp>
 
 int main(int argc, char *argv[]) {
-  lars::Extension extension;
+  auto shared_extension = std::make_shared<lars::Extension>();
+  lars::Extension &extension = *shared_extension;
   
   // call functions and get return values
   extension.add_function("meaning_of_life",[](){ return 42; });
@@ -165,6 +164,15 @@ int main(int argc, char *argv[]) {
   assert(!run_string("assert(get_Cvalue(create_B()) == 2)"));
   assert(!run_string("get_value(create_my_class())"));
   assert(!run_string("get_value('test')"));
+
+  // extension path
+  {
+  lars::Extension tmp_extension;
+  tmp_extension.add_extension("extensions", shared_extension);
+  tmp_extension.connect(lua_glue);
+  }
+  
+  assert(run_string("extensions.log('hello!')"));
 
   return 0;
 }

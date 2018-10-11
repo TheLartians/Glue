@@ -1,8 +1,8 @@
 
-file (GLOB_RECURSE sources "*.c")
-file (GLOB_RECURSE headers "*.h*")
+file (GLOB sources "*.c")
+file (GLOB headers "*.h*")
 
-SET_SOURCE_FILES_PROPERTIES( ${sources} PROPERTIES LANGUAGE CXX )
+# SET_SOURCE_FILES_PROPERTIES( ${sources} PROPERTIES LANGUAGE CXX )
 
 FILE(GLOB modules ${CMAKE_CURRENT_SOURCE_DIR}/modules/*)
 include_directories(${modules} ${CMAKE_CURRENT_SOURCE_DIR})

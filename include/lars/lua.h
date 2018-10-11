@@ -1,6 +1,7 @@
 #pragma once
 
-#include <lua/lua.h>
+
+#include <lua.hpp>
 #include <lars/glue.h>
 
 #include <string>

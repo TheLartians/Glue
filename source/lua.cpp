@@ -2,9 +2,7 @@
 
 #include <lars/log.h>
 
-#include <lua/lua.h>
-#include <lua/lualib.h>
-#include <lua/lauxlib.h>
+#include <lua.hpp>
 
 //#define LARS_LUA_GLUE_DEBUG
 
@@ -114,14 +112,14 @@ namespace {
 
       if(lars::get_type_index<T>() == lars::get_type_index<lars::AnyFunction>()){
         lua_pushcfunction(L, +[](lua_State *L){
-          LARS_LUA_GLUE_LOG("calling " << as_string(L,1) << " with " << lua_gettop(L)-1 << " arguments");
-          auto & f = get_object<lars::AnyFunction>(L,1);
-          lars::AnyArguments args;
-          auto argc = f.argument_count();
-          if(argc == -1) argc = lua_gettop(L)-1;
-          LARS_LUA_GLUE_LOG("calling function " << &f << " with " << argc << " arguments");
-          for(int i=0;i<argc;++i) args.emplace_back(extract_value(L, i+2, f.argument_type(i)));
           try{
+            LARS_LUA_GLUE_LOG("calling " << as_string(L,1) << " with " << lua_gettop(L)-1 << " arguments");
+            auto & f = get_object<lars::AnyFunction>(L,1);
+            lars::AnyArguments args;
+            auto argc = f.argument_count();
+            if(argc == -1) argc = lua_gettop(L)-1;
+            LARS_LUA_GLUE_LOG("calling function " << &f << " with " << argc << " arguments");
+            for(int i=0;i<argc;++i) args.emplace_back(extract_value(L, i+2, f.argument_type(i)));
             auto result = f.call(args);
             if(result){
               LARS_LUA_GLUE_LOG("returning " << result.type().name());
@@ -133,6 +131,12 @@ namespace {
           }
           catch(std::exception &e){
             throw luaL_error(L, e.what());
+          }
+          catch(const char *s){
+            throw luaL_error(L, s);
+          }
+          catch(...){
+            throw luaL_error(L, "unknown exception");
           }
         });
         lua_setfield(L, -2, "__call");
