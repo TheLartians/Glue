@@ -168,16 +168,16 @@ namespace {
         return;
       }
       
-      struct PushVisitor:public ConstVisitor<lars::AnyScalarData<double>,lars::AnyScalarData<std::string>,lars::AnyScalarData<lars::AnyFunction>,lars::AnyScalarData<int>,lars::AnyScalarData<bool>,lars::AnyScalarData<StashedObject>,lars::AnyScalarBase>{
+      struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<StashedObject>>{
         duk_context * ctx;
         bool push_any = false;
-        void visit(const lars::AnyScalarBase &data)override{ DUK_VERBOSE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
-        void visit(const lars::AnyScalarData<bool> &data)override{ DUK_VERBOSE_LOG("push bool"); duk_push_boolean(ctx, data.data); }
-        void visit(const lars::AnyScalarData<int> &data)override{ DUK_VERBOSE_LOG("push int"); duk_push_int(ctx, data.data); }
-        void visit(const lars::AnyScalarData<double> &data)override{ DUK_VERBOSE_LOG("push double"); duk_push_number(ctx, data.data); }
-        void visit(const lars::AnyScalarData<std::string> &data)override{ DUK_VERBOSE_LOG("push string"); duk_push_string(ctx, data.data.c_str()); }
-        void visit(const lars::AnyScalarData<lars::AnyFunction> &data)override{ DUK_VERBOSE_LOG("push function"); push_function(ctx,data.data); }
-        void visit(const lars::AnyScalarData<StashedObject> &data)override{ DUK_VERBOSE_LOG("push object"); data.data.push(); }
+        void visit_default(const lars::VisitableBase &data)override{ DUK_VERBOSE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
+        void visit(const lars::VisitableType<bool> &data)override{ DUK_VERBOSE_LOG("push bool"); duk_push_boolean(ctx, data.data); }
+        void visit(const lars::VisitableType<int> &data)override{ DUK_VERBOSE_LOG("push int"); duk_push_int(ctx, data.data); }
+        void visit(const lars::VisitableType<double> &data)override{ DUK_VERBOSE_LOG("push double"); duk_push_number(ctx, data.data); }
+        void visit(const lars::VisitableType<std::string> &data)override{ DUK_VERBOSE_LOG("push string"); duk_push_string(ctx, data.data.c_str()); }
+        void visit(const lars::VisitableType<lars::AnyFunction> &data)override{ DUK_VERBOSE_LOG("push function"); push_function(ctx,data.data); }
+        void visit(const lars::VisitableType<StashedObject> &data)override{ DUK_VERBOSE_LOG("push object"); data.data.push(); }
       } visitor;
       
       visitor.ctx = ctx;
@@ -192,6 +192,10 @@ namespace {
       if(auto ptr = get_object_ptr<lars::Any>(ctx,idx)){
         if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
           DUK_VERBOSE_LOG("extracted any<" << ptr->type().name() << ">");
+          return *ptr;
+        }
+        else{
+          DUK_VERBOSE_LOG("unsafe extracted any<" << ptr->type().name() << ">");
           return *ptr;
         }
       }

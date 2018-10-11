@@ -155,5 +155,17 @@ int main(int argc, char *argv[]) {
   set_key_value(table,"c",create_table());
   LARS_LOG(to_json(table).get<std::string>());
   
+  // derived classes
+  struct A:lars::Visitable<A>{ int value; A(){} };
+  struct B:lars::DVisitable<B,A>{ B(){ value = 1; } };
+  struct C:lars::DVisitable<C,A>{ C(){ value = 2; } };
+  
+  extension.add_function("create_B", [](){ return B(); });
+  extension.add_function("create_C", [](){ return C(); });
+  extension.add_function("get_value", [](A & a){ return a.value; });
+  assert(run_string("assert(get_value(create_B()) == 1)"));
+  assert(run_string("assert(get_value(create_C()) == 2)"));
+  assert(!run_string("get_value(create_my_class())"));
+
   return 0;
 }

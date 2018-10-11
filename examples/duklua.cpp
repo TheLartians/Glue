@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
   lars::DuktapeGlue duktape_glue(ctx);
   extension.connect(duktape_glue);
   
-  auto javascript = [&](std::string str){
+  auto duk = [&](std::string str){
     duk_push_string(ctx, str.c_str());
     bool complete = false;
     if (duk_peval(ctx) != 0) {
@@ -58,25 +58,25 @@ int main(int argc, char *argv[]) {
   });
   extensions_extension->add_function("add_function",[](std::shared_ptr<lars::Extension> extension,std::string name,lars::AnyFunction f){ extension->add_function(name, f); });
   
-  assert(javascript("var javascript_extension = extensions.create_extension('javascript')"));
+  assert(duk("var duk_extension = extensions.create_extension('duk')"));
   assert(lua("lua_extension = extensions.create_extension('lua')"));
 
-  assert(javascript("extensions.add_function(javascript_extension,'add',function(x,y){ return x + y; })"));
-  assert(javascript("extensions.add_function(javascript_extension,'log',function(str){ rawprint('log: ' + str); })"));
+  assert(duk("extensions.add_function(duk_extension,'add',function(x,y){ return x + y; })"));
+  assert(duk("extensions.add_function(duk_extension,'log',function(str){ rawprint('log: ' + str); })"));
   assert(lua("extensions.add_function(lua_extension,'add',function(x,y) return x + y end)"));
   assert(lua("extensions.add_function(lua_extension,'log',function(str) print('log: ' .. str) end)"));
 
-  // call javascript from lua
-  assert(lua("lua.log(javascript.add(4,2))")); // log: 6.0
-  assert(lua("lua.log(javascript.add(4,'2'))")); // log: 42
+  // call duk from lua
+  assert(lua("lua.log(duk.add(4,2))")); // log: 6.0
+  assert(lua("lua.log(duk.add(4,'2'))")); // log: 42
 
-  // call lua from javascript
-  assert(javascript("javascript.log(lua.add(4,2))")); // log: 6
-  assert(javascript("javascript.log(lua.add(4,'2'))")); // log: 6.0
+  // call lua from duk
+  assert(duk("duk.log(lua.add(4,2))")); // log: 6
+  assert(duk("duk.log(lua.add(4,'2'))")); // log: 6.0
 
 
-  // call javascript and lua from c
-  auto js_add = extension.get_extension("javascript")->get_function("add");
+  // call duk and lua from c
+  auto js_add = extension.get_extension("duk")->get_function("add");
   auto lua_add = extension.get_extension("lua")->get_function("add");
   auto log = extension.get_extension("lua")->get_function("log");
   

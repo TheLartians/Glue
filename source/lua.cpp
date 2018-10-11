@@ -191,16 +191,16 @@ namespace {
         return lua_pushnil(L);
       }
       
-      struct PushVisitor:public ConstVisitor<lars::AnyScalarData<double>,lars::AnyScalarData<std::string>,lars::AnyScalarData<lars::AnyFunction>,lars::AnyScalarData<int>,lars::AnyScalarData<bool>,lars::AnyScalarData<RegistryObject>,lars::AnyScalarBase>{
+      struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<RegistryObject>>{
         lua_State * L;
         bool push_any = false;
-        void visit(const lars::AnyScalarBase &data)override{ LARS_LUA_GLUE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
-        void visit(const lars::AnyScalarData<bool> &data)override{ LARS_LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data.data); }
-        void visit(const lars::AnyScalarData<int> &data)override{ LARS_LUA_GLUE_LOG("push int"); lua_pushinteger(L, data.data); }
-        void visit(const lars::AnyScalarData<double> &data)override{ LARS_LUA_GLUE_LOG("push double"); lua_pushnumber(L, data.data); }
-        void visit(const lars::AnyScalarData<std::string> &data)override{ LARS_LUA_GLUE_LOG("push string"); lua_pushstring(L, data.data.c_str()); }
-        void visit(const lars::AnyScalarData<lars::AnyFunction> &data)override{ LARS_LUA_GLUE_LOG("push function"); push_function(L,data.data); }
-        void visit(const lars::AnyScalarData<RegistryObject> &data)override{ LARS_LUA_GLUE_LOG("push object"); data.data.push(); }
+        void visit_default(const lars::VisitableBase &data)override{ LARS_LUA_GLUE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
+        void visit(const lars::VisitableType<bool> &data)override{ LARS_LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data.data); }
+        void visit(const lars::VisitableType<int> &data)override{ LARS_LUA_GLUE_LOG("push int"); lua_pushinteger(L, data.data); }
+        void visit(const lars::VisitableType<double> &data)override{ LARS_LUA_GLUE_LOG("push double"); lua_pushnumber(L, data.data); }
+        void visit(const lars::VisitableType<std::string> &data)override{ LARS_LUA_GLUE_LOG("push string"); lua_pushstring(L, data.data.c_str()); }
+        void visit(const lars::VisitableType<lars::AnyFunction> &data)override{ LARS_LUA_GLUE_LOG("push function"); push_function(L,data.data); }
+        void visit(const lars::VisitableType<RegistryObject> &data)override{ LARS_LUA_GLUE_LOG("push object"); data.data.push(); }
       } visitor;
       
       visitor.L = L;
@@ -216,6 +216,10 @@ namespace {
       if(auto ptr = get_object_ptr<lars::Any>(L,idx)){
         if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
           LARS_LUA_GLUE_LOG("extracted any<" << ptr->type().name() << ">");
+          return *ptr;
+        }
+        else{
+          LARS_LUA_GLUE_LOG("unsafe extracted any<" << ptr->type().name() << ">");
           return *ptr;
         }
       }
@@ -253,7 +257,7 @@ namespace {
         return lars::make_any<lars::AnyFunction>(f);
       }
       else{
-        throw luaL_error(L,("cannot convert extract value at " + std::to_string(idx) + " <" + std::string(type.name().begin(),type.name().end()) + "> from \"" + as_string(L, idx) + "\"").c_str());
+        throw luaL_error(L,("cannot extract value <" + std::string(type.name().begin(),type.name().end()) + "> from \"" + as_string(L, idx) + "\"").c_str());
       }
     }
     
