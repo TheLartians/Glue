@@ -40,6 +40,7 @@ int main(int argc, char *argv[]) {
   auto run_string = [&](std::string str){
     if(luaL_dostring(L, str.c_str())){
       std::cout << "lua error: " << lua_tostring(L,-1) << std::endl;
+      lua_pop(L,1);
       return false;
     };
     return true;
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]) {
   static unsigned my_class_instances = 0;
   struct MyClass{
     std::string data;
-    MyClass(const MyClass &other):data(){ my_class_instances++; }
+    MyClass(const MyClass &other):data(other.data){ my_class_instances++; }
     MyClass(){ my_class_instances++; }
     ~MyClass(){ my_class_instances--; }
   };
@@ -75,8 +76,14 @@ int main(int argc, char *argv[]) {
   extension.add_function("get_my_class_data",[](const MyClass &my_class){ return my_class.data; });
   extension.add_function("set_my_class_data",[](MyClass &my_class,const std::string &str){ my_class.data = str; });
   
+  
+  run_string("print('type of set_my_class_data: ',set_my_class_data)");
+
   assert(run_string("my_class = create_my_class()"));
+  lua_gc(L, LUA_GCCOLLECT, 0);
   assert(my_class_instances == 1);
+  run_string("print('type of set_my_class_data: ',set_my_class_data)");
+
   assert(run_string("set_my_class_data(my_class,'data')"));
   assert(run_string("log(get_my_class_data(my_class))"));
   assert(run_string("my_class = nil"));
@@ -165,14 +172,39 @@ int main(int argc, char *argv[]) {
   assert(!run_string("get_value(create_my_class())"));
   assert(!run_string("get_value('test')"));
 
-  // extension path
-  {
-  lars::Extension tmp_extension;
-  tmp_extension.add_extension("extensions", shared_extension);
-  tmp_extension.connect(lua_glue);
-  }
+  // class extensions
+  auto my_class_extension = std::make_shared<lars::Extension>();
+  my_class_extension->set_class<MyClass>();
   
-  assert(run_string("extensions.log('hello!')"));
+  my_class_extension->add_function("new", [&](lars::AnyArguments &args){
+    if(args.size() == 0) return MyClass();
+    if(args.size() == 1){ MyClass c; c.data = args[0].get<std::string>(); return c; };
+    throw std::runtime_error("create MyClass with zero or one arguments");
+  });
+  my_class_extension->add_function("set_data", [](MyClass &o,const std::string &str){ o.data = str; });
+  my_class_extension->add_function("get_data", [](MyClass &o){ return o.data; });
+  extension.add_extension("MyClass", my_class_extension);
+  
+  assert(run_string("local a = MyClass.new(); a:set_data('a'); assert(a:get_data() == 'a');"));
+  assert(run_string("local b = MyClass.new('b'); assert(b:get_data() == 'b');"));
 
+  // Derived classes
+  class MyDerivedClass:public lars::BVisitable<MyDerivedClass,MyClass>{
+  public:
+    std::string data_2(){ return data + "2"; }
+  };
+  
+  auto my_derived_class_extension = std::make_shared<lars::Extension>();
+  my_derived_class_extension->set_class<MyDerivedClass>();
+  my_derived_class_extension->set_base_class<MyClass>();
+  my_derived_class_extension->add_function("new", [](){ return MyDerivedClass(); });
+  my_derived_class_extension->add_function("data_2", [](MyDerivedClass &c){ return c.data_2(); });
+  extension.add_extension("MyDerivedClass", my_derived_class_extension);
+
+  assert(run_string("a = MyDerivedClass.new()"));
+  assert(run_string("assert(a:data_2() == '2')"));
+  assert(run_string("a:set_data('hello')"));
+  assert(run_string("assert(a:data_2() == 'hello2')"));
+  
   return 0;
 }

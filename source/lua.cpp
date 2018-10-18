@@ -4,7 +4,7 @@
 
 #include <lua.hpp>
 
-//#define LARS_LUA_GLUE_DEBUG
+#define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #define LARS_LUA_GLUE_LOG(X) LARS_LOG_WITH_PROMPT(X,"lua glue: ")
@@ -15,7 +15,12 @@
 namespace {
   namespace lua_glue{
     
-    template <class T> using internal_type = std::pair<lars::TypeIndex,T>;
+    template <class T> struct internal_type{
+      lars::TypeIndex type;
+      T data;
+      template <typename ... Args> internal_type(const lars::TypeIndex &t, Args...args):type(t),data(args...){}
+      operator T&(){ return data; }
+    };
 
     std::string UNUSED as_string(lua_State * L,int idx = -1){
       auto res = luaL_tolstring(L,idx,nullptr);
@@ -72,44 +77,48 @@ namespace {
       void push()const{ push_from_registry(L, key); }
     };
     
-    const int OBJECT_POINTER_INDEX = 0;
-    
+    template <class T> internal_type<T> * get_internal_object_ptr(lua_State *L,int idx);
+    template <class T> T * get_object_ptr(lua_State *L,int idx = -1);
     template <class T> T & get_object(lua_State *L,int idx = -1);
     lars::Any extract_value(lua_State * L,int idx,lars::TypeIndex type);
     void push_value(lua_State * L,const lars::Any &value);
     
+    std::string class_mt_key(const lars::TypeIndex &idx){
+      auto key = "glue." + std::string(idx.name().begin(),idx.name().end());
+      return key;
+    }
+    
+    template <class T> auto class_mt_key(){
+      static auto key = class_mt_key(lars::get_type_index<T>());
+      return key.c_str();
+    }
+    
     template <class T> void push_class_metatable(lua_State * L){
-      auto key = "GlueMetatable<" + lars::get_type_name<T>() + ">";
-      lua_pushstring(L, key.c_str());
-      lua_rawget(L, LUA_REGISTRYINDEX);
+      auto key = class_mt_key<T>();
+      
+      luaL_getmetatable(L, key);
       if(!lua_isnil(L, -1)) return;
-      lua_pop(L, 1); // nil is on top
+      lua_pop(L, 1);
 
       LARS_LUA_GLUE_LOG("creating metatable for class " << lars::get_type_name<T>());
       
-      lua_pushstring(L, key.c_str());
-      lua_newtable(L);
-
+      luaL_newmetatable(L, key);
+      
       lua_pushcfunction(L, +[](lua_State *L){
-        lua_rawgeti(L, -1, OBJECT_POINTER_INDEX);
-        auto * data = static_cast<internal_type<T>*>(lua_touserdata(L, -1));
-        lua_pop(L, 1);
-        lua_pushstring(L, ("Glued<" + lars::get_type_name<T>() + ">(" + std::to_string((size_t)data) + ")").c_str());
+        auto * data = get_internal_object_ptr<T>(L,1);
+        auto type_name = std::string(data->type.name().begin(),data->type.name().end());
+        lua_pushstring(L, (type_name + std::string("(") + std::to_string((size_t)&data->data) + ")").c_str());
         return 1;
       });
       lua_setfield(L, -2, "__tostring");
 
       lua_pushcfunction(L, +[](lua_State *L){
-        lua_rawgeti(L, -1, OBJECT_POINTER_INDEX);
-        auto * data = static_cast<internal_type<T>*>(lua_touserdata(L, -1));
-        lua_pop(L, 1);
-        assert(data->first == lars::get_type_index<T>());
-        delete data;
+        auto * data = get_object_ptr<T>(L,1);
+        data->~T();
         return 0;
       });
-      
       lua_setfield(L, -2, "__gc");
-
+      
       if(lars::get_type_index<T>() == lars::get_type_index<lars::AnyFunction>()){
         lua_pushcfunction(L, +[](lua_State *L){
           try{
@@ -142,38 +151,69 @@ namespace {
         lua_setfield(L, -2, "__call");
       }
       
-      lua_rawset(L, LUA_REGISTRYINDEX);
-      
-      lua_pushstring(L, key.c_str());
-      lua_rawget(L, LUA_REGISTRYINDEX);
+      lua_pushcfunction(L, +[](lua_State *L){
+        LARS_LUA_GLUE_LOG("indexing: " << as_string(L,1) << "." << as_string(L,2));
+        lua_getmetatable(L,1);
+        lua_rawgeti(L, -1, get_internal_object_ptr<T>(L,1)->type.hash() );
+        if(lua_isnil(L, -1)){
+          LARS_LUA_GLUE_LOG("no class table exists");
+          return 1;
+        }
+        lua_pushvalue(L, 2);
+        lua_gettable(L,-2);
+        return 1;
+      });
+      lua_setfield(L, -2, "__index");
+    
+      // lua_rawset(L, LUA_REGISTRYINDEX);
+      //lua_pushstring(L, key.c_str());
+      //lua_rawget(L, LUA_REGISTRYINDEX);
       LARS_LUA_GLUE_LOG("completed metatable: " << as_string(L));
       return;
     }
     
-    template <class T> T & create_and_push_object(lua_State * L){
-      lua_newtable(L);
-      LARS_LUA_GLUE_LOG("creating object for type " << lars::get_type_name<T>() << ":" << as_string(L));
+    template <class T> void set_subclass_metatable(lua_State * L,const lars::TypeIndex &type){
       push_class_metatable<T>(L);
-      lua_setmetatable(L, -2);
-      auto data = new internal_type<T>(lars::get_type_index<T>(),T());
-      lua_pushlightuserdata(L, data);
-      lua_rawseti(L, -2, OBJECT_POINTER_INDEX);
-      LARS_LUA_GLUE_LOG("after setting metatable: " << as_string(L));
-      return data->second;
+      lua_pushvalue(L, -2);
+      lua_rawseti(L, -2, type.hash());
     }
     
-    template <class T> T * get_object_ptr(lua_State *L,int idx = -1){
-      LARS_LUA_GLUE_LOG("getting object pointer for " << lars::get_type_name<T>() << " from " << as_string(L,idx));
-      if(!lua_istable(L, idx)){ LARS_LUA_GLUE_LOG("not a table"); return nullptr; }
-      lua_rawgeti(L, idx, OBJECT_POINTER_INDEX);
-      auto * data = static_cast<internal_type<T>*>(lua_touserdata(L, -1));
-      lua_pop(L, 1);
-      if(!data || data->first != lars::get_type_index<T>()){
-        if(data) LARS_LUA_GLUE_LOG("type mismatch: " << data->first.name());
-        else LARS_LUA_GLUE_LOG("received nullptr");
-        return nullptr;
+    template <class T> void push_subclass_metatable(lua_State * L,const lars::TypeIndex &type){
+      push_class_metatable<T>(L);
+      lua_rawgeti(L, -1, type.hash());
+      if(lua_isnil(L, -1)){
+        lua_newtable(L);
+        lua_rawseti(L, -2, type.hash());
+        lua_rawgeti(L, -1, type.hash());
       }
-      return &data->second;
+      lua_insert(L,-2);
+      lua_pop(L, 1);
+    }
+
+    template <class T,class ... Args> T & create_and_push_object(lua_State * L,lars::TypeIndex type_index = lars::get_type_index<T>(),Args ... args){
+      // lua_newtable(L);
+      LARS_LUA_GLUE_LOG("creating object for type " << type_index.name());
+      auto data = static_cast<internal_type<T>*>(lua_newuserdata(L,sizeof(internal_type<T>))); // new internal_type<T>(lars::get_type_index<T>(),T());
+      new(data) internal_type<T>(type_index,args...);
+      // lua_pushlightuserdata(L, data);
+      //lua_rawseti(L, -2, OBJECT_POINTER_INDEX);
+      LARS_LUA_GLUE_LOG("before setting metatable: " << as_string(L));
+      push_class_metatable<T>(L);
+      lua_setmetatable(L, -2);
+      LARS_LUA_GLUE_LOG("after setting metatable: " << as_string(L));
+      return *data;
+    }
+    
+    template <class T> internal_type<T> * get_internal_object_ptr(lua_State *L,int idx){
+      LARS_LUA_GLUE_LOG("getting object pointer for " << lars::get_type_name<T>());
+      auto * ptr = luaL_testudata(L,idx,class_mt_key<T>());
+      if(!ptr){ LARS_LUA_GLUE_LOG("incorrect type"); return nullptr; }
+      return static_cast<internal_type<T>*>(ptr);
+    }
+    
+    template <class T> T * get_object_ptr(lua_State *L,int idx){
+      auto data = get_internal_object_ptr<T>(L,idx);
+      return data ? &data->data : nullptr;
     }
     
     template <class T> T & get_object(lua_State *L,int idx){
@@ -198,7 +238,7 @@ namespace {
       struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<char>,lars::VisitableType<float>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<RegistryObject>>{
         lua_State * L;
         bool push_any = false;
-        void visit_default(const lars::VisitableBase &data)override{ LARS_LUA_GLUE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
+        void visit_default(const lars::VisitableBase &data)override{ LARS_LUA_GLUE_LOG("push any"); push_any = true; }
         void visit(const lars::VisitableType<bool> &data)override{ LARS_LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data.data); }
         void visit(const lars::VisitableType<int> &data)override{ LARS_LUA_GLUE_LOG("push int"); lua_pushinteger(L, data.data); }
         void visit(const lars::VisitableType<char> &data)override{ LARS_LUA_GLUE_LOG("push char"); lua_pushnumber(L, data.data); }
@@ -211,13 +251,13 @@ namespace {
       
       visitor.L = L;
       value.accept_visitor(visitor);
-      if(visitor.push_any) create_and_push_object<lars::Any>(L) = value;
+      if(visitor.push_any) create_and_push_object<lars::Any>(L,value.type()) = value;
     }
     
     lars::Any extract_value(lua_State * L,int idx,lars::TypeIndex type){
       LARS_LUA_GLUE_LOG("extract " << type.name() << " from " << as_string(L,idx));
       
-      auto assert_value_exists = [&](auto && v){ if(!v) throw luaL_error(L,("invalid argument type for argument " + std::to_string(idx+1) + ". Expected " + std::string(type.name().begin(),type.name().end()) + ", got " + as_string(L,idx)).c_str()); return v; };
+      auto assert_value_exists = [&](auto && v){ if(!v) throw luaL_error(L,("invalid argument type for argument " + std::to_string(idx-1) + ". Expected " + std::string(type.name().begin(),type.name().end()) + ", got " + as_string(L,idx)).c_str()); return v; };
       
       if(auto ptr = get_object_ptr<lars::Any>(L,idx)){
         if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
@@ -294,7 +334,7 @@ namespace lars {
   }
   
   void LuaGlue::connect_function(const Extension *parent,const std::string &name,const AnyFunction &f){
-    LARS_LUA_GLUE_LOG("connecting function " << name);
+    LARS_LUA_GLUE_LOG("connecting function " << name << " with parent " << &parent);
     lua_glue::push_from_registry(state, get_key(parent));
     lua_glue::push_function(state,f);
     lua_setfield(state, -2, name.c_str());
@@ -302,14 +342,31 @@ namespace lars {
   }
   
   void LuaGlue::connect_extension(const Extension *parent,const std::string &name,const Extension &e){
-    LARS_LUA_GLUE_LOG("connecting extension " << name);
+    LARS_LUA_GLUE_LOG("connecting extension " << name << " with parent " << &parent);
     lua_glue::push_from_registry(state, get_key(parent));
     lua_newtable(state);
     //lua_pushvalue(state, -1);
     keys[&e] = lua_glue::add_to_registry(state);
     lua_setfield(state, -2, name.c_str());
     lua_pop(state, 1);
+    
     e.connect(*this);
+    
+    if(e.class_type()){
+      lua_glue::push_from_registry(state, get_key(&e));
+      if(e.base_class_type()){
+        lua_glue::print_stack(state);
+        lua_newtable(state); // this will be the metatable
+        lua_pushstring(state, "__index");
+        lua_glue::push_subclass_metatable<Any>(state, *e.base_class_type());
+        lua_glue::print_stack(state);
+        lua_rawset(state, -3);
+        lua_setmetatable(state, -2);
+        lua_glue::print_stack(state);
+      }
+      lua_glue::set_subclass_metatable<Any>(state, *e.class_type());
+    }
+    
   }
   
 }

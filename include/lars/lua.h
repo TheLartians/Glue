@@ -13,7 +13,9 @@ namespace lars {
     lua_State * state = nullptr;
     std::unordered_map<const Extension *, std::string> keys;
     const std::string & get_key(const Extension *parent)const;
+    
   public:
+  
     LuaGlue(lua_State * state);
     ~LuaGlue();
     

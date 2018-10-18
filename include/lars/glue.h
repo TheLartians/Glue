@@ -28,7 +28,10 @@ namespace lars{
     
     MUTATOR_MEMBER_PROTECTED(FunctionMap, functions, , );
     MUTATOR_MEMBER_PROTECTED(ExtensionMap, extensions, , );
-  public:
+    MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, class_type, , );
+    MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, base_class_type, , );
+    public:
+    
     Event<std::string,AnyFunction> on_function_added;
     Event<std::string,const Extension &> on_extension_added;
 
@@ -46,9 +49,15 @@ namespace lars{
       if(it == extensions().end()) throw std::runtime_error("extension not found");
       return it->second;
     }
-    
+      
     void connect(Glue & glue)const;
+    
+    template <class T> void set_class(){ set_class_type(new TypeIndex(get_type_index<T>())); }
+    template <class T> void set_base_class(){ set_base_class_type(new TypeIndex(get_type_index<T>())); }
+    
+    virtual ~Extension(){}
   };
+  
   
 }
 
