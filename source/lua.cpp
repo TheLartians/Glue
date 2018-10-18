@@ -242,11 +242,11 @@ namespace {
       }
       
       if(type == lars::get_type_index<std::string>()){ return lars::make_any<std::string>(assert_value_exists(lua_tostring(L, idx))); }
-      else if(type == lars::get_type_index<double>()){ return lars::make_any<double>(assert_value_exists(lua_tonumber(L, idx))); }
-      else if(type == lars::get_type_index<float>()){ return lars::make_any<float>(assert_value_exists(lua_tonumber(L, idx))); }
-      else if(type == lars::get_type_index<char>()){ return lars::make_any<char>(assert_value_exists(lua_tonumber(L, idx))); }
-      else if(type == lars::get_type_index<int>()){ return lars::make_any<int>(assert_value_exists(lua_tointeger(L, idx))); }
-      else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>(assert_value_exists(lua_toboolean(L, idx))); }
+      else if(type == lars::get_type_index<double>()){ return lars::make_any<double>((lua_tonumber(L, idx))); }
+      else if(type == lars::get_type_index<float>()){ return lars::make_any<float>((lua_tonumber(L, idx))); }
+      else if(type == lars::get_type_index<char>()){ return lars::make_any<char>((lua_tonumber(L, idx))); }
+      else if(type == lars::get_type_index<int>()){ return lars::make_any<int>((lua_tointeger(L, idx))); }
+      else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>((lua_toboolean(L, idx))); }
       else if(type == lars::get_type_index<RegistryObject>()){ return lars::make_any<RegistryObject>(L,add_to_registry(L,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
         auto captured = std::make_shared<RegistryObject>(L,add_to_registry(L,idx));
