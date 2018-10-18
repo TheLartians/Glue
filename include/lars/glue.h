@@ -19,6 +19,7 @@ namespace lars{
   public:
     virtual void connect_function(const Extension *parent,const std::string &name,const AnyFunction &f) = 0;
     virtual void connect_extension(const Extension *parent,const std::string &name,const Extension &e) = 0;
+    virtual ~Glue(){}
   };
   
   class Extension{
