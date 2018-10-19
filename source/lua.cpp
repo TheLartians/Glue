@@ -4,7 +4,7 @@
 
 #include <lua.hpp>
 
-#define LARS_LUA_GLUE_DEBUG
+//#define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #define LARS_LUA_GLUE_LOG(X) LARS_LOG_WITH_PROMPT(X,"lua glue: ")
@@ -355,14 +355,11 @@ namespace lars {
     if(e.class_type()){
       lua_glue::push_from_registry(state, get_key(&e));
       if(e.base_class_type()){
-        lua_glue::print_stack(state);
         lua_newtable(state); // this will be the metatable
         lua_pushstring(state, "__index");
         lua_glue::push_subclass_metatable<Any>(state, *e.base_class_type());
-        lua_glue::print_stack(state);
         lua_rawset(state, -3);
         lua_setmetatable(state, -2);
-        lua_glue::print_stack(state);
       }
       lua_glue::set_subclass_metatable<Any>(state, *e.class_type());
     }
