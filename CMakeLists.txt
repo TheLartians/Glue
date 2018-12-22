@@ -7,10 +7,10 @@ endif()
 
 
 # ---- Configuration variables ----
-set(LARS_GLUE_USE_DUKTAPE FALSE CACHE BOOL "build glue for use with duktape")
-set(LARS_GLUE_USE_LUA FALSE CACHE BOOL "build glue for use with lua")
-set(LARS_GLUE_BUILD_LUA FALSE CACHE BOOL "build lua with glue")
-set(LARS_GLUE_BUILD_DUKTAPE FALSE CACHE BOOL "build duktape with glue")
+option(LARS_GLUE_USE_DUKTAPE "build glue for use with duktape" OFF)
+option(LARS_GLUE_USE_LUA "build glue for use with lua" OFF)
+option(LARS_GLUE_BUILD_LUA "build lua with glue" OFF)
+option(LARS_GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
 
 # ---- create project ----
 
