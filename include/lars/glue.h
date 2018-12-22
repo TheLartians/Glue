@@ -29,6 +29,7 @@ namespace lars{
     MUTATOR_MEMBER_PROTECTED(FunctionMap, functions, , );
     MUTATOR_MEMBER_PROTECTED(ExtensionMap, extensions, , );
     MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, class_type, , );
+    MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, shared_class_type, , );
     MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, base_class_type, , );
     public:
     
@@ -52,7 +53,10 @@ namespace lars{
       
     void connect(Glue & glue)const;
     
-    template <class T> void set_class(){ set_class_type(new TypeIndex(get_type_index<T>())); }
+    template <class T> void set_class(){
+      set_class_type(new TypeIndex(get_type_index<T>()));
+      set_shared_class_type(new TypeIndex(get_type_index<std::shared_ptr<T>>()));
+    }
     template <class T> void set_base_class(){ set_base_class_type(new TypeIndex(get_type_index<T>())); }
     
     virtual ~Extension(){}

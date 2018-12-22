@@ -363,6 +363,10 @@ namespace lars {
       }
       lua_glue::set_subclass_metatable<Any>(state, *e.class_type());
     }
+    if(e.shared_class_type()){
+      lua_glue::push_from_registry(state, get_key(&e));
+      lua_glue::set_subclass_metatable<Any>(state, *e.shared_class_type());
+    }
     
   }
   

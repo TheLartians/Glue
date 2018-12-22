@@ -183,6 +183,7 @@ int main(int argc, char *argv[]) {
   });
   my_class_extension->add_function("set_data", [](MyClass &o,const std::string &str){ o.data = str; });
   my_class_extension->add_function("get_data", [](MyClass &o){ return o.data; });
+  my_class_extension->add_function("shared_get_data", [](const std::shared_ptr<MyClass> &o){ return o->data; });
   extension.add_extension("MyClass", my_class_extension);
   
   assert(run_string("local a = MyClass.new(); a:set_data('a'); assert(a:get_data() == 'a');"));
@@ -198,13 +199,24 @@ int main(int argc, char *argv[]) {
   my_derived_class_extension->set_class<MyDerivedClass>();
   my_derived_class_extension->set_base_class<MyClass>();
   my_derived_class_extension->add_function("new", [](){ return MyDerivedClass(); });
+  my_derived_class_extension->add_function("shared_new", [](){ return std::make_shared<MyDerivedClass>(); });
   my_derived_class_extension->add_function("data_2", [](MyDerivedClass &c){ return c.data_2(); });
+  my_derived_class_extension->add_function("shared_data_2", [](const std::shared_ptr<MyDerivedClass> &c){ return c->data_2(); });
   extension.add_extension("MyDerivedClass", my_derived_class_extension);
 
   assert(run_string("a = MyDerivedClass.new()"));
   assert(run_string("assert(a:data_2() == '2')"));
   assert(run_string("a:set_data('hello')"));
   assert(run_string("assert(a:data_2() == 'hello2')"));
+  assert(run_string("assert(a:shared_data_2() == 'hello2')"));
+
+  assert(run_string("a = MyDerivedClass.shared_new()"));
+  assert(run_string("assert(a:data_2() == '2')"));
+  assert(run_string("a:set_data('hello')"));
+  assert(run_string("assert(a:shared_data_2() == 'hello2')"));
+  assert(run_string("assert(a:shared_get_data() == 'hello')"));
+
+  extension.get_function("log")("all tests ok");
   
   return 0;
 }
