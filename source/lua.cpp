@@ -286,6 +286,7 @@ namespace {
       else if(type == lars::get_type_index<float>()){ return lars::make_any<float>((lua_tonumber(L, idx))); }
       else if(type == lars::get_type_index<char>()){ return lars::make_any<char>((lua_tonumber(L, idx))); }
       else if(type == lars::get_type_index<int>()){ return lars::make_any<int>((lua_tointeger(L, idx))); }
+      else if(type == lars::get_type_index<unsigned>()){ return lars::make_any<int>((lua_tointeger(L, idx))); }
       else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>((lua_toboolean(L, idx))); }
       else if(type == lars::get_type_index<RegistryObject>()){ return lars::make_any<RegistryObject>(L,add_to_registry(L,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
@@ -305,7 +306,7 @@ namespace {
         return lars::make_any<lars::AnyFunction>(f);
       }
       else{
-        throw luaL_error(L,("cannot extract value <" + std::string(type.name().begin(),type.name().end()) + "> from \"" + as_string(L, idx) + "\"").c_str());
+        throw luaL_error(L,("cannot extract type '" + std::string(type.name().begin(),type.name().end()) + "' from \"" + as_string(L, idx) + "\"").c_str());
       }
     }
     
