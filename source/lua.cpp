@@ -4,7 +4,7 @@
 
 #include <lua.hpp>
 
-//#define LARS_LUA_GLUE_DEBUG
+// #define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #define LARS_LUA_GLUE_LOG(X) LARS_LOG_WITH_PROMPT(X,"lua glue: ")
@@ -41,7 +41,7 @@ namespace {
     RegistryKey add_to_registry(lua_State * L,int idx = -1){
       static int obj_id = 0;
       obj_id++;
-      auto key = "GLUE_REGISTRY_" + std::to_string(obj_id);
+      auto key = "lars.glue.registry." + std::to_string(obj_id);
       lua_pushstring(L, key.c_str());
       lua_pushvalue(L, idx > 0 ? idx : idx - 1);
       LARS_LUA_GLUE_LOG("add " << key << " to registry: " << as_string(L));
@@ -84,7 +84,7 @@ namespace {
     void push_value(lua_State * L,const lars::Any &value);
     
     std::string class_mt_key(const lars::TypeIndex &idx){
-      auto key = "glue." + std::string(idx.name().begin(),idx.name().end());
+      auto key = "lars.glue." + std::string(idx.name().begin(),idx.name().end());
       return key;
     }
     
@@ -165,29 +165,29 @@ namespace {
       });
       lua_setfield(L, -2, "__index");
     
-      // lua_rawset(L, LUA_REGISTRYINDEX);
-      //lua_pushstring(L, key.c_str());
-      //lua_rawget(L, LUA_REGISTRYINDEX);
       LARS_LUA_GLUE_LOG("completed metatable: " << as_string(L));
       return;
     }
     
+    // sets metatable for subclass. leaves stack unchanged.
     template <class T> void set_subclass_metatable(lua_State * L,const lars::TypeIndex &type){
       push_class_metatable<T>(L);
       lua_pushvalue(L, -2);
       lua_rawseti(L, -2, type.hash());
+      lua_pop(L, 1);
     }
     
     template <class T> void push_subclass_metatable(lua_State * L,const lars::TypeIndex &type){
-      push_class_metatable<T>(L);
-      lua_rawgeti(L, -1, type.hash());
+      push_class_metatable<T>(L); // get parent metatable
+      lua_rawgeti(L, -1, type.hash()); // get base metatable if it exists
       if(lua_isnil(L, -1)){
-        lua_newtable(L);
-        lua_rawseti(L, -2, type.hash());
-        lua_rawgeti(L, -1, type.hash());
+        lua_pop(L, 1); // pop nil
+        lua_newtable(L); // create subclass metatable
+        lua_rawseti(L, -2, type.hash()); // assign base metatble to parent;
+        lua_rawgeti(L, -1, type.hash()); // get base metatable
       }
-      lua_insert(L,-2);
-      lua_pop(L, 1);
+      lua_insert(L,-2); // set base metatable at -2
+      lua_pop(L, 1); // pop current and parent metatable
     }
 
     template <class T,class ... Args> T & create_and_push_object(lua_State * L,lars::TypeIndex type_index = lars::get_type_index<T>(),Args ... args){
@@ -296,7 +296,7 @@ namespace {
           captured->push();
           LARS_LUA_GLUE_LOG("calling registry " << captured->key << " with " << args.size() << " arguments: " << as_string(L));
           for(auto && arg:args) push_value(L, arg);
-          lua_call(L, args.size(), 1);
+          lua_call(L,static_cast<int>(args.size()), 1);
           LARS_LUA_GLUE_LOG("return " << as_string(L));
           if(lua_isnil(L, -1)){ lua_pop(L, 1); return lars::Any(); }
           auto result = extract_value(L, -1, lars::get_type_index<lars::Any>());
@@ -340,35 +340,46 @@ namespace lars {
     lua_glue::push_function(state,f);
     lua_setfield(state, -2, name.c_str());
     lua_pop(state, 1);
+    LARS_LUA_GLUE_LOG("finished connecting function " << name << " with parent " << &parent);
   }
   
   void LuaGlue::connect_extension(const Extension *parent,const std::string &name,const Extension &e){
     LARS_LUA_GLUE_LOG("connecting extension " << name << " with parent " << &parent);
-    lua_glue::push_from_registry(state, get_key(parent));
-    lua_newtable(state);
-    //lua_pushvalue(state, -1);
-    keys[&e] = lua_glue::add_to_registry(state);
-    lua_setfield(state, -2, name.c_str());
-    lua_pop(state, 1);
     
-    e.connect(*this);
+    lua_newtable(state); // create and push extension table
+    lua_glue::push_from_registry(state, get_key(parent)); // push parent
+    lua_pushvalue(state, -2); // push extension table again
+    keys[&e] = lua_glue::add_to_registry(state); // store extension table in registry
+    lua_setfield(state, -2, name.c_str()); // assign extension to parent
+    lua_pop(state, 1); // pop parent
+    
+    // extension table at top.
     
     if(e.class_type()){
-      lua_glue::push_from_registry(state, get_key(&e));
       if(e.base_class_type()){
-        lua_newtable(state); // this will be the metatable
-        lua_pushstring(state, "__index");
-        lua_glue::push_subclass_metatable<Any>(state, *e.base_class_type());
-        lua_rawset(state, -3);
-        lua_setmetatable(state, -2);
+        lua_newtable(state); // create class metatable
+        lua_pushstring(state, "__index"); // push __index
+        lua_glue::push_subclass_metatable<Any>(state, *e.base_class_type()); // push base class table
+        lua_rawset(state, -3); // set base class table as __index
+        // metatable at top
+        lua_setmetatable(state, -2); // set as metatable for extension table
       }
+      // extension table at top
       lua_glue::set_subclass_metatable<Any>(state, *e.class_type());
     }
+
+    // extension table at top
+
     if(e.shared_class_type()){
       lua_glue::push_from_registry(state, get_key(&e));
       lua_glue::set_subclass_metatable<Any>(state, *e.shared_class_type());
+      lua_pop(state, 1);
     }
     
+    e.connect(*this);
+    lua_pop(state, 1); // pop extension table
+    
+    LARS_LUA_GLUE_LOG("finished connecting extension " << name << " with parent " << &parent);
   }
   
 }
