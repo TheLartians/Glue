@@ -235,7 +235,7 @@ namespace {
         return lua_pushnil(L);
       }
       
-      struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<char>,lars::VisitableType<float>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<RegistryObject>>{
+      struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<char>,lars::VisitableType<float>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<unsigned>,lars::VisitableType<RegistryObject>>{
         lua_State * L;
         bool push_any = false;
         void visit_default(const lars::VisitableBase &data)override{ LARS_LUA_GLUE_LOG("push any"); push_any = true; }
@@ -244,6 +244,7 @@ namespace {
         void visit(const lars::VisitableType<char> &data)override{ LARS_LUA_GLUE_LOG("push char"); lua_pushnumber(L, data.data); }
         void visit(const lars::VisitableType<float> &data)override{ LARS_LUA_GLUE_LOG("push float"); lua_pushnumber(L, data.data); }
         void visit(const lars::VisitableType<double> &data)override{ LARS_LUA_GLUE_LOG("push double"); lua_pushnumber(L, data.data); }
+        void visit(const lars::VisitableType<unsigned> &data)override{ LARS_LUA_GLUE_LOG("push double"); lua_pushnumber(L, data.data); }
         void visit(const lars::VisitableType<std::string> &data)override{ LARS_LUA_GLUE_LOG("push string"); lua_pushstring(L, data.data.c_str()); }
         void visit(const lars::VisitableType<lars::AnyFunction> &data)override{ LARS_LUA_GLUE_LOG("push function"); push_function(L,data.data); }
         void visit(const lars::VisitableType<RegistryObject> &data)override{ LARS_LUA_GLUE_LOG("push object"); data.data.push(); }
