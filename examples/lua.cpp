@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   // store callback
   auto get_stored_function = []()->lars::AnyFunction &{ static lars::AnyFunction f; return f; };
   extension.add_function("store_callback",[&](const lars::AnyFunction &f){ get_stored_function() = f; });
-  extension.add_function("call_stored_callback",[&](){ get_stored_function()(); });
+  extension.add_function("call_stored_callback",[&](lars::AnyArguments &args){ return get_stored_function().call(args); });
 
   // create lua context
   lua_State *L = luaL_newstate();
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     return true;
   };
 
-  assert( run_string("function assert(x) if not x then error('assertion failed') end end") );
+  assert( run_string("function assert(x, msg) if not x then error(msg or 'assertion failed') end end") );
   assert( run_string("assert(1 == 1)") );
   assert( !run_string("assert(1 == 0)") );
   std::cout << "... as planned" << std::endl;
@@ -61,8 +61,8 @@ int main(int argc, char *argv[]) {
   assert(run_string("local new_log = get_log_function('test'); new_log(add(2,40))"));
   assert(run_string("local function myLog(x) log('myLog: ' .. x) print('test 2123') end call_callback(myLog)"));
 
-  assert(run_string("store_callback(function() log('stored callback has been called') end);"));
-  assert(run_string("call_stored_callback()"));
+  assert(run_string("store_callback(function(n) log('stored callback has been called') return n+1; end);"));
+  assert(run_string("assert(call_stored_callback(4) == 5)"));
 
   // classes and auto update
   static unsigned my_class_instances = 0;
@@ -215,6 +215,14 @@ int main(int argc, char *argv[]) {
   assert(run_string("a:set_data('hello')"));
   assert(run_string("assert(a:shared_data_2() == 'hello2')"));
   //  assert(run_string("assert(a:shared_get_data() == 'hello')"));
+
+  // Coroutines
+  assert(run_string("wait = coroutine.create(function() \
+                      store_callback(function(n) return function() return coroutine.yield(n); end end) \
+                      local res = call_stored_callback(7); \
+                      return res(); \
+                    end)"));
+  assert(run_string("local status, value = coroutine.resume(wait); assert(status and value == 7, value);"));
 
   extension.get_function("log")("all tests passed");
   

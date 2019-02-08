@@ -414,7 +414,7 @@ namespace {
           captured->push();
           LARS_LUA_GLUE_LOG("calling registry " << captured->key << " with " << args.size() << " arguments: " << as_string(L));
           for(auto && arg:args) push_value(L, arg);
-          lua_call(L, static_cast<int>(args.size()), 1);
+          lua_callk(L, static_cast<int>(args.size()), 1, 0, +[](lua_State*L, int status, lua_KContext ctx){ return 0; });
           LARS_LUA_GLUE_LOG("return " << as_string(L));
           if(lua_isnil(L, -1)){ lua_pop(L, 1); return lars::Any(); }
           auto result = extract_value(L, -1, lars::get_type_index<lars::Any>());
