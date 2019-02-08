@@ -4,7 +4,7 @@
 
 #include <lua.hpp>
 
-// #define LARS_LUA_GLUE_DEBUG
+//#define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #define LARS_LUA_GLUE_LOG(X) LARS_LOG_WITH_PROMPT(X,"lua glue: ")
@@ -83,8 +83,15 @@ namespace {
     lars::Any extract_value(lua_State * L,int idx,lars::TypeIndex type);
     void push_value(lua_State * L,const lars::Any &value);
     
+    // WARNING: contains longjmp. No exception is thrown and destructors are not called.
+    __attribute__ ((noreturn)) void throw_lua_error(lua_State * L, const std::string &err) {
+      luaL_error(L, ("glue: " + err).c_str());
+      throw "internal glue error"; // should never throw as luaL_error does a longjmp.
+    }
+    
     std::string class_mt_key(const lars::TypeIndex &idx){
-      auto key = "lars.glue." + std::string(idx.name().begin(),idx.name().end());
+      auto name = idx.name();
+      auto key = "lars.glue." + std::string(name.begin(),name.end());
       return key;
     }
     
@@ -94,7 +101,7 @@ namespace {
     }
     
     template <class T> void push_class_metatable(lua_State * L){
-      auto key = class_mt_key<T>();
+      static auto key = class_mt_key<T>();
       
       luaL_getmetatable(L, key);
       if(!lua_isnil(L, -1)) return;
@@ -106,6 +113,7 @@ namespace {
       
       lua_pushcfunction(L, +[](lua_State *L){
         auto * data = get_internal_object_ptr<T>(L,1);
+        if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
         auto type_name = std::string(data->type.name().begin(),data->type.name().end());
         lua_pushstring(L, (type_name + std::string("(") + std::to_string((size_t)&data->data) + ")").c_str());
         return 1;
@@ -114,6 +122,7 @@ namespace {
 
       lua_pushcfunction(L, +[](lua_State *L){
         auto * data = get_object_ptr<T>(L,1);
+        if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
         data->~T();
         return 0;
       });
@@ -131,7 +140,7 @@ namespace {
             for(int i=0;i<argc;++i) args.emplace_back(extract_value(L, i+2, f.argument_type(i)));
             auto result = f.call(args);
             if(result){
-              LARS_LUA_GLUE_LOG("returning " << result.type().name());
+              LARS_LUA_GLUE_LOG("returning type " << result.type().name());
               push_value(L, result);
               return 1;
             }
@@ -139,13 +148,13 @@ namespace {
             return 0;
           }
           catch(std::exception &e){
-            throw luaL_error(L, e.what());
+            throw_lua_error(L, std::string("caught exception: ") + e.what());
           }
           catch(const char *s){
-            throw luaL_error(L, s);
+            throw_lua_error(L, std::string("caught exception: ") + s);
           }
           catch(...){
-            throw luaL_error(L, "unknown exception");
+            throw_lua_error(L, "caught unknown exception");
           }
         });
         lua_setfield(L, -2, "__call");
@@ -189,14 +198,27 @@ namespace {
       lua_insert(L,-2); // set base metatable at -2
       lua_pop(L, 1); // pop current and parent metatable
     }
+    
+    template <class T> size_t buffer_size_for_type(){
+      return sizeof(internal_type<T>) + alignof(T) - 1;
+    }
+    
+    template <class T> T * align_buffer_pointer(void * ptr){
+      auto size = buffer_size_for_type<T>();
+      if (std::align(alignof(T), sizeof(T), ptr, size)){
+        T * result = reinterpret_cast<T*>(ptr);
+        return result;
+      }
+      throw std::runtime_error("glue: internal pointer alignment error");
+    }
 
-    template <class T,class ... Args> T & create_and_push_object(lua_State * L,lars::TypeIndex type_index = lars::get_type_index<T>(),Args ... args){
-      // lua_newtable(L);
-      LARS_LUA_GLUE_LOG("creating object for type " << type_index.name());
-      auto data = static_cast<internal_type<T>*>(lua_newuserdata(L,sizeof(internal_type<T>))); // new internal_type<T>(lars::get_type_index<T>(),T());
+    // does not lua_error
+    template <class T,class ... Args> T & create_and_push_object(lua_State * L,lars::TypeIndex type_index,Args ... args){
+      LARS_LUA_GLUE_LOG("creating object of type " << type_index.name());
+      auto ptr = lua_newuserdata(L,buffer_size_for_type<internal_type<T>>());
+      if(!ptr) throw std::runtime_error("glue: cannot allocate memory");
+      auto data = align_buffer_pointer<internal_type<T>>(ptr);
       new(data) internal_type<T>(type_index,args...);
-      // lua_pushlightuserdata(L, data);
-      //lua_rawseti(L, -2, OBJECT_POINTER_INDEX);
       LARS_LUA_GLUE_LOG("before setting metatable: " << as_string(L));
       push_class_metatable<T>(L);
       lua_setmetatable(L, -2);
@@ -205,22 +227,24 @@ namespace {
     }
     
     template <class T> internal_type<T> * get_internal_object_ptr(lua_State *L,int idx){
-      LARS_LUA_GLUE_LOG("getting object pointer for " << lars::get_type_name<T>());
+      // LARS_LUA_GLUE_LOG("getting object pointer for " << lars::get_type_name<T>());
       auto * ptr = luaL_testudata(L,idx,class_mt_key<T>());
-      if(!ptr){ LARS_LUA_GLUE_LOG("incorrect type"); return nullptr; }
-      return static_cast<internal_type<T>*>(ptr);
+      if(!ptr){
+        LARS_LUA_GLUE_LOG("cannot get internal pointer of type " << lars::get_type_name<T>() << ": incorrect type");
+        return nullptr;
+      }
+      return align_buffer_pointer<internal_type<T>>(ptr);
     }
     
     template <class T> T * get_object_ptr(lua_State *L,int idx){
-      auto data = get_internal_object_ptr<T>(L,idx);
+      internal_type<T> * data = get_internal_object_ptr<T>(L,idx);
       return data ? &data->data : nullptr;
     }
     
     template <class T> T & get_object(lua_State *L,int idx){
       auto * data = get_object_ptr<T>(L,idx);
       if(!data){
-        // never returns
-        throw luaL_error(L,("cannot extract c++ object of type " + lars::get_type_name<T>() + " from " + as_string(L,idx)).c_str());
+        throw_lua_error(L,("cannot extract c++ object of type " + lars::get_type_name<T>() + " from " + as_string(L,idx)).c_str());
       }
       return *data;
     }
@@ -252,13 +276,21 @@ namespace {
       
       visitor.L = L;
       value.accept_visitor(visitor);
-      if(visitor.push_any) create_and_push_object<lars::Any>(L,value.type()) = value;
+      if(visitor.push_any){
+        LARS_LUA_GLUE_LOG("will push any: " << value.type().name());
+        auto & result = create_and_push_object<lars::Any>(L,value.type(),value);
+        LARS_LUA_GLUE_LOG("pushed any: " << result.type().name());
+      }
     }
     
     lars::Any extract_value(lua_State * L,int idx,lars::TypeIndex type){
       LARS_LUA_GLUE_LOG("extract " << type.name() << " from " << as_string(L,idx));
-      
-      auto assert_value_exists = [&](auto && v){ if(!v) throw luaL_error(L,("invalid argument type for argument " + std::to_string(idx-1) + ". Expected " + std::string(type.name().begin(),type.name().end()) + ", got " + as_string(L,idx)).c_str()); return v; };
+      auto assert_value_exists = [&](auto && v){
+        if(!v){
+          throw std::runtime_error("invalid argument type for argument " + std::to_string(idx-1) + ". Expected " + std::string(type.name().begin(),type.name().end()) + ", got " + as_string(L,idx));
+        }
+        return v;
+      };
       
       if(auto ptr = get_object_ptr<lars::Any>(L,idx)){
         if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
@@ -292,12 +324,21 @@ namespace {
       else if(type == lars::get_type_index<RegistryObject>()){ return lars::make_any<RegistryObject>(L,add_to_registry(L,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
         auto captured = std::make_shared<RegistryObject>(L,add_to_registry(L,idx));
+        
         lars::AnyFunction f = [captured](lars::AnyArguments &args){
           lua_State * L = captured->L;
+          if(lua_status(L) == LUA_YIELD){
+            LARS_LUA_GLUE_LOG("resuming thread");
+            lua_resume(L, nullptr, 0);
+          }
+          if(lua_status(L) != LUA_OK){
+            LARS_LUA_GLUE_LOG("calling function with invalid status: " << lua_status(L));
+            throw "glue calling function with invalid lua status";
+          }
           captured->push();
           LARS_LUA_GLUE_LOG("calling registry " << captured->key << " with " << args.size() << " arguments: " << as_string(L));
           for(auto && arg:args) push_value(L, arg);
-          lua_call(L,static_cast<int>(args.size()), 1);
+          lua_call(L, static_cast<int>(args.size()), 1);
           LARS_LUA_GLUE_LOG("return " << as_string(L));
           if(lua_isnil(L, -1)){ lua_pop(L, 1); return lars::Any(); }
           auto result = extract_value(L, -1, lars::get_type_index<lars::Any>());
@@ -307,12 +348,12 @@ namespace {
         return lars::make_any<lars::AnyFunction>(f);
       }
       else{
-        throw luaL_error(L,("cannot extract type '" + std::string(type.name().begin(),type.name().end()) + "' from \"" + as_string(L, idx) + "\"").c_str());
+        throw std::runtime_error("cannot extract type '" + std::string(type.name().begin(),type.name().end()) + "' from \"" + as_string(L, idx) + "\"");
       }
     }
     
     void push_function(lua_State * L,const lars::AnyFunction &f){
-      create_and_push_object<lars::AnyFunction>(L) = f;
+      create_and_push_object<lars::AnyFunction>(L, lars::get_type_index<internal_type<lars::AnyFunction>>(),f);
     }
     
   }
