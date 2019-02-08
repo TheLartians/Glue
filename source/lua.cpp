@@ -89,6 +89,67 @@ namespace {
       throw "internal glue error"; // should never throw as luaL_error does a longjmp.
     }
     
+    // pushes the subclass table of the object at idx, if it exists
+    bool getSubclassTable(lua_State * L, int idx, const lars::TypeIndex &type){
+      lua_getmetatable(L, idx); // push metatable
+      auto t = lua_rawgeti(L, -1, type.hash() ); // push subclass table
+      if(t == LUA_TNIL){
+        lua_pop(L, 2); // leave stack unchagned
+        return false;
+      }
+      lua_copy(L, -1, -2); // replace metatable with subclass table
+      lua_pop(L, 1); // pops the top
+      return true;
+    }
+    
+    // pushes the subclass field of the object at idx, if it exists
+    bool getSubclassField(lua_State * L, int idx, const lars::TypeIndex &type, const std::string &name){
+      if(!getSubclassTable(L, idx, type)){ return false; } // push subclass table
+      auto t = lua_getfield(L, -1, name.c_str()); // get the fiels
+      if(t == LUA_TNIL){ // field type is nil
+        lua_pop(L, 2); // leave stack unchagned
+        return false;
+      }
+      lua_copy(L, -1, -2); // replace metatable with subclass table
+      lua_pop(L, 1); // pops the top
+      return true;
+    }
+    
+    // calls the subclass metamethod with arguments on the stack, if it exist
+    bool forwardSubclassCall(lua_State * L, int idx, const lars::TypeIndex &type, const std::string &name, int argc, int retc = 1){
+      if(!getSubclassField(L, idx, type, name)) return false; // push the method
+      for(auto i = 0; i<argc; ++i){
+        lua_pushvalue(L, -argc-1); // push the arguments
+      }
+      lua_call(L, argc, retc); // call the method. the result is now on top of the stack
+      return true;
+    }
+    
+    template <class T,const char *f, unsigned argc, unsigned resc> int forwardedClassMetamethod(lua_State * L){
+      auto * data = get_internal_object_ptr<T>(L,1);
+      if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
+      if(forwardSubclassCall(L, -1, data->type, f, argc, resc)) return resc;
+      throw_lua_error(L, "glue error: call undefined method " + std::string(f) + " on class object.");
+    }
+    
+    namespace metamethd_names {
+#define LARS_GLUE_ADD_FORWARDED_METAMETHOD(name) lua_pushcfunction(L, (forwardedClassMetamethod<T, metamethd_names::name, 2, 1>)); lua_setfield(L, -2, #name)
+      
+      char __eq[] = "__eq";
+      char __lt[] = "__lt";
+      char __le[] = "__le";
+      char __gt[] = "__gt";
+      char __ge[] = "__ge";
+      char __mul[] = "__mul";
+      char __div[] = "__div";
+      char __idiv[] = "__idiv";
+      char __add[] = "__add";
+      char __sub[] = "__sub";
+      char __mod[] = "__mod";
+      char __pow[] = "__pow";
+      char __unm[] = "__unm";
+    }
+
     std::string class_mt_key(const lars::TypeIndex &idx){
       auto name = idx.name();
       auto key = "lars.glue." + std::string(name.begin(),name.end());
@@ -114,11 +175,26 @@ namespace {
       lua_pushcfunction(L, +[](lua_State *L){
         auto * data = get_internal_object_ptr<T>(L,1);
         if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
+        if(forwardSubclassCall(L, -1, data->type, "__tostring", 1, 1)) return 1;
         auto type_name = std::string(data->type.name().begin(),data->type.name().end());
         lua_pushstring(L, (type_name + std::string("(") + std::to_string((size_t)&data->data) + ")").c_str());
         return 1;
       });
       lua_setfield(L, -2, "__tostring");
+      
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__eq);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__lt);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__le);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__gt);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__ge);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__mul);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__div);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__idiv);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__add);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__sub);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__mod);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__pow);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__unm);
 
       lua_pushcfunction(L, +[](lua_State *L){
         auto * data = get_object_ptr<T>(L,1);
