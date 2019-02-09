@@ -354,7 +354,7 @@ namespace {
       value.accept_visitor(visitor);
       if(visitor.push_any){
         LARS_LUA_GLUE_LOG("will push any: " << value.type().name());
-        auto & result = create_and_push_object<lars::Any>(L,value.type(),value);
+        create_and_push_object<lars::Any>(L,value.type(),value);
         LARS_LUA_GLUE_LOG("pushed any: " << result.type().name());
       }
     }
@@ -403,23 +403,36 @@ namespace {
         
         lars::AnyFunction f = [captured](lars::AnyArguments &args){
           lua_State * L = captured->L;
-          if(lua_status(L) == LUA_YIELD){
-            LARS_LUA_GLUE_LOG("resuming thread");
-            lua_resume(L, nullptr, 0);
+          auto status = lua_status(L);
+          if(status == LUA_YIELD){
+            LARS_LUA_GLUE_LOG("resuming coroutine");
+            // no main function pushed on stack as coroutine has yielded
+            status = lua_resume(L, nullptr, 0);
           }
-          if(lua_status(L) != LUA_OK){
-            LARS_LUA_GLUE_LOG("calling function with invalid status: " << lua_status(L));
-            throw "glue calling function with invalid lua status";
+          if(status != LUA_OK){
+            LARS_LUA_GLUE_LOG("calling function with invalid status: " << status);
+            throw std::runtime_error("glue: calling function with invalid lua status");
           }
           captured->push();
           LARS_LUA_GLUE_LOG("calling registry " << captured->key << " with " << args.size() << " arguments: " << as_string(L));
           for(auto && arg:args) push_value(L, arg);
-          lua_callk(L, static_cast<int>(args.size()), 1, 0, +[](lua_State*L, int status, lua_KContext ctx){ return 0; });
-          LARS_LUA_GLUE_LOG("return " << as_string(L));
-          if(lua_isnil(L, -1)){ lua_pop(L, 1); return lars::Any(); }
-          auto result = extract_value(L, -1, lars::get_type_index<lars::Any>());
-          lua_pop(L, 1);
-          return result;
+          // dummy continuation k to allow yielding
+          auto k = +[](lua_State*L, int status, lua_KContext ctx){ return 0; };
+          status = lua_pcallk(L, static_cast<int>(args.size()), 1, 1, 0, k);
+          if(status == LUA_OK){
+            LARS_LUA_GLUE_LOG("return " << as_string(L));
+            if(lua_isnil(L, -1)){
+              lua_pop(L, 1);
+              return lars::Any();
+            }
+            auto result = extract_value(L, -1, lars::get_type_index<lars::Any>());
+            lua_pop(L, 1);
+            return result;
+          } else if(status == LUA_ERRRUN){
+            throw std::runtime_error("glue: lua runtime error in callback: " + std::string(lua_tostring(L,-1)));
+          } else {
+            throw std::runtime_error("glue: lua error in callback: " + std::to_string(status));
+          }
         };
         return lars::make_any<lars::AnyFunction>(f);
       }

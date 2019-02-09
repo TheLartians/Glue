@@ -218,12 +218,17 @@ int main(int argc, char *argv[]) {
 
   // Coroutines
   assert(run_string("wait = coroutine.create(function() \
-                      store_callback(function(n) return function() return coroutine.yield(n); end end) \
-                      local res = call_stored_callback(7); \
-                      return res(); \
+                      store_callback(function(n) return coroutine.yield(n+3); end) \
+                      call_stored_callback(4); \
                     end)"));
   assert(run_string("local status, value = coroutine.resume(wait); assert(status and value == 7, value);"));
-
+  
+  try { // yielding from c will not work but should raise an exception
+    assert( extension.get_function("call_stored_callback")(1).get<int>() == 4);
+  } catch (std::exception &e) {
+    extension.get_function("log")(std::string(e.what()));
+  }
+  
   extension.get_function("log")("all tests passed");
   
   return 0;
