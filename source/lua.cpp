@@ -55,6 +55,11 @@ namespace {
       LARS_LUA_GLUE_LOG("push " << key << " from registry: " << as_string(L));
     }
     
+    void push_from_registry_i(lua_State * L, lua_Integer key){
+      lua_rawgeti(L, LUA_REGISTRYINDEX, key);
+      LARS_LUA_GLUE_LOG("push " << key << " from registry: " << as_string(L));
+    }
+
     void remove_from_registry(lua_State * L,const RegistryKey &key){
 #ifdef LARS_LUA_GLUE_DEBUG
       lua_pushstring(L, key.c_str());
@@ -74,7 +79,7 @@ namespace {
       RegistryObject(const RegistryObject &) = delete;
       RegistryObject(RegistryObject &&other):L(other.L),key(other.key){ other.L = nullptr; }
       ~RegistryObject(){ if(L){ LARS_LUA_GLUE_LOG("delete RegistryObject(" << key << ")"); remove_from_registry(L, key); } }
-      void push()const{ push_from_registry(L, key); }
+      void push(lua_State * L)const{ push_from_registry(L, key); }
     };
     
     template <class T> internal_type<T> * get_internal_object_ptr(lua_State *L,int idx);
@@ -347,15 +352,14 @@ namespace {
         void visit(const lars::VisitableType<unsigned> &data)override{ LARS_LUA_GLUE_LOG("push double"); lua_pushnumber(L, data.data); }
         void visit(const lars::VisitableType<std::string> &data)override{ LARS_LUA_GLUE_LOG("push string"); lua_pushstring(L, data.data.c_str()); }
         void visit(const lars::VisitableType<lars::AnyFunction> &data)override{ LARS_LUA_GLUE_LOG("push function"); push_function(L,data.data); }
-        void visit(const lars::VisitableType<RegistryObject> &data)override{ LARS_LUA_GLUE_LOG("push object"); data.data.push(); }
+        void visit(const lars::VisitableType<RegistryObject> &data)override{ LARS_LUA_GLUE_LOG("push object"); data.data.push(L); }
       } visitor;
       
       visitor.L = L;
       value.accept_visitor(visitor);
       if(visitor.push_any){
-        LARS_LUA_GLUE_LOG("will push any: " << value.type().name());
         create_and_push_object<lars::Any>(L,value.type(),value);
-        LARS_LUA_GLUE_LOG("pushed any: " << result.type().name());
+        LARS_LUA_GLUE_LOG("pushed any: " << value.type().name());
       }
     }
     
@@ -405,16 +409,21 @@ namespace {
           lua_State * L = captured->L;
           auto status = lua_status(L);
           if(status == LUA_YIELD){
-            LARS_LUA_GLUE_LOG("resuming coroutine");
-            // no main function pushed on stack as coroutine has yielded
-            status = lua_resume(L, nullptr, 0);
+            LARS_LUA_GLUE_LOG("the current coroutine has yielded");
+            LARS_LUA_GLUE_LOG("attempt to call the function from the main thread");
+            push_from_registry_i(L, LUA_RIDX_MAINTHREAD); // push the main thread
+            auto old_state = L;
+            L = lua_tothread(L,-1); // get the main state
+            lua_pop(old_state, 1);
+            if(!L) throw std::runtime_error("glue: cannot get main thread object");
+            status = lua_status(L);
           }
           if(status != LUA_OK){
             LARS_LUA_GLUE_LOG("calling function with invalid status: " << status);
             throw std::runtime_error("glue: calling function with invalid lua status");
           }
-          captured->push();
-          LARS_LUA_GLUE_LOG("calling registry " << captured->key << " with " << args.size() << " arguments: " << as_string(L));
+          captured->push(L);
+          LARS_LUA_GLUE_LOG("calling registry " << captured->key << " with " << args.size() << " arguments: " << as_string(L, -(args.size()+1)));
           for(auto && arg:args) push_value(L, arg);
           // dummy continuation k to allow yielding
           auto k = +[](lua_State*L, int status, lua_KContext ctx){ return 0; };
