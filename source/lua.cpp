@@ -4,7 +4,7 @@
 
 #include <lua.hpp>
 
-//#define LARS_LUA_GLUE_DEBUG
+// #define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #define LARS_LUA_GLUE_LOG(X) LARS_LOG_WITH_PROMPT(X,"lua glue: ")
@@ -72,10 +72,18 @@ namespace {
       lua_rawset(L, LUA_REGISTRYINDEX);
     }
     
+    lua_State * get_main_thread(lua_State * L){
+      push_from_registry_i(L, LUA_RIDX_MAINTHREAD); // push the main thread
+      auto main_L = lua_tothread(L,-1); // get the main state
+      lua_pop(L, 1); // pop the main thread object
+      if(!main_L) throw std::runtime_error("glue: cannot get main thread object");
+      return main_L;
+    }
+    
     struct RegistryObject{
       lua_State * L;
       RegistryKey key;
-      RegistryObject(lua_State * l,const RegistryKey &k):L(l),key(k){ LARS_LUA_GLUE_LOG("create registry object: " << key); }
+      RegistryObject(lua_State * l,const RegistryKey &k):L(get_main_thread(l)),key(k){ LARS_LUA_GLUE_LOG("create registry object: " << key); }
       RegistryObject(const RegistryObject &) = delete;
       RegistryObject(RegistryObject &&other):L(other.L),key(other.key){ other.L = nullptr; }
       ~RegistryObject(){ if(L){ LARS_LUA_GLUE_LOG("delete RegistryObject(" << key << ")"); remove_from_registry(L, key); } }
@@ -403,21 +411,16 @@ namespace {
       else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>((lua_toboolean(L, idx))); }
       else if(type == lars::get_type_index<RegistryObject>()){ return lars::make_any<RegistryObject>(L,add_to_registry(L,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
+        if(auto ptr = get_object_ptr<lars::AnyFunction>(L,idx)){
+          LARS_LUA_GLUE_LOG("extracted lars::AnyFunction");
+          return lars::make_any<lars::AnyFunction>(*ptr);
+        }
+        
         auto captured = std::make_shared<RegistryObject>(L,add_to_registry(L,idx));
         
         lars::AnyFunction f = [captured](lars::AnyArguments &args){
           lua_State * L = captured->L;
           auto status = lua_status(L);
-          if(status == LUA_YIELD){
-            LARS_LUA_GLUE_LOG("the current coroutine has yielded");
-            LARS_LUA_GLUE_LOG("attempt to call the function from the main thread");
-            push_from_registry_i(L, LUA_RIDX_MAINTHREAD); // push the main thread
-            auto old_state = L;
-            L = lua_tothread(L,-1); // get the main state
-            lua_pop(old_state, 1);
-            if(!L) throw std::runtime_error("glue: cannot get main thread object");
-            status = lua_status(L);
-          }
           if(status != LUA_OK){
             LARS_LUA_GLUE_LOG("calling function with invalid status: " << status);
             throw std::runtime_error("glue: calling function with invalid lua status");
