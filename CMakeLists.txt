@@ -1,19 +1,24 @@
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
 if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
       message(FATAL_ERROR "Source and build directories cannot be the same.")
 endif()
 
 # ---- Configuration variables ----
+
 option(GLUE_USE_DUKTAPE "build glue for use with duktape" OFF)
 option(GLUE_USE_LUA "build glue for use with lua" OFF)
 option(GLUE_BUILD_LUA "build lua with glue" OFF)
 option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
+option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
 
 # ---- create project ----
 
-project(Glue CXX)
+project(LarsGlue 
+  VERSION 0.1
+  LANGUAGES CXX
+)
 
 # ---- Dependencies ----
 
@@ -21,15 +26,14 @@ if (GLUE_BUILD_LUA)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
 endif()
 
-find_package(LHC 0.1 QUIET)
-if(NOT ${LHC_FOUND})
-  add_subdirectory(dependencies/LHC)
-endif()
+add_subdirectory(dependencies/LHC)
+add_subdirectory(dependencies/Event)
+add_subdirectory(dependencies/Visitor)
 
 # ---- enable c++14 ----
 
-if(NOT CMAKE_CXX_STANDARD GREATER 14)
-  set (CMAKE_CXX_STANDARD 14)
+if(NOT CMAKE_CXX_STANDARD GREATER 17)
+  set (CMAKE_CXX_STANDARD 17)
 endif()
 
 # ---- create module ----
@@ -49,7 +53,7 @@ endif()
 
 add_library(Glue ${sources} ${headers})
 
-target_link_libraries(Glue PUBLIC LHC)
+target_link_libraries(Glue PUBLIC LHC LarsEvent LarsGlue)
 
 if(GLUE_USE_LUA)
   target_link_libraries(Glue PUBLIC lua)  
@@ -61,7 +65,55 @@ target_include_directories(Glue
     $<INSTALL_INTERFACE:include>    
 )
 
-# ---- install ----
+# ---- Install ----
 
-# ---- tests ----
+include(CMakePackageConfigHelpers)
 
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/LarsGlueConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+install(
+  TARGETS LarsGlue
+  EXPORT LarsGlueTargets
+  LIBRARY DESTINATION lib COMPONENT Runtime
+  ARCHIVE DESTINATION lib COMPONENT Development
+  RUNTIME DESTINATION bin COMPONENT Runtime
+  PUBLIC_HEADER DESTINATION include COMPONENT Development
+  BUNDLE DESTINATION bin COMPONENT Runtime
+)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/LarsGlueConfig.cmake.in"
+  "${PROJECT_BINARY_DIR}/LarsGlueConfig.cmake"
+  INSTALL_DESTINATION lib/cmake/LarsGlue
+)
+
+install(
+  EXPORT LarsGlueTargets 
+  DESTINATION lib/cmake/LarsGlue
+)
+
+install(
+  FILES 
+    "${PROJECT_BINARY_DIR}/LarsGlueConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/LarsGlueConfig.cmake"
+  DESTINATION 
+    lib/cmake/LarsGlue
+)
+
+install(
+  DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+  DESTINATION include
+)
+
+# ---- Test ----
+
+if(${ENABLE_LARS_GLUE_TESTS})
+  ENABLE_TESTING()  
+  add_subdirectory(tests)  
+endif()
