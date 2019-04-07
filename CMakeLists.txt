@@ -15,12 +15,16 @@ option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
 
 # ---- create project ----
 
-project(LarsGlue 
+project(Glue 
   VERSION 0.1
   LANGUAGES CXX
 )
 
 # ---- Dependencies ----
+
+if(TARGET Glue)
+  return()
+endif()
 
 if (GLUE_BUILD_LUA)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
@@ -53,10 +57,10 @@ endif()
 
 add_library(Glue ${sources} ${headers})
 
-target_link_libraries(Glue PUBLIC LHC LarsEvent LarsGlue)
+target_link_libraries(Glue PUBLIC LHC LarsEvent Glue)
 
 if(GLUE_USE_LUA)
-  target_link_libraries(Glue PUBLIC lua)  
+  target_link_libraries(Glue PUBLIC liblua)  
 endif()
 
 target_include_directories(Glue
@@ -70,14 +74,14 @@ target_include_directories(Glue
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-  "${PROJECT_BINARY_DIR}/LarsGlueConfigVersion.cmake"
+  "${PROJECT_BINARY_DIR}/GlueConfigVersion.cmake"
   VERSION ${PROJECT_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
 install(
-  TARGETS LarsGlue
-  EXPORT LarsGlueTargets
+  TARGETS Glue
+  EXPORT GlueTargets
   LIBRARY DESTINATION lib COMPONENT Runtime
   ARCHIVE DESTINATION lib COMPONENT Development
   RUNTIME DESTINATION bin COMPONENT Runtime
@@ -88,22 +92,22 @@ install(
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-  "${PROJECT_SOURCE_DIR}/cmake/LarsGlueConfig.cmake.in"
-  "${PROJECT_BINARY_DIR}/LarsGlueConfig.cmake"
-  INSTALL_DESTINATION lib/cmake/LarsGlue
+  "${PROJECT_SOURCE_DIR}/cmake/GlueConfig.cmake.in"
+  "${PROJECT_BINARY_DIR}/GlueConfig.cmake"
+  INSTALL_DESTINATION lib/cmake/Glue
 )
 
 install(
-  EXPORT LarsGlueTargets 
-  DESTINATION lib/cmake/LarsGlue
+  EXPORT GlueTargets 
+  DESTINATION lib/cmake/Glue
 )
 
 install(
   FILES 
-    "${PROJECT_BINARY_DIR}/LarsGlueConfigVersion.cmake"
-    "${PROJECT_BINARY_DIR}/LarsGlueConfig.cmake"
+    "${PROJECT_BINARY_DIR}/GlueConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/GlueConfig.cmake"
   DESTINATION 
-    lib/cmake/LarsGlue
+    lib/cmake/Glue
 )
 
 install(
