@@ -23,7 +23,7 @@ endif()
 
 find_package(LHC 0.1 QUIET)
 if(NOT ${LHC_FOUND})
-  add_subdirectory(dependencies/LHC)  
+  add_subdirectory(dependencies/LHC)
 endif()
 
 # ---- enable c++14 ----
@@ -40,8 +40,7 @@ set(sources ${glue_source_dir}/glue.cpp)
 file(GLOB headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/*.h)
 
 if(GLUE_USE_DUKTAPE)
-  set(sources ${sources} ${PROJECT_SOURCE_DIR}/duktape.cpp)
-  include_directories(${duktape_INCLUDE_DIRS})
+  list(APPEND sources ${glue_source_dir}/duktape.cpp)
 endif()
 
 if(GLUE_USE_LUA)
@@ -64,6 +63,5 @@ target_include_directories(Glue
 
 # ---- install ----
 
-
-# ---- examples ----
+# ---- tests ----
 
