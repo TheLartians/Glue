@@ -4,9 +4,9 @@ if(TARGET LHC)
   return()
 endif()
 
-set(lhc_min_version 0.2)
+set(LHC_min_version 0.3)
 
-find_package(LHC ${lhc_min_version} QUIET)
+find_package(LHC ${LHC_min_version} QUIET)
 
 if(${LHC_FOUND})
   set_target_properties(LHC 
@@ -19,8 +19,7 @@ else()
   download_project(
     PROJ LHC
     GIT_REPOSITORY https://github.com/TheLartians/LHC.git
-    GIT_TAG include-guards
-    # GIT_TAG "v${lhc_min_version}"
+    GIT_TAG "v${LHC_min_version}"
     UPDATE_DISCONNECTED 1
     QUIET
   )

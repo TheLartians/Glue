@@ -4,7 +4,7 @@ if(TARGET LarsVisitor)
   return()
 endif()
 
-set(LarsVisitor_MIN_VERSION 0.1)
+set(LarsVisitor_MIN_VERSION 0.2)
 
 find_package(LarsVisitor ${LarsVisitor_MIN_VERSION} QUIET)
 
@@ -19,7 +19,7 @@ else()
   download_project(
     PROJ LarsVisitor
     GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
-    GIT_TAG update-dependencies # "v${LarsVisitor_MIN_VERSION}"
+    GIT_TAG "v${LarsVisitor_MIN_VERSION}"
     UPDATE_DISCONNECTED 1
     QUIET
   )

@@ -4,7 +4,7 @@ if(TARGET LarsEvent)
   return()
 endif()
 
-set(LarsEvent_MIN_VERSION 0.1)
+set(LarsEvent_MIN_VERSION 0.2)
 
 find_package(LarsEvent ${LarsEvent_MIN_VERSION} QUIET)
 
@@ -19,8 +19,7 @@ else()
   download_project(
     PROJ LarsEvent
     GIT_REPOSITORY https://github.com/TheLartians/LarsEvent.git
-    # GIT_TAG "v${LarsEvent_MIN_VERSION}"
-    GIT_TAG include-guards
+    GIT_TAG "v${LarsEvent_MIN_VERSION}"
     UPDATE_DISCONNECTED 1
     QUIET
   )
