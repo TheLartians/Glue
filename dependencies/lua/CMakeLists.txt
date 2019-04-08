@@ -33,3 +33,9 @@ install(
   PUBLIC_HEADER DESTINATION include/lua COMPONENT Development
   BUNDLE DESTINATION bin/lua COMPONENT Runtime
 )
+
+install(
+  EXPORT libluaTargets 
+  DESTINATION lib/glue 
+  EXPORT_LINK_INTERFACE_LIBRARIES
+)

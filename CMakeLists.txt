@@ -58,10 +58,10 @@ endif()
 add_library(Glue ${sources} ${headers})
 
 if(GLUE_ENABLE_LUA)
-  target_link_libraries(Glue PRIVATE libluaTargets)  
+  target_link_libraries(Glue PRIVATE liblua)  
 endif()
 
-target_link_libraries(Glue PUBLIC LHC LarsEvent LarsVisitor)
+target_link_libraries(Glue PUBLIC LHC LarsEvent) # LarsVisitor ???
 
 target_include_directories(Glue
   PUBLIC
