@@ -1,26 +1,25 @@
 #pragma once
 
-
-#include <lua/lua.hpp>
 #include <lars/glue.h>
 
 #include <string>
 #include <unordered_map>
 
+struct duk_hthread;
+typedef struct duk_hthread duk_context;
+
 namespace lars {
   
-  class LuaGlue:public Glue{
-    lua_State * state = nullptr;
+  class DuktapeGlue:public Glue{
+    duk_context * ctx = nullptr;
     std::unordered_map<const Extension *, std::string> keys;
-    const std::string & get_key(const Extension *parent)const;
-    
   public:
-  
-    LuaGlue(lua_State * state);
-    ~LuaGlue();
+    DuktapeGlue(duk_context * c);
+    ~DuktapeGlue();
     
+    std::string get_key(const Extension *parent)const;
     void connect_function(const Extension *parent,const std::string &name,const AnyFunction &f)override;
     void connect_extension(const Extension *parent,const std::string &name,const Extension &e)override;
   };
-  
+
 }

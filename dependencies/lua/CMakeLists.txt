@@ -9,7 +9,6 @@ download_project(
   GIT_REPOSITORY https://github.com/lua/lua.git
   GIT_TAG v5-3-4
   GIT_SHALLOW 1
-  SOURCE_DIR ${CMAKE_BINARY_DIR}/lua
   UPDATE_DISCONNECTED 1
   QUIET
 )
@@ -21,7 +20,7 @@ add_library(liblua STATIC ${lua_sources} ${lua_headers})
 
 target_include_directories(liblua
   PUBLIC
-    $<BUILD_INTERFACE:${lua_SOURCE_DIR}/..>
+    $<BUILD_INTERFACE:${lua_SOURCE_DIR}>
 )
 
 install(
@@ -36,6 +35,5 @@ install(
 
 install(
   EXPORT libluaTargets 
-  DESTINATION lib/glue 
-  EXPORT_LINK_INTERFACE_LIBRARIES
+  DESTINATION lib 
 )

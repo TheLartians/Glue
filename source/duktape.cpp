@@ -1,11 +1,12 @@
 
-#include <lars/duktape.h>
+#include <lars/duktape_glue.h>
 #include <lars/log.h>
 #include <lars/to_string.h>
 #include <lars/destructor.h>
+#include <duktape.h>
 
 #include <unordered_map>
-#include <duktape/duktape.h>
+#include <duktape.h>
 
 //#define LARS_GLUE_DUK_DEBUG
 
@@ -17,8 +18,6 @@
 #define DUK_VERBOSE_LOG(X)
 #define DUK_MEMORY_DEBUG_LOG(X)
 #endif
-
-
 
 namespace {
   

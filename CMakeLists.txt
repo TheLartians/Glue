@@ -30,11 +30,15 @@ if (GLUE_BUILD_LUA)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
 endif()
 
+if (GLUE_BUILD_DUKTAPE)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/duktape)
+endif()
+
 add_subdirectory(dependencies/LHC)
 add_subdirectory(dependencies/Event)
 add_subdirectory(dependencies/Visitor)
 
-# ---- enable c++14 ----
+# ---- enable C++ ----
 
 if(NOT CMAKE_CXX_STANDARD GREATER 17)
   set (CMAKE_CXX_STANDARD 17)
@@ -58,7 +62,11 @@ endif()
 add_library(Glue ${sources} ${headers})
 
 if(GLUE_ENABLE_LUA)
-  target_link_libraries(Glue PRIVATE liblua)  
+  target_link_libraries(Glue PUBLIC liblua)  
+endif()
+
+if(GLUE_ENABLE_DUKTAPE)
+  target_link_libraries(Glue PUBLIC libduktape)  
 endif()
 
 target_link_libraries(Glue PUBLIC LHC LarsEvent) # LarsVisitor ???

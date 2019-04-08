@@ -27,6 +27,7 @@ add_executable(glue-tests ${glue-tests_sources})
 add_dependencies(glue-tests catch2-project)
 target_link_libraries(glue-tests catch2)
 target_link_libraries(glue-tests Glue)
+target_link_libraries(glue-tests)
 
 # ---- Add glue-tests ----
 
