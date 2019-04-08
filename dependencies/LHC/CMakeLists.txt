@@ -21,6 +21,7 @@ else()
     GIT_REPOSITORY https://github.com/TheLartians/LHC.git
     GIT_TAG "v${LHC_min_version}"
     UPDATE_DISCONNECTED 1
+    GIT_SHALLOW 1
     QUIET
   )
 

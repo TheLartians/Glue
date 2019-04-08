@@ -21,6 +21,7 @@ else()
     GIT_REPOSITORY https://github.com/TheLartians/LarsEvent.git
     GIT_TAG "v${LarsEvent_MIN_VERSION}"
     UPDATE_DISCONNECTED 1
+    GIT_SHALLOW 1
     QUIET
   )
 
