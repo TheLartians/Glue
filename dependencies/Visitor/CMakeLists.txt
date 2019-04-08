@@ -26,4 +26,3 @@ else()
 
   add_subdirectory(${LarsVisitor_SOURCE_DIR} ${LarsVisitor_BINARY_DIR})
 endif()
-

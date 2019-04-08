@@ -7,8 +7,8 @@ endif()
 
 # ---- Configuration variables ----
 
-option(GLUE_USE_DUKTAPE "build glue for use with duktape" OFF)
-option(GLUE_USE_LUA "build glue for use with lua" OFF)
+option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
+option(GLUE_ENABLE_LUA "build glue for use with lua" OFF)
 option(GLUE_BUILD_LUA "build lua with glue" OFF)
 option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
 option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
@@ -47,21 +47,21 @@ set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 set(sources ${glue_source_dir}/glue.cpp)
 file(GLOB headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/*.h)
 
-if(GLUE_USE_DUKTAPE)
+if(GLUE_ENABLE_DUKTAPE)
   list(APPEND sources ${glue_source_dir}/duktape.cpp)
 endif()
 
-if(GLUE_USE_LUA)
+if(GLUE_ENABLE_LUA)
   list(APPEND sources ${glue_source_dir}/lua.cpp)
 endif()
 
 add_library(Glue ${sources} ${headers})
 
-target_link_libraries(Glue PUBLIC LHC LarsEvent Glue)
-
-if(GLUE_USE_LUA)
-  target_link_libraries(Glue PUBLIC liblua)  
+if(GLUE_ENABLE_LUA)
+  target_link_libraries(Glue PRIVATE libluaTargets)  
 endif()
+
+target_link_libraries(Glue PUBLIC LHC LarsEvent LarsVisitor)
 
 target_include_directories(Glue
   PUBLIC
@@ -81,7 +81,7 @@ write_basic_package_version_file(
 
 install(
   TARGETS Glue
-  EXPORT GlueTargets
+  EXPORT GlueTargets 
   LIBRARY DESTINATION lib COMPONENT Runtime
   ARCHIVE DESTINATION lib COMPONENT Development
   RUNTIME DESTINATION bin COMPONENT Runtime

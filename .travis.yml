@@ -38,13 +38,8 @@ before_install:
   - wget -O cmake.sh https://cmake.org/files/v3.10/cmake-3.10.0-rc1-Linux-x86_64.sh 
   - sudo sh cmake.sh --skip-license --exclude-subdir --prefix=/usr/local
 
-install:
-  - cmake -H. -Bbuild
-  - cmake --build build
-  - sudo cmake --build build --target install
-
 script:
-  - cmake -Htests -Bbuild/test  
-  - cmake --build build/test
-  - CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
+  - cmake -H. -Bbuild -DGLUE_ENABLE_LUA=true -DGLUE_BUILD_LUA=true -DENABLE_LARS_GLUE_TESTS=true
+  - cmake --build build
+  - CTEST_OUTPUT_ON_FAILURE=1 cmake --build build --target test
  

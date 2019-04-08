@@ -2,7 +2,7 @@
 
 #include <lars/log.h>
 
-#include <lua.hpp>
+#include <lua/lua.hpp>
 
 // #define LARS_LUA_GLUE_DEBUG
 
