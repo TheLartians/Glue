@@ -4,7 +4,7 @@ if(TARGET LarsVisitor)
   return()
 endif()
 
-set(LarsVisitor_MIN_VERSION 0.2)
+set(LarsVisitor_MIN_VERSION 0.3)
 
 find_package(LarsVisitor ${LarsVisitor_MIN_VERSION} QUIET)
 
