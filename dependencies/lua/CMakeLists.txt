@@ -8,6 +8,7 @@ download_project(
   PROJ lua
   GIT_REPOSITORY https://github.com/lua/lua.git
   GIT_TAG v5-3-4
+  GIT_SHALLOW 1
   SOURCE_DIR ${CMAKE_BINARY_DIR}/lua
   UPDATE_DISCONNECTED 1
   QUIET
