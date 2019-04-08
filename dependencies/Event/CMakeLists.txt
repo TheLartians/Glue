@@ -4,7 +4,7 @@ if(TARGET LarsEvent)
   return()
 endif()
 
-set(LarsEvent_MIN_VERSION 0.2)
+set(LarsEvent_MIN_VERSION 1.0)
 
 find_package(LarsEvent ${LarsEvent_MIN_VERSION} QUIET)
 
