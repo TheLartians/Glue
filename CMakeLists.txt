@@ -71,7 +71,7 @@ if(GLUE_ENABLE_DUKTAPE)
   target_link_libraries(Glue PUBLIC libduktape)  
 endif()
 
-target_link_libraries(Glue PUBLIC LHC LarsEvent) # LarsVisitor ???
+target_link_libraries(Glue PUBLIC LHC LarsEvent LarsVisitor)
 
 target_include_directories(Glue
   PUBLIC
