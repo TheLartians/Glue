@@ -49,14 +49,16 @@ endif()
 set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources ${glue_source_dir}/glue.cpp)
-file(GLOB headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/*.h)
+set(headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue.h)
 
 if(GLUE_ENABLE_DUKTAPE)
-  list(APPEND sources ${glue_source_dir}/duktape.cpp)
+list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)
+list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/duktape_glue.h)
 endif()
 
 if(GLUE_ENABLE_LUA)
-  list(APPEND sources ${glue_source_dir}/lua.cpp)
+  list(APPEND sources ${glue_source_dir}/lua_glue.cpp)
+  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/lua_glue.h)
 endif()
 
 add_library(Glue ${sources} ${headers})

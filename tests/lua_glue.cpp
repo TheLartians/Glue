@@ -30,25 +30,36 @@ TEST_CASE("LuaGlue"){
   
   // create lua context
   lars::LuaState lua;
+  auto initialStackSize = lua.stackSize();
   lua.openLibs();
-  
-  lars::LuaGlue lua_glue = lua.getGlue();
-  extension.connect(lua_glue);
+  REQUIRE(lua.stackSize() == initialStackSize);
+  extension.connect(lua.getGlue());
+  REQUIRE(lua.stackSize() == initialStackSize);
   
   SECTION("test lua execution"){
     REQUIRE_NOTHROW(lua.run("function assert(x, msg) if not x then error(msg or 'assertion failed') end end") );
+    REQUIRE(lua.stackSize() == initialStackSize);
     REQUIRE_NOTHROW(lua.run("assert(1 == 1)") );
-    REQUIRE_THROWS(lua.run("assert(1 == 0)") );
+    REQUIRE_THROWS_AS(lua.run("assert(1 == 0)"), lars::LuaState::Error);
+    REQUIRE(lua.stackSize() == initialStackSize);
+    REQUIRE(lua.getValue<std::string>("'Hello World!'") == "Hello World!");
+    REQUIRE(lua.getValue<int>("42") == 42);
+    REQUIRE_THROWS_AS(lua.run("error('')"), lars::LuaState::Error);
+    struct Test {};
+    REQUIRE_THROWS(lua.getValue<Test>("42"));
+    REQUIRE(lua.stackSize() == initialStackSize);
   }
   
   SECTION("test calling extension"){
     REQUIRE_NOTHROW(lua.run("local value = meaning_of_life(); assert(value == 42)"));
     REQUIRE_NOTHROW(lua.run("assert(add(2,3) == 5);"));
+    REQUIRE(lua.stackSize() == initialStackSize);
   }
   
   SECTION("test callbacks"){
     REQUIRE_NOTHROW(lua.run("store_callback(function(n) return n+1; end);"));
     REQUIRE_NOTHROW(lua.run("assert(call_stored_callback(4) == 5)"));
+    REQUIRE(lua.stackSize() == initialStackSize);
   }
   
   // classes and auto update
@@ -84,6 +95,7 @@ TEST_CASE("LuaGlue"){
     REQUIRE_NOTHROW(lua.run("store_callback(function()end)"));
     lua.collectGarbage();
     REQUIRE(my_class_instances == 0);
+    REQUIRE(lua.stackSize() == initialStackSize);
   }
     
   SECTION("inner extensions"){
@@ -96,6 +108,7 @@ TEST_CASE("LuaGlue"){
       inner_extension->add_function("after", []()->std::string{ return "inner=>after"; });
       REQUIRE_NOTHROW(lua.run("assert(inner.after() == 'inner=>after')"));
     }
+    REQUIRE(lua.stackSize() == initialStackSize);
   }
   
   SECTION("extensions extension"){
@@ -116,10 +129,10 @@ TEST_CASE("LuaGlue"){
       auto f = extension.get_extension("lua_extension")->get_function("f");
       REQUIRE(f);
       REQUIRE_NOTHROW(f(std::string("x"),42));
-      REQUIRE_NOTHROW(lua.run("assert(tmp == 'called f(x,42)')"));
+      REQUIRE(lua.getValue<std::string>("tmp") == "called f(x,42)");
       REQUIRE_NOTHROW(f(1));
-      REQUIRE_NOTHROW(lua.run("assert(tmp == 'called f(1,nil)')"));
-      REQUIRE_NOTHROW(lua.run("assert(extension)"));
+      REQUIRE(lua.getValue<std::string>("tmp") == "called f(1,nil)");
+      REQUIRE(lua.stackSize() == initialStackSize);
     }
     
     SECTION("call lua function with return value"){
@@ -134,6 +147,7 @@ TEST_CASE("LuaGlue"){
       REQUIRE_NOTHROW(res = extension.get_extension("lua_extension")->get_function("add")(2,40));
       REQUIRE(res);
       REQUIRE(res.get_numeric<int>() == 42);
+      REQUIRE(lua.stackSize() == initialStackSize);
     }
     
     SECTION("call and return lua object"){
@@ -153,6 +167,8 @@ TEST_CASE("LuaGlue"){
       set_key_value(table,"a",1);
       set_key_value(table,"b","2");
       set_key_value(table,"c",create_table());
+      
+      REQUIRE(lua.stackSize() == initialStackSize);
     }
   
   }
@@ -172,6 +188,7 @@ TEST_CASE("LuaGlue"){
     REQUIRE_THROWS(lua.run("assert(get_Cvalue(create_B()) == 2)"));
     REQUIRE_THROWS(lua.run("get_value(create_my_class())"));
     REQUIRE_THROWS(lua.run("get_value('test')"));
+    REQUIRE(lua.stackSize() == initialStackSize);
   }
   
   SECTION("class extensions"){
@@ -216,6 +233,7 @@ TEST_CASE("LuaGlue"){
       REQUIRE_NOTHROW(lua.run("assert(a:data_2() == '2')"));
       REQUIRE_NOTHROW(lua.run("a:set_data('hello')"));
       REQUIRE_NOTHROW(lua.run("assert(a:shared_data_2() == 'hello2')"));
+      REQUIRE(lua.stackSize() == initialStackSize);
       //  REQUIRE_NOTHROW(lua.run("assert(a:shared_get_data() == 'hello')"));
     }
   }

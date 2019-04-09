@@ -11,11 +11,10 @@ extern "C" {
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
-#include <string>
 namespace { std::string ____indent; }
 #define INCREASE_INDENT ____indent += "  "
 #define DECREASE_INDENT ____indent.erase(____indent.end() - 2, ____indent.end())
-#define LARS_LUA_GLUE_LOG(X) LARS_LOG_WITH_PROMPT(____indent << X,"lua glue: ")
+#define LARS_LUA_GLUE_LOG(X) LARS_LOG("lua glue[" << (L ? lua_gettop(L) : -1) << "]: " << ____indent << X)
 #else
 #define LARS_LUA_GLUE_LOG(X)
 #define INCREASE_INDENT
@@ -52,9 +51,9 @@ namespace {
       static int obj_id = 0;
       obj_id++;
       auto key = "lars.glue.registry." + std::to_string(obj_id);
+      LARS_LUA_GLUE_LOG("adding " << key << " to registry: " << as_string(L));
       lua_pushstring(L, key.c_str());
       lua_pushvalue(L, idx > 0 ? idx : idx - 1);
-      LARS_LUA_GLUE_LOG("add " << key << " to registry: " << as_string(L));
       lua_rawset(L, LUA_REGISTRYINDEX);
       return key;
     }
@@ -110,7 +109,9 @@ namespace {
         LARS_LUA_GLUE_LOG("create registry object: " << key << " with main context " << L);
       }
       RegistryObject(const RegistryObject &) = delete;
-      RegistryObject(RegistryObject &&other):L(other.L),key(other.key){ other.L = nullptr; }
+      RegistryObject(RegistryObject &&other):L(other.L),key(other.key){
+        other.L = nullptr;
+      }
       ~RegistryObject(){
         if(L && *lua_active){
           LARS_LUA_GLUE_LOG("delete RegistryObject(" << key << ")");
@@ -135,7 +136,12 @@ namespace {
     
     __attribute__ ((noreturn)) void throw_lua_exception(lua_State * L, const std::string_view &err){
       lua_pushlstring(L, err.data(), err.size());
-      throw lars::LuaState::Error(L);
+      throw lars::LuaState::Error(L, lua_gettop(L)-1);
+    }
+    
+    __attribute__ ((noreturn)) void pop_and_throw_lua_exception(lua_State * L, const std::string_view &err){
+      lua_pop(L, 1);
+      throw_lua_exception(L, err);
     }
     
     // pushes the subclass table of the object at idx, if it exists
@@ -425,6 +431,8 @@ namespace {
                             lars::TypeIndex type,
                             __attribute__ ((noreturn)) void (*error_handler)(lua_State *, const std::string_view &)){
       LARS_LUA_GLUE_LOG("extract " << type.name() << " from " << as_string(L,idx));
+      INCREASE_INDENT;
+      
       auto assert_value_exists = [&](auto && v){
         if(!v){
           error_handler(L, "invalid argument type for argument " + std::to_string(idx-1) + ". Expected " + std::string(type.name().begin(),type.name().end()) + ", got " + as_string(L,idx));
@@ -433,6 +441,7 @@ namespace {
       };
       
       if(auto ptr = get_object_ptr<lars::Any>(L,idx)){
+        DECREASE_INDENT;
         if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
           LARS_LUA_GLUE_LOG("extracted any<" << ptr->type().name() << ">");
           return *ptr;
@@ -454,6 +463,7 @@ namespace {
         }
       }
       
+      DECREASE_INDENT;
       if(type == lars::get_type_index<std::string>()){ return lars::make_any<std::string>(assert_value_exists(lua_tostring(L, idx))); }
       else if(type == lars::get_type_index<double>()){ return lars::make_any<double>((lua_tonumber(L, idx))); }
       else if(type == lars::get_type_index<float>()){ return lars::make_any<float>((lua_tonumber(L, idx))); }
@@ -473,6 +483,9 @@ namespace {
         auto captured = std::make_shared<RegistryObject>(L,add_to_registry(L,idx));
         
         lars::AnyFunction f = [captured](lars::AnyArguments &args){
+          if (!*captured->lua_active) {
+            throw std::runtime_error("calling function with invalid lua context");
+          }
           lua_State * L = captured->L;
           LARS_LUA_GLUE_LOG("using captured context: " << L);
           auto status = lua_status(L);
@@ -511,7 +524,9 @@ namespace {
         };
         return lars::make_any<lars::AnyFunction>(f);
       } else{
-        error_handler(L, "cannot extract type '" + std::string(type.name().begin(),type.name().end()) + "' from \"" + as_string(L, idx) + "\"");
+        auto msg = "cannot extract type '" + std::string(type.name().begin(),type.name().end()) + "' from \"" + as_string(L, idx) + "\"";
+        LARS_LUA_GLUE_LOG(msg);
+        error_handler(L, msg);
       }
     }
     
@@ -527,6 +542,7 @@ namespace {
       push_from_registry(L, LUA_VALID_REGISTRY_KEY);
       if (!lua_isnil(L, -1)) {
         auto result = get_object<std::shared_ptr<bool>>(L);
+        lua_pop(L, 1);
         DECREASE_INDENT;
         return result;
       }
@@ -545,9 +561,14 @@ namespace {
 
 namespace lars {
 
-  LuaGlue::LuaGlue(lua_State * s):state(s){
-    lua_pushglobaltable(state); // TODO: delete?
+  LuaGlue::LuaGlue(lua_State * s):L(s){
+    LARS_LUA_GLUE_LOG("creating Glue " << this);
+    INCREASE_INDENT;
+    lua_pushglobaltable(L); // TODO: delete?
     keys[nullptr] = lua_glue::add_to_registry(s);
+    lua_pop(L, 1);
+    DECREASE_INDENT;
+    LARS_LUA_GLUE_LOG("finished creating Glue");
   }
 
   LuaGlue::~LuaGlue(){
@@ -562,49 +583,53 @@ namespace lars {
   
   void LuaGlue::connect_function(const Extension *parent,const std::string &name,const AnyFunction &f){
     LARS_LUA_GLUE_LOG("connecting function " << name << " with parent " << &parent);
-    lua_glue::push_from_registry(state, get_key(parent));
-    lua_glue::push_function(state,f);
-    lua_setfield(state, -2, name.c_str());
-    lua_pop(state, 1);
+    INCREASE_INDENT;
+    lua_glue::push_from_registry(L, get_key(parent));
+    lua_glue::push_function(L,f);
+    lua_setfield(L, -2, name.c_str());
+    lua_pop(L, 1);
+    DECREASE_INDENT;
     LARS_LUA_GLUE_LOG("finished connecting function " << name << " with parent " << &parent);
   }
   
   void LuaGlue::connect_extension(const Extension *parent,const std::string &name,const Extension &e){
     LARS_LUA_GLUE_LOG("connecting extension " << name << " with parent " << &parent);
-    
-    lua_newtable(state); // create and push extension table
-    lua_glue::push_from_registry(state, get_key(parent)); // push parent
-    lua_pushvalue(state, -2); // push extension table again
-    keys[&e] = lua_glue::add_to_registry(state); // store extension table in registry
-    lua_setfield(state, -2, name.c_str()); // assign extension to parent
-    lua_pop(state, 1); // pop parent
+    INCREASE_INDENT;
+
+    lua_newtable(L); // create and push extension table
+    lua_glue::push_from_registry(L, get_key(parent)); // push parent
+    lua_pushvalue(L, -2); // push extension table again
+    keys[&e] = lua_glue::add_to_registry(L); // store extension table in registry
+    lua_setfield(L, -2, name.c_str()); // assign extension to parent
+    lua_pop(L, 1); // pop parent
     
     // extension table at top.
     
     if(e.class_type()){
       if(e.base_class_type()){
-        lua_newtable(state); // create class metatable
-        lua_pushstring(state, "__index"); // push __index
-        lua_glue::push_subclass_metatable<Any>(state, *e.base_class_type()); // push base class table
-        lua_rawset(state, -3); // set base class table as __index
+        lua_newtable(L); // create class metatable
+        lua_pushstring(L, "__index"); // push __index
+        lua_glue::push_subclass_metatable<Any>(L, *e.base_class_type()); // push base class table
+        lua_rawset(L, -3); // set base class table as __index
         // metatable at top
-        lua_setmetatable(state, -2); // set as metatable for extension table
+        lua_setmetatable(L, -2); // set as metatable for extension table
       }
       // extension table at top
-      lua_glue::set_subclass_metatable<Any>(state, *e.class_type());
+      lua_glue::set_subclass_metatable<Any>(L, *e.class_type());
     }
 
     // extension table at top
 
     if(e.shared_class_type()){
-      lua_glue::push_from_registry(state, get_key(&e));
-      lua_glue::set_subclass_metatable<Any>(state, *e.shared_class_type());
-      lua_pop(state, 1);
+      lua_glue::push_from_registry(L, get_key(&e));
+      lua_glue::set_subclass_metatable<Any>(L, *e.shared_class_type());
+      lua_pop(L, 1);
     }
     
     e.connect(*this);
-    lua_pop(state, 1); // pop extension table
+    lua_pop(L, 1); // pop extension table
     
+    DECREASE_INDENT;
     LARS_LUA_GLUE_LOG("finished connecting extension " << name << " with parent " << &parent);
   }
   
@@ -612,11 +637,32 @@ namespace lars {
 
 namespace lars {
   
+  
+  LuaState::Error::Error(lua_State * l, unsigned s):L(l), stackSize(s), valid(lua_glue::get_lua_active_ptr(L)){
+    LARS_LUA_GLUE_LOG("error: " << lua_glue::as_string(L));
+  }
+  
+  LuaState::Error::Error():L(nullptr){
+    
+  }
+
   const char * LuaState::Error::what() const noexcept {
-    return lua_tostring(L,-1);
+    if (L && *valid) {
+      auto str = lua_tostring(L,-1);
+      if (str) {
+        return str;
+      } else {
+        return "unknown lua error";
+      }
+    } else {
+      return "unknown lua error (lost lua context)";
+    }
   }
   
   LuaState::Error::~Error(){
+    if(L && *valid){
+      lua_settop(L, stackSize);
+    }
   }
   
   LuaState::LuaState(lua_State * s){
@@ -633,9 +679,10 @@ namespace lars {
     if (owns_state) {
       LARS_LUA_GLUE_LOG("destroying lua");
       INCREASE_INDENT;
-      *lua_glue::get_lua_active_ptr(L) = false;
+      invalidate();
       lua_close(L);
       DECREASE_INDENT;
+      L = nullptr;
       LARS_LUA_GLUE_LOG("lua destroyed");
     }
   }
@@ -644,24 +691,66 @@ namespace lars {
     luaL_openlibs(L);
   }
   
-  void LuaState::run(const std::string_view &str, const std::string &name){
-    luaL_loadbuffer(L, str.data(), str.size(), name.c_str());
+  void LuaState::run(const std::string_view &code, const std::string &name){
+    LARS_LUA_GLUE_LOG("running code: " << code);
+
+    auto N = lua_gettop(L);
+    
+    INCREASE_INDENT;
+    luaL_loadbuffer(L, code.data(), code.size(), name.c_str());
+    DECREASE_INDENT;
+
     if(lua_pcall(L, 0, LUA_MULTRET, 0)) {
-      throw Error(L);
+      throw Error(L, N);
     }
+    
+    LARS_LUA_GLUE_LOG("finished running code");
+    lua_settop(L, N);
+    
   }
   
-  lars::Any LuaState::runValue(const std::string_view &str, lars::TypeIndex type, const std::string &name){
-    run(str);
-    return lua_glue::extract_value(L, -1, type, lua_glue::throw_lua_exception);
+  lars::Any LuaState::getValue(const std::string &str, lars::TypeIndex type, const std::string &name){
+    LARS_LUA_GLUE_LOG("getting value: " << str);
+
+    auto N = lua_gettop(L);
+    auto code = "return " + str;
+    
+    INCREASE_INDENT;
+    luaL_loadbuffer(L, code.data(), code.size(), "get value code");
+    DECREASE_INDENT;
+    
+    if(auto res = lua_pcall(L, 0, 1, 0)) {
+      throw Error(L, N);
+    }
+    
+    auto result = lua_glue::extract_value(L, -1, type, lua_glue::pop_and_throw_lua_exception);
+
+    LARS_LUA_GLUE_LOG("finished running code");
+    lua_settop(L, N);
+
+    return result;
   }
   
-  LuaGlue LuaState::getGlue(){
-    return LuaGlue(L);
+  LuaGlue &LuaState::getGlue(){
+    if (glue) {
+      return *glue;
+    }
+    else {
+      glue = std::make_shared<LuaGlue>(L);
+      return *glue;
+    }
   }
   
   void LuaState::collectGarbage(){
     lua_gc(L, LUA_GCCOLLECT, 0);
+  }
+
+  void LuaState::invalidate(){
+    *lua_glue::get_lua_active_ptr(L) = false;
+  }
+  
+  unsigned LuaState::stackSize(){
+    return lua_gettop(L);
   }
 
 }

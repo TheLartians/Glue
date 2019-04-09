@@ -22,6 +22,7 @@
 namespace {
   
   namespace duk_glue{
+    std::shared_ptr<bool> get_duktape_active_flag(duk_context *ctx);
     
     template <class T> using internal_type = std::pair<lars::TypeIndex,T>;
     
@@ -122,16 +123,20 @@ namespace {
       return result;
     }
     
-    std::string add_to_stash(duk_context * ctx,int idx = -1){
-      static int obj_id = 0;
-      auto key = std::to_string(obj_id);
-      obj_id++;
+    std::string add_to_stash(duk_context * ctx, const std::string &key,int idx = -1){
       DUK_VERBOSE_LOG("add " << key << " to stash: " << as_string(ctx, idx));
       duk_push_global_stash(ctx);
       duk_dup(ctx, idx < 0 ? idx-1 : idx);
       duk_put_prop_string(ctx, -2, key.c_str());
       duk_pop(ctx);
       return key;
+    }
+
+    std::string add_to_stash(duk_context * ctx,int idx = -1){
+      static int obj_id = 0;
+      auto key = "lars.glue.stash." + std::to_string(obj_id);
+      obj_id++;
+      return add_to_stash(ctx, key, idx);
     }
     
     void push_from_stash(duk_context * ctx,const std::string &key){
@@ -216,7 +221,13 @@ namespace {
       else if(type == lars::get_type_index<StashedObject>()){ return lars::make_any<StashedObject>(ctx,add_to_stash(ctx,idx)); }
       else if(type == lars::get_type_index<lars::AnyFunction>()){
         auto key = add_to_stash(ctx,idx);
-        lars::AnyFunction f = [=,destructor = lars::make_shared_destructor([=](){ remove_from_stash(ctx, key); })](lars::AnyArguments &args){
+        auto active = get_duktape_active_flag(ctx);
+        lars::AnyFunction f = [=,destructor = lars::make_shared_destructor([=](){
+          if (*active) remove_from_stash(ctx, key);
+        })](lars::AnyArguments &args){
+          if (!*active) {
+            throw std::runtime_error("calling function with invalid duktape state");
+          }
           push_from_stash(ctx, key.c_str());
           DUK_VERBOSE_LOG("calling captured function " << key << ": " << as_string(ctx));
           for(auto && arg:args) push_value(ctx, arg);
@@ -270,6 +281,23 @@ namespace {
       duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("data"));
     }
     
+    const std::string DUKTAPE_ACTIVE_FLAG_KEY = "lars.glue.duktape_active";
+    
+    std::shared_ptr<bool> get_duktape_active_flag(duk_context *ctx){
+      push_from_stash(ctx, DUKTAPE_ACTIVE_FLAG_KEY);
+      if (!duk_is_undefined(ctx, -1)) {
+        auto result = get_object<std::shared_ptr<bool>>(ctx);
+        duk_pop(ctx);
+        return result;
+      }
+      duk_pop(ctx);
+      auto &result = create_and_push_object<std::shared_ptr<bool>>(ctx);
+      result = std::make_shared<bool>(true);
+      add_to_stash(ctx, DUKTAPE_ACTIVE_FLAG_KEY);
+      duk_pop(ctx);
+      return result;
+    }
+    
   }
 }
   
@@ -282,7 +310,7 @@ namespace lars {
   }
   
   DuktapeGlue::~DuktapeGlue(){
-    duk_glue::remove_from_stash(ctx, keys[nullptr]);
+
   }
   
   std::string DuktapeGlue::get_key(const Extension *parent)const{
@@ -307,4 +335,53 @@ namespace lars {
     e.connect(*this);
   }
   
+}
+
+namespace lars {
+  
+  const char * DuktapeContext::Error::what() const noexcept {
+    return duk_safe_to_string(ctx, -1);
+  }
+  
+  DuktapeContext::DuktapeContext::Error::~Error(){
+    duk_pop(ctx);
+  }
+
+  DuktapeContext::DuktapeContext(){
+    ctx = duk_create_heap(NULL, NULL, NULL, NULL, NULL);
+  }
+  
+  DuktapeContext::~DuktapeContext(){
+    *duk_glue::get_duktape_active_flag(ctx) = false;
+    duk_destroy_heap(ctx);
+  }
+  
+  DuktapeGlue &DuktapeContext::getGlue(){
+    if (glue) {
+      return *glue;
+    }
+    else {
+      glue = std::make_shared<DuktapeGlue>(ctx);
+      return *glue;
+    }
+  }
+  
+  void DuktapeContext::run(const std::string_view &code){
+    duk_push_lstring(ctx, code.data(), code.size());
+    if (duk_peval(ctx) != 0) { throw Error(ctx); }
+    duk_pop(ctx);
+  }
+  
+  lars::Any DuktapeContext::getValue(const std::string_view &code, lars::TypeIndex type){
+    duk_push_lstring(ctx, code.data(), code.size());
+    if (duk_peval(ctx) != 0) { throw Error(ctx); }
+    auto result = duk_glue::extract_value(ctx, -1, type);
+    duk_pop(ctx);
+    return result;
+  }
+  
+  void DuktapeContext::collectGarbage(){
+    duk_gc(ctx, 0);
+  }
+
 }
