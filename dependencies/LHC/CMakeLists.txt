@@ -22,7 +22,6 @@ else()
     GIT_TAG "v${LHC_min_version}"
     UPDATE_DISCONNECTED 1
     GIT_SHALLOW 1
-    QUIET
   )
 
   add_subdirectory(${LHC_SOURCE_DIR} ${LHC_BINARY_DIR})

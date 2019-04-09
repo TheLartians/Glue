@@ -22,7 +22,6 @@ else()
     GIT_TAG "v${LarsEvent_MIN_VERSION}"
     UPDATE_DISCONNECTED 1
     GIT_SHALLOW 1
-    QUIET
   )
 
   add_subdirectory(${LarsEvent_SOURCE_DIR} ${LarsEvent_BINARY_DIR})
