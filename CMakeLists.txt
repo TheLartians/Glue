@@ -34,9 +34,25 @@ if (GLUE_BUILD_DUKTAPE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/duktape)
 endif()
 
-add_subdirectory(dependencies/LHC)
-add_subdirectory(dependencies/Event)
-add_subdirectory(dependencies/Visitor)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
+
+CPMAddPackage(
+  NAME LHC
+  VERSION 0.3
+  GIT_REPOSITORY https://github.com/TheLartians/LHC.git
+)
+
+CPMAddPackage(
+  NAME LarsEvent
+  VERSION 1.0
+  GIT_REPOSITORY https://github.com/TheLartians/Event.git
+)
+
+CPMAddPackage(
+  NAME LarsVisitor
+  VERSION 0.3
+  GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
+)
 
 # ---- enable C++ ----
 
