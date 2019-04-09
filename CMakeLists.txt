@@ -50,7 +50,7 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 0.3
+  VERSION 0.4
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 
