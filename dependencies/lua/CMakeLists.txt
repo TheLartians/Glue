@@ -10,6 +10,7 @@ download_project(
   GIT_TAG v5-3-4
   GIT_SHALLOW 1
   UPDATE_DISCONNECTED 1
+  QUIET
 )
 
 FILE(GLOB lua_sources ${lua_SOURCE_DIR}/*.c)
