@@ -1,10 +1,10 @@
 
 #include <lars/log.h>
 #include <lars/duktape.h>
-#include <lars/lua.h>
 #include <iostream>
 
 #include <lua.hpp>
+#include <lars/lua.h>
 
 int main(int argc, char *argv[]) {
   auto shared_extension = std::make_shared<lars::Extension>();
