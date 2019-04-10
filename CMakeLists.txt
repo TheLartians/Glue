@@ -7,16 +7,16 @@ endif()
 
 # ---- Configuration variables ----
 
-option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
 option(GLUE_ENABLE_LUA "build glue for use with lua" OFF)
 option(GLUE_BUILD_LUA "build lua with glue" OFF)
+option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
 option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
 option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
 
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.1
+  VERSION 0.2
   LANGUAGES CXX
 )
 
@@ -38,7 +38,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
 
 CPMAddPackage(
   NAME LHC
-  VERSION 0.3
+  VERSION 0.4
   GIT_REPOSITORY https://github.com/TheLartians/LHC.git
 )
 
@@ -50,7 +50,7 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 0.4
+  VERSION 0.5
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 
