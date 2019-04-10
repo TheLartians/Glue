@@ -16,7 +16,7 @@ option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.1
+  VERSION 0.2
   LANGUAGES CXX
 )
 
