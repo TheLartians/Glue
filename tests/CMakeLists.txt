@@ -24,7 +24,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/catch2)
 
 file(GLOB glue-tests_sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 add_executable(glue-tests ${glue-tests_sources})
-target_link_libraries(glue-tests catch2 Glue)
+target_link_libraries(glue-tests Catch2 Glue)
 
 # ---- Add glue-tests ----
 
