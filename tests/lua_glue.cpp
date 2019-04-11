@@ -31,9 +31,9 @@ TEST_CASE("LuaGlue"){
   // create lua context
   lars::LuaState lua;
   auto initialStackSize = lua.stackSize();
-  lua.openLibs();
+  lua.open_libs();
   REQUIRE(lua.stackSize() == initialStackSize);
-  extension.connect(lua.getGlue());
+  extension.connect(lua.get_glue());
   REQUIRE(lua.stackSize() == initialStackSize);
   
   SECTION("test lua execution"){
@@ -42,11 +42,11 @@ TEST_CASE("LuaGlue"){
     REQUIRE_NOTHROW(lua.run("assert(1 == 1)") );
     REQUIRE_THROWS_AS(lua.run("assert(1 == 0)"), lars::LuaState::Error);
     REQUIRE(lua.stackSize() == initialStackSize);
-    REQUIRE(lua.getValue<std::string>("'Hello World!'") == "Hello World!");
-    REQUIRE(lua.getValue<int>("42") == 42);
+    REQUIRE(lua.get_value<std::string>("'Hello World!'") == "Hello World!");
+    REQUIRE(lua.get_value<int>("42") == 42);
     REQUIRE_THROWS_AS(lua.run("error('')"), lars::LuaState::Error);
     struct Test {};
-    REQUIRE_THROWS(lua.getValue<Test>("42"));
+    REQUIRE_THROWS(lua.get_value<Test>("42"));
     REQUIRE(lua.stackSize() == initialStackSize);
   }
   
@@ -77,23 +77,23 @@ TEST_CASE("LuaGlue"){
     extension.add_function("set_my_class_data",[](MyClass &my_class,const std::string &str){ my_class.data = str; });
     
     REQUIRE_NOTHROW(lua.run("my_class = create_my_class()"));
-    lua.collectGarbage();
+    lua.collect_garbage();
     REQUIRE(my_class_instances == 1);
     
     REQUIRE_NOTHROW(lua.run("set_my_class_data(my_class,'data')"));
     REQUIRE_NOTHROW(lua.run("assert(get_my_class_data(my_class) == 'data')"));
     REQUIRE_NOTHROW(lua.run("my_class = nil"));
-    lua.collectGarbage();
+    lua.collect_garbage();
     
     // destructor called
     REQUIRE(my_class_instances == 0);
     
     // capture and free
     REQUIRE_NOTHROW(lua.run("function test(x) store_callback(function() set_my_class_data(x,'data') end); end test(create_my_class())"));
-    lua.collectGarbage();
+    lua.collect_garbage();
     REQUIRE(my_class_instances == 1);
     REQUIRE_NOTHROW(lua.run("store_callback(function()end)"));
-    lua.collectGarbage();
+    lua.collect_garbage();
     REQUIRE(my_class_instances == 0);
     REQUIRE(lua.stackSize() == initialStackSize);
   }
@@ -129,9 +129,9 @@ TEST_CASE("LuaGlue"){
       auto f = extension.get_extension("lua_extension")->get_function("f");
       REQUIRE(f);
       REQUIRE_NOTHROW(f(std::string("x"),42));
-      REQUIRE(lua.getValue<std::string>("tmp") == "called f(x,42)");
+      REQUIRE(lua.get_value<std::string>("tmp") == "called f(x,42)");
       REQUIRE_NOTHROW(f(1));
-      REQUIRE(lua.getValue<std::string>("tmp") == "called f(1,nil)");
+      REQUIRE(lua.get_value<std::string>("tmp") == "called f(1,nil)");
       REQUIRE(lua.stackSize() == initialStackSize);
     }
     

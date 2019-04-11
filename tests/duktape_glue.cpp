@@ -26,7 +26,7 @@ TEST_CASE("DuktapeGlue"){
   
   // create duktape context
   lars::DuktapeContext context;
-  extension.connect(context.getGlue());
+  extension.connect(context.get_glue());
   
   // assertion and sanity check
   REQUIRE_NOTHROW(context.run("function assert(x){ if(x) return; else throw 'assertion failed'; }"));
@@ -56,7 +56,7 @@ TEST_CASE("DuktapeGlue"){
   REQUIRE_NOTHROW(context.run("var my_class = create_my_class()"));
   REQUIRE(my_class_instances == 1);
   REQUIRE_NOTHROW(context.run("set_my_class_data(my_class,'data')"));
-  REQUIRE(context.getValue<std::string>("get_my_class_data(my_class)") == "data");
+  REQUIRE(context.get_value<std::string>("get_my_class_data(my_class)") == "data");
   REQUIRE_NOTHROW(context.run("my_class = undefined"));
   
   // destructor called
@@ -64,21 +64,21 @@ TEST_CASE("DuktapeGlue"){
   
   // capture and free
   REQUIRE_NOTHROW(context.run("function test(x){ store_callback(function(){ set_my_class_data(x,'data') }); } test(create_my_class())"));
-  context.collectGarbage();
+  context.collect_garbage();
   REQUIRE(my_class_instances == 1);
   REQUIRE_NOTHROW(context.run("store_callback(function(){ })"));
-  context.collectGarbage();
+  context.collect_garbage();
   REQUIRE(my_class_instances == 0);
   
   // inner extensions
   auto inner_extension = std::make_shared<lars::Extension>();
   inner_extension->add_function("before", []()->std::string{ return "called inner extension function"; });
   extension.add_extension("inner", inner_extension);
-  REQUIRE(context.getValue<std::string>("inner.before()") == "called inner extension function");
+  REQUIRE(context.get_value<std::string>("inner.before()") == "called inner extension function");
   
   // inner update
   inner_extension->add_function("after", []()->std::string{ return "called updated inner extension function"; });
-  REQUIRE(context.getValue<std::string>("inner.after()") == "called updated inner extension function");
+  REQUIRE(context.get_value<std::string>("inner.after()") == "called updated inner extension function");
   
   // extensions extension
   auto extensions_extension = std::make_shared<lars::Extension>();
@@ -98,9 +98,9 @@ TEST_CASE("DuktapeGlue"){
   auto f = extension.get_extension("duk_extension")->get_function("f");
   REQUIRE(f);
   REQUIRE_NOTHROW( f(std::string("x"),42) );
-  REQUIRE(context.getValue<std::string>("res") == "called f(x,42)");
+  REQUIRE(context.get_value<std::string>("res") == "called f(x,42)");
   REQUIRE_NOTHROW( f(1) );
-  REQUIRE(context.getValue<std::string>("res") == "called f(1,undefined)");
+  REQUIRE(context.get_value<std::string>("res") == "called f(1,undefined)");
 
   // call javascript function with return value
   REQUIRE_NOTHROW(context.run("extensions.add_function(extension,'g',function(x,y){ return x+y })"));

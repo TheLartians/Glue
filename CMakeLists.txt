@@ -11,7 +11,7 @@ option(GLUE_ENABLE_LUA "build glue for use with lua" OFF)
 option(GLUE_BUILD_LUA "build lua with glue" OFF)
 option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
 option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
-option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
+option(ENABLE_GLUE_TESTS "Enable tests" OFF)
 
 option(GLUE_LUA_LIB "The lua library to link with glue.")
 option(GLUE_DUKTAPE_LIB "The duktape library to link with glue.")
@@ -148,7 +148,7 @@ install(
 
 # ---- Test ----
 
-if(${ENABLE_LARS_GLUE_TESTS})
+if(${ENABLE_GLUE_TESTS})
   ENABLE_TESTING()  
   add_subdirectory(tests)  
 endif()

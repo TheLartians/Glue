@@ -40,15 +40,21 @@ namespace lars {
     ~DuktapeContext();
     
     void run(const std::string_view &code);
-    lars::Any getValue(const std::string_view &code, lars::TypeIndex type);
+    lars::Any get_value(const std::string_view &code, lars::TypeIndex type);
     
-    template <class T> T getValue(const std::string_view &code){
-      return getValue(code, lars::get_type_index<typename std::remove_reference<typename std::remove_const<T>::type>::type>()).template get<T>();
+    template <class T> T get_value(const std::string &code){
+      using RawType = typename std::remove_reference<typename std::remove_const<T>::type>::type;
+      auto anyValue = get_value(code, lars::get_type_index<RawType>());
+      return anyValue.template get<T>();
     }
 
+    double get_numeric(const std::string &code){
+      auto anyValue = get_value(code, lars::get_type_index<double>());
+      return anyValue.template get_numeric<double>();
+    }
     
-    DuktapeGlue &getGlue();
-    void collectGarbage();
+    DuktapeGlue &get_glue();
+    void collect_garbage();
   };
 
 }

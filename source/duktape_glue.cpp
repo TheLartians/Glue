@@ -356,7 +356,7 @@ namespace lars {
     duk_destroy_heap(ctx);
   }
   
-  DuktapeGlue &DuktapeContext::getGlue(){
+  DuktapeGlue &DuktapeContext::get_glue(){
     if (glue) {
       return *glue;
     }
@@ -372,7 +372,7 @@ namespace lars {
     duk_pop(ctx);
   }
   
-  lars::Any DuktapeContext::getValue(const std::string_view &code, lars::TypeIndex type){
+  lars::Any DuktapeContext::get_value(const std::string_view &code, lars::TypeIndex type){
     duk_push_lstring(ctx, code.data(), code.size());
     if (duk_peval(ctx) != 0) { throw Error(ctx); }
     auto result = duk_glue::extract_value(ctx, -1, type);
@@ -380,7 +380,7 @@ namespace lars {
     return result;
   }
   
-  void DuktapeContext::collectGarbage(){
+  void DuktapeContext::collect_garbage(){
     duk_gc(ctx, 0);
   }
 
