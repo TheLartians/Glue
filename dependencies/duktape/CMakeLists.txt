@@ -12,6 +12,7 @@ FetchContent_Declare(
   URL https://duktape.org/duktape-2.3.0.tar.xz
   URL_HASH MD5=352105b39979fc766bbd0b3721e8c2b5
   UPDATE_DISCONNECTED 1
+  GIT_SHALLOW 1
   QUIET
 )
 
@@ -69,9 +70,4 @@ install(
     "${PROJECT_BINARY_DIR}/GlueDuktapeConfig.cmake"
   DESTINATION 
     lib/cmake/GlueDuktape
-)
-
-install(
-  DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-  DESTINATION include
 )

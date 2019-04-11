@@ -71,9 +71,3 @@ install(
   DESTINATION 
     lib/cmake/GlueLua
 )
-
-install(
-  DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-  DESTINATION include
-)
-
