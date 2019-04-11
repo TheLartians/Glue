@@ -19,7 +19,7 @@ option(GLUE_DUKTAPE_LIB "The duktape library to link with glue. Ignored if GLUE_
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.3
+  VERSION 0.4
   LANGUAGES CXX
 )
 
@@ -57,7 +57,7 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 0.5
+  VERSION 0.6
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 
