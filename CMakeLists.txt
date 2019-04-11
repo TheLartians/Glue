@@ -13,10 +13,13 @@ option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
 option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
 option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
 
+option(GLUE_LUA_LIB "The lua library to link with glue. Ignored if GLUE_BUILD_LUA is set.")
+option(GLUE_DUKTAPE_LIB "The duktape library to link with glue. Ignored if GLUE_BUILD_DUKTAPE is set.")
+
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.2
+  VERSION 0.3
   LANGUAGES CXX
 )
 
@@ -28,10 +31,14 @@ endif()
 
 if (GLUE_BUILD_LUA)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
+else()
+  set(liblua ${GLUE_LUA_LIB})
 endif()
 
 if (GLUE_BUILD_DUKTAPE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/duktape)
+else()
+  set(libduktape ${GLUE_LUA_LIB})
 endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
