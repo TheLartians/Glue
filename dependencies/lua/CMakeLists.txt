@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 include(FetchContent)
 
-project(lua C)
+project(GlueLua
+  VERSION 5.3.4
+  LANGUAGES C
+)
 
 FetchContent_Declare(
   lua
@@ -21,24 +24,56 @@ endif()
 FILE(GLOB lua_sources ${lua_SOURCE_DIR}/*.c)
 FILE(GLOB lua_headers ${lua_SOURCE_DIR}/*.h)
 
-add_library(liblua STATIC ${lua_sources} ${lua_headers})
+add_library(GlueLua STATIC ${lua_sources} ${lua_headers})
 
-target_include_directories(liblua
+target_include_directories(GlueLua
   PUBLIC
     $<BUILD_INTERFACE:${lua_SOURCE_DIR}>
 )
 
-install(
-  TARGETS liblua
-  EXPORT libluaTargets
-  LIBRARY DESTINATION lib/lua COMPONENT Runtime
-  ARCHIVE DESTINATION lib/lua COMPONENT Development
-  RUNTIME DESTINATION bin/lua COMPONENT Runtime
-  PUBLIC_HEADER DESTINATION include/lua COMPONENT Development
-  BUNDLE DESTINATION bin/lua COMPONENT Runtime
+# ---- Install ----
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/GlueLuaConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
 )
 
 install(
-  EXPORT libluaTargets 
-  DESTINATION lib 
+  TARGETS GlueLua
+  EXPORT GlueLuaTargets 
+  LIBRARY DESTINATION lib COMPONENT Runtime
+  ARCHIVE DESTINATION lib COMPONENT Development
+  RUNTIME DESTINATION bin COMPONENT Runtime
+  PUBLIC_HEADER DESTINATION include COMPONENT Development
+  BUNDLE DESTINATION bin COMPONENT Runtime
 )
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/GlueLuaConfig.cmake.in"
+  "${PROJECT_BINARY_DIR}/GlueLuaConfig.cmake"
+  INSTALL_DESTINATION lib/cmake/GlueLua
+)
+
+install(
+  EXPORT GlueLuaTargets 
+  DESTINATION lib/cmake/GlueLua
+)
+
+install(
+  FILES 
+    "${PROJECT_BINARY_DIR}/GlueLuaConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/GlueLuaConfig.cmake"
+  DESTINATION 
+    lib/cmake/GlueLua
+)
+
+install(
+  DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+  DESTINATION include
+)
+

@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 include(FetchContent)
 
-project(duktape C)
+project(Duktape
+  VERSION 2.3.0
+  LANGUAGES C
+)
 
 FetchContent_Declare(
   duktape
@@ -20,16 +23,26 @@ endif()
 FILE(GLOB duktape_sources ${duktape_SOURCE_DIR}/src/*.c)
 FILE(GLOB duktape_headers ${duktape_SOURCE_DIR}/src/*.h)
 
-add_library(libduktape STATIC ${duktape_sources} ${duktape_headers})
+add_library(GlueDuktape STATIC ${duktape_sources} ${duktape_headers})
 
-target_include_directories(libduktape
+target_include_directories(GlueDuktape
   PUBLIC
     $<BUILD_INTERFACE:${duktape_SOURCE_DIR}/src>
 )
 
+# ---- Install ----
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/GlueDuktapeConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
 install(
-  TARGETS libduktape
-  EXPORT libduktapeTargets
+  TARGETS GlueDuktape
+  EXPORT GlueDuktapeTargets 
   LIBRARY DESTINATION lib COMPONENT Runtime
   ARCHIVE DESTINATION lib COMPONENT Development
   RUNTIME DESTINATION bin COMPONENT Runtime
@@ -37,7 +50,28 @@ install(
   BUNDLE DESTINATION bin COMPONENT Runtime
 )
 
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/GlueDuktapeConfig.cmake.in"
+  "${PROJECT_BINARY_DIR}/GlueDuktapeConfig.cmake"
+  INSTALL_DESTINATION lib/cmake/GlueDuktape
+)
+
 install(
-  EXPORT libduktapeTargets 
-  DESTINATION lib
+  EXPORT GlueDuktapeTargets 
+  DESTINATION lib/cmake/GlueDuktape
+)
+
+install(
+  FILES 
+    "${PROJECT_BINARY_DIR}/GlueDuktapeConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/GlueDuktapeConfig.cmake"
+  DESTINATION 
+    lib/cmake/GlueDuktape
+)
+
+install(
+  DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+  DESTINATION include
 )

@@ -13,8 +13,8 @@ option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
 option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
 option(ENABLE_LARS_GLUE_TESTS "Enable tests" OFF)
 
-option(GLUE_LUA_LIB "The lua library to link with glue. Ignored if GLUE_BUILD_LUA is set.")
-option(GLUE_DUKTAPE_LIB "The duktape library to link with glue. Ignored if GLUE_BUILD_DUKTAPE is set.")
+option(GLUE_LUA_LIB "The lua library to link with glue.")
+option(GLUE_DUKTAPE_LIB "The duktape library to link with glue.")
 
 # ---- create project ----
 
@@ -31,14 +31,12 @@ endif()
 
 if (GLUE_BUILD_LUA)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
-else()
-  set(liblua ${GLUE_LUA_LIB})
+  set(GLUE_LUA_LIB GlueLua)
 endif()
 
 if (GLUE_BUILD_DUKTAPE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/duktape)
-else()
-  set(libduktape ${GLUE_LUA_LIB})
+  set(GLUE_DUKTAPE_LIB GlueDuktape)
 endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
@@ -87,11 +85,11 @@ endif()
 add_library(Glue ${sources} ${headers})
 
 if(GLUE_ENABLE_LUA)
-  target_link_libraries(Glue PUBLIC liblua)  
+  target_link_libraries(Glue PUBLIC ${GLUE_LUA_LIB})  
 endif()
 
 if(GLUE_ENABLE_DUKTAPE)
-  target_link_libraries(Glue PUBLIC libduktape)  
+  target_link_libraries(Glue PUBLIC ${GLUE_DUKTAPE_LIB})  
 endif()
 
 target_link_libraries(Glue PUBLIC LHC LarsEvent LarsVisitor)
