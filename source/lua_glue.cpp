@@ -687,7 +687,7 @@ namespace lars {
     }
   }
   
-  void LuaState::openLibs(){
+  void LuaState::open_libs(){
     luaL_openlibs(L);
   }
   
@@ -709,7 +709,7 @@ namespace lars {
     
   }
   
-  lars::Any LuaState::getValue(const std::string &str, lars::TypeIndex type, const std::string &name){
+  lars::Any LuaState::get_value(const std::string &str, lars::TypeIndex type, const std::string &name){
     LARS_LUA_GLUE_LOG("getting value: " << str);
 
     auto N = lua_gettop(L);
@@ -731,7 +731,7 @@ namespace lars {
     return result;
   }
   
-  LuaGlue &LuaState::getGlue(){
+  LuaGlue &LuaState::get_glue(){
     if (glue) {
       return *glue;
     }
@@ -741,7 +741,7 @@ namespace lars {
     }
   }
   
-  void LuaState::collectGarbage(){
+  void LuaState::collect_garbage(){
     lua_gc(L, LUA_GCCOLLECT, 0);
   }
 

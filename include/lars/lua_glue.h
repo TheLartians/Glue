@@ -49,18 +49,25 @@ namespace lars {
     LuaState(lua_State * state);
     LuaState(const LuaState &other) = delete;
 
-    void openLibs();
+    void open_libs();
     
-    LuaGlue &getGlue();
+    LuaGlue &get_glue();
     
     void run(const std::string_view &code, const std::string &name = "anonymous lua code");
-    lars::Any getValue(const std::string &value, lars::TypeIndex type, const std::string &name = "anonymous lua code");
+    lars::Any get_value(const std::string &value, lars::TypeIndex type, const std::string &name = "anonymous lua code");
     
-    template <class T> T getValue(const std::string &value){
-      return getValue(value, lars::get_type_index<typename std::remove_reference<typename std::remove_const<T>::type>::type>()).template get<T>();
+    template <class T> T get_value(const std::string &code){
+      using RawType = typename std::remove_reference<typename std::remove_const<T>::type>::type;
+      auto anyValue = get_value(code, lars::get_type_index<RawType>());
+      return anyValue.template get<T>();
     }
 
-    void collectGarbage();
+    double get_numeric(const std::string &code){
+      auto anyValue = get_value(code, lars::get_type_index<double>());
+      return anyValue.template get_numeric<double>();
+    }
+
+    void collect_garbage();
     void invalidate();
     unsigned stackSize();
     
