@@ -42,7 +42,7 @@ before_install:
   - cmake --version
   - cmake -H. -Bbuild -DGLUE_BUILD_DUKTAPE=true -DGLUE_BUILD_LUA=true -DGLUE_ENABLE_LUA=true -DGLUE_ENABLE_DUKTAPE=true
   - cmake --build build
-  - cmake --build build --target install
+  - sudo cmake --build build --target install
 
 script:
   - cmake -Htests -Bbuild/tests
