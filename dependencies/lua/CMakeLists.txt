@@ -1,17 +1,22 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+
+include(FetchContent)
 
 project(lua C)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/DownloadProject.cmake)
-
-download_project(
-  PROJ lua
+FetchContent_Declare(
+  lua
   GIT_REPOSITORY https://github.com/lua/lua.git
   GIT_TAG v5-3-4
   GIT_SHALLOW 1
   UPDATE_DISCONNECTED 1
   QUIET
 )
+
+FetchContent_GetProperties(lua)
+if(NOT lua_POPULATED)
+  FetchContent_Populate(lua)
+endif()
 
 FILE(GLOB lua_sources ${lua_SOURCE_DIR}/*.c)
 FILE(GLOB lua_headers ${lua_SOURCE_DIR}/*.h)

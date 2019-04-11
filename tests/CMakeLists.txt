@@ -18,16 +18,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   find_package(Glue REQUIRED)
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/get_catch2.cmake)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/catch2)
 
 # ---- Create binary ----
 
 file(GLOB glue-tests_sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 add_executable(glue-tests ${glue-tests_sources})
-add_dependencies(glue-tests catch2-project)
-target_link_libraries(glue-tests catch2)
-target_link_libraries(glue-tests Glue)
-target_link_libraries(glue-tests)
+target_link_libraries(glue-tests catch2 Glue)
 
 # ---- Add glue-tests ----
 

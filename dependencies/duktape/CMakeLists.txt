@@ -1,16 +1,21 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+
+include(FetchContent)
 
 project(duktape C)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/DownloadProject.cmake)
-
-download_project(
-  PROJ duktape
+FetchContent_Declare(
+  duktape
   URL https://duktape.org/duktape-2.3.0.tar.xz
   URL_HASH MD5=352105b39979fc766bbd0b3721e8c2b5
   UPDATE_DISCONNECTED 1
   QUIET
 )
+
+FetchContent_GetProperties(duktape)
+if(NOT duktape_POPULATED)
+  FetchContent_Populate(duktape)
+endif()
 
 FILE(GLOB duktape_sources ${duktape_SOURCE_DIR}/src/*.c)
 FILE(GLOB duktape_headers ${duktape_SOURCE_DIR}/src/*.h)
