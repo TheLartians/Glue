@@ -175,7 +175,7 @@ namespace {
       struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<StashedObject>>{
         duk_context * ctx;
         bool push_any = false;
-        void visit_default(const lars::VisitableBase &data)override{ DUK_VERBOSE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
+        void visit_default(const lars::VisitableBase &)override{ DUK_VERBOSE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
         void visit(const lars::VisitableType<bool> &data)override{ DUK_VERBOSE_LOG("push bool"); duk_push_boolean(ctx, data.data); }
         void visit(const lars::VisitableType<int> &data)override{ DUK_VERBOSE_LOG("push int"); duk_push_int(ctx, data.data); }
         void visit(const lars::VisitableType<double> &data)override{ DUK_VERBOSE_LOG("push double"); duk_push_number(ctx, data.data); }

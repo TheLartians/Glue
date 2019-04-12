@@ -7,7 +7,9 @@ find_dependency(LarsVisitor)
 find_dependency(LarsEvent)
 
 foreach(dependency @GLUE_LUA_LIB@ @GLUE_DUKTAPE_LIB@)
-  find_dependency(${dependency})
+  if(dependency)
+    find_dependency(${dependency})
+  endif()
 endforeach()
 
 include("${CMAKE_CURRENT_LIST_DIR}/GlueTargets.cmake")

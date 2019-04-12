@@ -406,7 +406,7 @@ namespace {
       struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<char>,lars::VisitableType<float>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<unsigned>,lars::VisitableType<RegistryObject>>{
         lua_State * L;
         bool push_any = false;
-        void visit_default(const lars::VisitableBase &data)override{ LARS_LUA_GLUE_LOG("push any"); push_any = true; }
+        void visit_default(const lars::VisitableBase &)override{ LARS_LUA_GLUE_LOG("push any"); push_any = true; }
         void visit(const lars::VisitableType<bool> &data)override{ LARS_LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data.data); }
         void visit(const lars::VisitableType<int> &data)override{ LARS_LUA_GLUE_LOG("push int"); lua_pushinteger(L, data.data); }
         void visit(const lars::VisitableType<char> &data)override{ LARS_LUA_GLUE_LOG("push char"); lua_pushnumber(L, data.data); }
@@ -497,7 +497,7 @@ namespace {
           LARS_LUA_GLUE_LOG("calling registry " << captured->key << ": " << as_string(L) << " with " << args.size() << " arguments");
           for(auto && arg:args) push_value(L, arg);
           // dummy continuation k to allow yielding
-          auto k = +[](lua_State*L, int status, lua_KContext ctx){
+          auto k = +[](lua_State*, int , lua_KContext ){
             LARS_LUA_GLUE_LOG("k called");
             return 0;
           };
@@ -716,10 +716,10 @@ namespace lars {
     auto code = "return " + str;
     
     INCREASE_INDENT;
-    luaL_loadbuffer(L, code.data(), code.size(), "get value code");
+    luaL_loadbuffer(L, code.data(), code.size(), name.c_str());
     DECREASE_INDENT;
     
-    if(auto res = lua_pcall(L, 0, 1, 0)) {
+    if(lua_pcall(L, 0, 1, 0)) {
       throw Error(L, N);
     }
     

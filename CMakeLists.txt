@@ -19,7 +19,7 @@ option(GLUE_DUKTAPE_LIB "The duktape library to link with glue.")
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.4
+  VERSION 0.5
   LANGUAGES CXX
 )
 
@@ -29,12 +29,12 @@ if(TARGET Glue)
   return()
 endif()
 
-if (GLUE_BUILD_LUA)
+if (${GLUE_BUILD_LUA})
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
   set(GLUE_LUA_LIB GlueLua)
 endif()
 
-if (GLUE_BUILD_DUKTAPE)
+if (${GLUE_BUILD_DUKTAPE})
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/duktape)
   set(GLUE_DUKTAPE_LIB GlueDuktape)
 endif()
@@ -72,23 +72,24 @@ set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 set(sources ${glue_source_dir}/glue.cpp)
 set(headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue.h)
 
-if(GLUE_ENABLE_DUKTAPE)
-list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)
-list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/duktape_glue.h)
+if(${GLUE_ENABLE_DUKTAPE})
+  list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)
+  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/duktape_glue.h)
 endif()
 
-if(GLUE_ENABLE_LUA)
+if(${GLUE_ENABLE_LUA})
   list(APPEND sources ${glue_source_dir}/lua_glue.cpp)
   list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/lua_glue.h)
 endif()
 
 add_library(Glue ${sources} ${headers})
+set_target_properties(Glue PROPERTIES COMPILE_FLAGS "-Wall -pedantic -Wextra -Werror")
 
-if(GLUE_ENABLE_LUA)
+if(${GLUE_ENABLE_LUA})
   target_link_libraries(Glue PUBLIC ${GLUE_LUA_LIB})  
 endif()
 
-if(GLUE_ENABLE_DUKTAPE)
+if(${GLUE_ENABLE_DUKTAPE})
   target_link_libraries(Glue PUBLIC ${GLUE_DUKTAPE_LIB})  
 endif()
 
