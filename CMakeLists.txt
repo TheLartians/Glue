@@ -73,8 +73,8 @@ set(sources ${glue_source_dir}/glue.cpp)
 set(headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue.h)
 
 if(${GLUE_ENABLE_DUKTAPE})
-list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)
-list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/duktape_glue.h)
+  list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)
+  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/duktape_glue.h)
 endif()
 
 if(${GLUE_ENABLE_LUA})
@@ -83,6 +83,7 @@ if(${GLUE_ENABLE_LUA})
 endif()
 
 add_library(Glue ${sources} ${headers})
+set_target_properties(Glue PROPERTIES COMPILE_FLAGS "-Wall -pedantic -Wextra")
 
 if(${GLUE_ENABLE_LUA})
   target_link_libraries(Glue PUBLIC ${GLUE_LUA_LIB})  
