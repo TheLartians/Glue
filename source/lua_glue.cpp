@@ -719,7 +719,7 @@ namespace lars {
     luaL_loadbuffer(L, code.data(), code.size(), name.c_str());
     DECREASE_INDENT;
     
-    if(auto res = lua_pcall(L, 0, 1, 0)) {
+    if(lua_pcall(L, 0, 1, 0)) {
       throw Error(L, N);
     }
     
