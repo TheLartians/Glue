@@ -7,7 +7,7 @@ find_dependency(LarsVisitor)
 find_dependency(LarsEvent)
 
 foreach(dependency @GLUE_LUA_LIB@ @GLUE_DUKTAPE_LIB@)
-  if(${dependency})
+  if(dependency)
     find_dependency(${dependency})
   endif()
 endforeach()

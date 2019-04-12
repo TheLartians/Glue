@@ -83,7 +83,7 @@ if(${GLUE_ENABLE_LUA})
 endif()
 
 add_library(Glue ${sources} ${headers})
-set_target_properties(Glue PROPERTIES COMPILE_FLAGS "-Wall -pedantic -Wextra")
+set_target_properties(Glue PROPERTIES COMPILE_FLAGS "-Wall -pedantic -Wextra -Werror")
 
 if(${GLUE_ENABLE_LUA})
   target_link_libraries(Glue PUBLIC ${GLUE_LUA_LIB})  
