@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include <stdexcept>
 
-#include <lars/glue.h>
+#include <lars/glue/glue.h>
 
 TEST_CASE("Extension"){
   using namespace lars;

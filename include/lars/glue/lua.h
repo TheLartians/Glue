@@ -1,46 +1,60 @@
 #pragma once
 
-#include <lars/glue.h>
+#include <lars/glue/glue.h>
 
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
+#include <type_traits>
 
-struct duk_hthread;
-typedef struct duk_hthread duk_context;
+struct lua_State;
 
 namespace lars {
   
-  class DuktapeGlue:public Glue{
-    duk_context * ctx = nullptr;
+  class LuaGlue:public Glue{
+    lua_State * L = nullptr;
     std::unordered_map<const Extension *, std::string> keys;
-  public:
-    DuktapeGlue(duk_context * c);
-    ~DuktapeGlue();
+    const std::string & get_key(const Extension *parent)const;
     
-    std::string get_key(const Extension *parent)const;
+  public:
+  
+    LuaGlue(lua_State * state);
+    ~LuaGlue();
+    
     void connect_function(const Extension *parent,const std::string &name,const AnyFunction &f)override;
     void connect_extension(const Extension *parent,const std::string &name,const Extension &e)override;
   };
-  
-  class DuktapeContext {
-  protected:
-    duk_context * ctx = nullptr;
-    std::shared_ptr<DuktapeGlue> glue;
+ 
+  class LuaState {
+  private:
+    lua_State * L;
+    bool owns_state;
+    std::shared_ptr<LuaGlue> glue;
     
   public:
+    
     struct Error: public std::exception {
-      duk_context * ctx;
-      Error(duk_context * c):ctx(c){}
+      lua_State * L;
+      unsigned stackSize;
+      std::shared_ptr<bool> valid;
+      
+      Error(lua_State * l, unsigned stackSize);
+      Error();
+
       const char * what() const noexcept override;
       ~Error();
     };
     
+    LuaState();
+    LuaState(lua_State * state);
+    LuaState(const LuaState &other) = delete;
+
+    void open_libs();
     
-    DuktapeContext();
-    ~DuktapeContext();
+    LuaGlue &get_glue();
     
-    void run(const std::string_view &code);
-    lars::Any get_value(const std::string_view &code, lars::TypeIndex type);
+    void run(const std::string_view &code, const std::string &name = "anonymous lua code");
+    lars::Any get_value(const std::string &value, lars::TypeIndex type, const std::string &name = "anonymous lua code");
     
     template <class T> T get_value(const std::string &code){
       using RawType = typename std::remove_reference<typename std::remove_const<T>::type>::type;
@@ -52,9 +66,12 @@ namespace lars {
       auto anyValue = get_value(code, lars::get_type_index<double>());
       return anyValue.template get_numeric<double>();
     }
-    
-    DuktapeGlue &get_glue();
-    void collect_garbage();
-  };
 
+    void collect_garbage();
+    void invalidate();
+    unsigned stackSize();
+    
+    ~LuaState();
+  };
+  
 }
