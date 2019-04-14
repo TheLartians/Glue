@@ -69,8 +69,15 @@ endif()
 
 set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
-set(sources ${glue_source_dir}/glue.cpp)
-set(headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/glue.h)
+set(sources
+  ${glue_source_dir}/glue.cpp
+  ${glue_source_dir}/definitions.cpp
+)
+
+set(headers
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/glue.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/definitions.h
+)
 
 if(${GLUE_ENABLE_DUKTAPE})
   list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)

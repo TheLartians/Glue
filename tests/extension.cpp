@@ -34,3 +34,4 @@ TEST_CASE("Automatic Casting"){
   extension.add_function("add_A", [](A & x,A & y){ A a; a.value = x.value+y.value; return a; });
   REQUIRE( extension.get_function("add_A")(B(),C()).get<A>().value == 3 );
 }
+
