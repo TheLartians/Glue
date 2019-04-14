@@ -459,6 +459,8 @@ namespace {
           case LUA_TBOOLEAN: type = lars::get_type_index<bool>(); break;
           case LUA_TTABLE: type = lars::get_type_index<RegistryObject>(); break;
           case LUA_TFUNCTION: type = lars::get_type_index<lars::AnyFunction>(); break;
+          case LUA_TNONE: return lars::Any(); break;
+          case LUA_TNIL: return lars::Any(); break;
           default: break;
         }
       }

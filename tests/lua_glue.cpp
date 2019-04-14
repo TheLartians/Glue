@@ -6,9 +6,8 @@
 
 TEST_CASE("LuaGlue"){
   
-  auto shared_extension = std::make_shared<lars::Extension>();
-  lars::Extension &extension = *shared_extension;
-  
+  lars::Extension extension;
+
   // call functions and get return values
   extension.add_function("meaning_of_life",[](){ return 42; });
   extension.add_function("add",[](float a,int b){ return a+b; });
@@ -236,6 +235,18 @@ TEST_CASE("LuaGlue"){
       REQUIRE(lua.stackSize() == initialStackSize);
       //  REQUIRE_NOTHROW(lua.run("assert(a:shared_get_data() == 'hello')"));
     }
+  }
+
+  SECTION("Accept Any"){
+    extension.add_function("get_type", [](lars::Any value){ 
+      auto name = value.type().name();
+      return std::string(name.begin(), name.end()); }
+    );
+
+    REQUIRE(lua.get_value<std::string>("get_type(5)") == "double");
+    REQUIRE(lua.get_value<std::string>("get_type('hello')") == "std::string");
+    REQUIRE(lua.get_value<std::string>("get_type(nil)") == "void");
+    REQUIRE(lua.get_value<std::string>("get_type()") == "void");
   }
 
   /**

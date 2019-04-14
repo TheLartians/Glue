@@ -43,7 +43,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
 
 CPMAddPackage(
   NAME LHC
-  VERSION 0.6
+  VERSION 0.7
   GIT_REPOSITORY https://github.com/TheLartians/LHC.git
 )
 
