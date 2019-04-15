@@ -38,18 +38,18 @@ TEST_CASE("Definitions"){
 
   REQUIRE(get_typescript_definitions(*extension) == 
 R"(namespace inner {
+  class CA{
+    a(arg2: number, arg3: CA):void;
+    b():number;
+    static create():CA;
+  }
   class CB extends CA{
     c():CA;
     static create(arg1: number):CB;
   }
-  class CA{
-    b():number;
-    a(arg2: number, arg3: CA):void;
-    static create():CA;
-  }
 }
-function g(arg1: number, arg2: string):void;
 function f():number;
+function g(arg1: number, arg2: string):void;
 )");
 
 }

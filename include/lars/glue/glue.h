@@ -5,7 +5,7 @@
 #include <lars/visitor.h>
 #include <lars/event.h>
 
-#include <unordered_map>
+#include <map>
 
 namespace lars{
   
@@ -23,8 +23,8 @@ namespace lars{
   };
   
   class Extension{
-    using FunctionMap = std::unordered_map<std::string, AnyFunction>;
-    using ExtensionMap = std::unordered_map<std::string, std::shared_ptr<Extension>>;
+    using FunctionMap = std::map<std::string, AnyFunction>;
+    using ExtensionMap = std::map<std::string, std::shared_ptr<Extension>>;
     
     MUTATOR_MEMBER_PROTECTED(FunctionMap, functions, , );
     MUTATOR_MEMBER_PROTECTED(ExtensionMap, extensions, , );

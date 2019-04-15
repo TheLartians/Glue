@@ -1,6 +1,7 @@
 #include <lars/glue/definitions.h>
 #include <lars/type_index.h>
 #include <lars/iterators.h>
+#include <unordered_map>
 #include <sstream>
 
 namespace {
