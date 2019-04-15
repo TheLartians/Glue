@@ -1,5 +1,5 @@
 
-#include <lars/duktape_glue.h>
+#include <lars/glue/duktape.h>
 #include <lars/log.h>
 #include <lars/to_string.h>
 #include <lars/destructor.h>

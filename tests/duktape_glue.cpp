@@ -1,8 +1,7 @@
 #include <catch2/catch.hpp>
 #include <stdexcept>
 
-#include <lars/glue.h>
-#include <lars/duktape_glue.h>
+#include <lars/glue/duktape.h>
 
 TEST_CASE("DuktapeGlue"){
   lars::Extension extension;

@@ -1,5 +1,5 @@
 
-#include <lars/lua_glue.h>
+#include <lars/glue/lua.h>
 
 extern "C" {
 #include "lua.h"

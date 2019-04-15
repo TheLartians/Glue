@@ -2,9 +2,9 @@
 #include <catch2/catch.hpp>
 #include <stdexcept>
 
-#include <lars/glue.h>
-#include <lars/duktape_glue.h>
-#include <lars/lua_glue.h>
+#include <lars/glue/glue.h>
+#include <lars/glue/duktape.h>
+#include <lars/glue/lua.h>
 
 TEST_CASE("DukLua"){
   lars::Extension extension;
