@@ -1,21 +1,53 @@
 #include <catch2/catch.hpp>
 #include <stdexcept>
 
-#include <lars/glue/lua.h>
+#include <glue/lua.h>
+
+TEST_CASE("LuaState","[lua]"){
+  using namespace glue;
+
+  LuaState lua;
+  lua.openLibs();
+  
+  SECTION("get number"){
+    REQUIRE_NOTHROW(lua.run("x = 40"));
+    REQUIRE(lua.get<char>("x+2") == 42);
+    REQUIRE(lua.get<int>("x+2") == 42);
+    REQUIRE(lua.get<unsigned>("x+2") == 42);
+    REQUIRE(lua.get<long>("x+2") == 42);
+    REQUIRE(lua.get<size_t>("x+2") == 42);
+    REQUIRE(lua.get<float>("x+2") == 42);
+    REQUIRE(lua.get<double>("x/16") == Approx(2.5));
+  }
+  
+  SECTION("get boolean"){
+    REQUIRE(lua.get<bool>("true") == true);
+    REQUIRE(lua.get<bool>("not true") == false);
+  }
+  
+  SECTION("get string"){
+    REQUIRE(lua.get<std::string>("'Hello Lua!'") == "Hello Lua!");
+  }
+  
+}
+
+
+#if false
 
 TEST_CASE("LuaGlue"){
-  
-  lars::Extension extension;
+  using namespace glue;
+
+  Extension extension;
 
   // call functions and get return values
   extension.add_function("meaning_of_life",[](){ return 42; });
   extension.add_function("add",[](float a,int b){ return a+b; });
   
   SECTION("test extension functions"){
-    REQUIRE(extension.get_function("add").return_type() == lars::get_type_index<decltype(float(1)+int(2))>());
-    REQUIRE(extension.get_function("add").argument_type(0) == lars::get_type_index<float>());
-    REQUIRE(extension.get_function("add").argument_type(1) == lars::get_type_index<int>());
-    REQUIRE(extension.get_function("add")(lars::make_any<double>(2),lars::make_any<int>(3)).get_numeric<int>() == 5);
+    REQUIRE(extension.get_function("add").returnType() == lars::getTypeIndex<decltype(float(1)+int(2))>());
+    REQUIRE(extension.get_function("add").argumentType(0) == lars::getTypeIndex<float>());
+    REQUIRE(extension.get_function("add").argumentType(1) == lars::getTypeIndex<int>());
+    REQUIRE(extension.get_function("add")(lars::makeAny<double>(2),lars::makeAny<int>(3)).get<int>() == 5);
   }
     
   // callbacks
@@ -27,9 +59,9 @@ TEST_CASE("LuaGlue"){
   extension.add_function("call_stored_callback",[&](lars::AnyArguments &args){ return stored_function.call(args); });
   
   // create lua context
-  lars::LuaState lua;
+  LuaState lua;
   auto initialStackSize = lua.stackSize();
-  lua.open_libs();
+  lua.openLibs();
   REQUIRE(lua.stackSize() == initialStackSize);
   extension.connect(lua.get_glue());
   REQUIRE(lua.stackSize() == initialStackSize);
@@ -38,13 +70,13 @@ TEST_CASE("LuaGlue"){
     REQUIRE_NOTHROW(lua.run("function assert(x, msg) if not x then error(msg or 'assertion failed') end end") );
     REQUIRE(lua.stackSize() == initialStackSize);
     REQUIRE_NOTHROW(lua.run("assert(1 == 1)") );
-    REQUIRE_THROWS_AS(lua.run("assert(1 == 0)"), lars::LuaState::Error);
+    REQUIRE_THROWS_AS(lua.run("assert(1 == 0)"), LuaState::Error);
     REQUIRE(lua.stackSize() == initialStackSize);
-    REQUIRE(lua.get_value<std::string>("'Hello World!'") == "Hello World!");
-    REQUIRE(lua.get_value<int>("42") == 42);
-    REQUIRE_THROWS_AS(lua.run("error('')"), lars::LuaState::Error);
+    REQUIRE(lua.getValue<std::string>("'Hello World!'") == "Hello World!");
+    REQUIRE(lua.getValue<int>("42") == 42);
+    REQUIRE_THROWS_AS(lua.run("error('')"), LuaState::Error);
     struct Test {};
-    REQUIRE_THROWS(lua.get_value<Test>("42"));
+    REQUIRE_THROWS(lua.getValue<Test>("42"));
     REQUIRE(lua.stackSize() == initialStackSize);
   }
   
@@ -97,7 +129,7 @@ TEST_CASE("LuaGlue"){
   }
     
   SECTION("inner extensions"){
-    auto inner_extension = std::make_shared<lars::Extension>();
+    auto inner_extension = std::make_shared<glue::Extension>();
     inner_extension->add_function("before", []()->std::string{ return "inner=>before"; });
     extension.add_extension("inner", inner_extension);
     REQUIRE_NOTHROW(lua.run("assert(inner.before() == 'inner=>before')"));
@@ -110,26 +142,26 @@ TEST_CASE("LuaGlue"){
   }
   
   SECTION("extensions extension"){
-    auto extensions_extension = std::make_shared<lars::Extension>();
+    auto extensions_extension = std::make_shared<glue::Extension>();
     extension.add_extension("extensions", extensions_extension);
     extensions_extension->add_function("create_extension", [&](std::string name){
-      auto new_extension = std::make_shared<lars::Extension>();
+      auto new_extension = std::make_shared<glue::Extension>();
       extension.add_extension(name, new_extension);
       return new_extension;
     });
     
-    extensions_extension->add_function("add_function",[](std::shared_ptr<lars::Extension> extension,std::string name,lars::AnyFunction f){ extension->add_function(name, f); });
+    extensions_extension->add_function("add_function",[](std::shared_ptr<glue::Extension> extension,std::string name,lars::AnyFunction f){ extension->add_function(name, f); });
     REQUIRE_NOTHROW(lua.run("extension = extensions.create_extension('lua_extension')"));
 
     SECTION("call lua function without return value"){
       REQUIRE_NOTHROW(lua.run("extensions.add_function(extension,'f',function(x,y) tmp = 'called f(' .. tostring(x) .. ',' .. tostring(y) .. ')' end)"));
       REQUIRE_NOTHROW(lua.run("lua_extension.f(1,'x'); assert(tmp == 'called f(1.0,x)');"));
       auto f = extension.get_extension("lua_extension")->get_function("f");
-      REQUIRE(f);
+      REQUIRE(bool(f));
       REQUIRE_NOTHROW(f(std::string("x"),42));
-      REQUIRE(lua.get_value<std::string>("tmp") == "called f(x,42)");
+      REQUIRE(lua.getValue<std::string>("tmp") == "called f(x,42)");
       REQUIRE_NOTHROW(f(1));
-      REQUIRE(lua.get_value<std::string>("tmp") == "called f(1,nil)");
+      REQUIRE(lua.getValue<std::string>("tmp") == "called f(1,nil)");
       REQUIRE(lua.stackSize() == initialStackSize);
     }
     
@@ -144,7 +176,7 @@ TEST_CASE("LuaGlue"){
       REQUIRE_NOTHROW(lua.run("extensions.add_function(extension,'add',function(a,b) return a+b end)"));
       REQUIRE_NOTHROW(res = extension.get_extension("lua_extension")->get_function("add")(2,40));
       REQUIRE(res);
-      REQUIRE(res.get_numeric<int>() == 42);
+      REQUIRE(res.get<int>() == 42);
       REQUIRE(lua.stackSize() == initialStackSize);
     }
     
@@ -171,6 +203,7 @@ TEST_CASE("LuaGlue"){
   
   }
 
+/*
   SECTION("derived classes"){
     struct A:lars::Visitable<A>{ int value; A(){} };
     struct B:lars::DVisitable<B,A>{ B(){ value = 1; } };
@@ -178,19 +211,19 @@ TEST_CASE("LuaGlue"){
     
     extension.add_function("create_B", [](){ return B(); });
     extension.add_function("create_C", [](){ return C(); });
-    extension.add_function("get_value", [](A & a){ return a.value; });
+    extension.add_function("getValue", [](A & a){ return a.value; });
     extension.add_function("get_Cvalue", [](C & a){ return a.value; });
-    REQUIRE_NOTHROW(lua.run("assert(get_value(create_B()) == 1)"));
-    REQUIRE_NOTHROW(lua.run("assert(get_value(create_C()) == 2)"));
+    REQUIRE_NOTHROW(lua.run("assert(getValue(create_B()) == 1)"));
+    REQUIRE_NOTHROW(lua.run("assert(getValue(create_C()) == 2)"));
     REQUIRE_NOTHROW(lua.run("assert(get_Cvalue(create_C()) == 2)"));
     REQUIRE_THROWS(lua.run("assert(get_Cvalue(create_B()) == 2)"));
-    REQUIRE_THROWS(lua.run("get_value(create_my_class())"));
-    REQUIRE_THROWS(lua.run("get_value('test')"));
+    REQUIRE_THROWS(lua.run("getValue(create_my_class())"));
+    REQUIRE_THROWS(lua.run("getValue('test')"));
     REQUIRE(lua.stackSize() == initialStackSize);
   }
-  
+  */
   SECTION("class extensions"){
-    auto my_class_extension = std::make_shared<lars::Extension>();
+    auto my_class_extension = std::make_shared<glue::Extension>();
     my_class_extension->set_class<MyClass>();
     
     my_class_extension->add_function("new", [&](lars::AnyArguments &args){
@@ -206,13 +239,14 @@ TEST_CASE("LuaGlue"){
     REQUIRE_NOTHROW(lua.run("local a = MyClass.new(); a:set_data('a'); assert(a:get_data() == 'a');"));
     REQUIRE_NOTHROW(lua.run("local b = MyClass.new('b'); assert(b:get_data() == 'b');"));
   
+  /*
     SECTION("Derived classes"){
       class MyDerivedClass:public lars::BVisitable<MyDerivedClass,MyClass>{
       public:
         std::string data_2(){ return data + "2"; }
       };
       
-      auto my_derived_class_extension = std::make_shared<lars::Extension>();
+      auto my_derived_class_extension = std::make_shared<glue::Extension>();
       my_derived_class_extension->set_class<MyDerivedClass>();
       my_derived_class_extension->set_base_class<MyClass>();
       my_derived_class_extension->add_function("new", [](){ return MyDerivedClass(); });
@@ -234,18 +268,19 @@ TEST_CASE("LuaGlue"){
       REQUIRE(lua.stackSize() == initialStackSize);
       //  REQUIRE_NOTHROW(lua.run("assert(a:shared_get_data() == 'hello')"));
     }
+  */
   }
 
   SECTION("Accept Any"){
-    extension.add_function("get_type", [](lars::Any value){ 
+    extension.add_function("get_type", [](lars::Any &value){ 
       auto name = value.type().name();
       return std::string(name.begin(), name.end()); }
     );
 
-    REQUIRE(lua.get_value<std::string>("get_type(5)") == "double");
-    REQUIRE(lua.get_value<std::string>("get_type('hello')") == "std::string");
-    REQUIRE(lua.get_value<std::string>("get_type(nil)") == "void");
-    REQUIRE(lua.get_value<std::string>("get_type()") == "void");
+    REQUIRE(lua.getValue<std::string>("get_type(5)") == "double");
+    REQUIRE(lua.getValue<std::string>("get_type('hello')") == "std::string");
+    REQUIRE(lua.getValue<std::string>("get_type(nil)") == "void");
+    REQUIRE(lua.getValue<std::string>("get_type()") == "void");
   }
 
   /**
@@ -267,3 +302,5 @@ TEST_CASE("LuaGlue"){
   */
   
 }
+
+#endif

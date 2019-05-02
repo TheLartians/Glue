@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lars/glue/glue.h>
+#include <glue/glue.h>
 
 #include <string>
 #include <unordered_map>
@@ -8,7 +8,7 @@
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
 
-namespace lars {
+namespace glue {
   
   class DuktapeGlue:public Glue{
     duk_context * ctx = nullptr;
@@ -18,7 +18,7 @@ namespace lars {
     ~DuktapeGlue();
     
     std::string get_key(const Extension *parent)const;
-    void connect_function(const Extension *parent,const std::string &name,const AnyFunction &f)override;
+    void connect_function(const Extension *parent,const std::string &name,const lars::AnyFunction &f)override;
     void connect_extension(const Extension *parent,const std::string &name,const Extension &e)override;
   };
   
@@ -40,19 +40,14 @@ namespace lars {
     ~DuktapeContext();
     
     void run(const std::string_view &code);
-    lars::Any get_value(const std::string_view &code, lars::TypeIndex type);
+    lars::Any getValue(const std::string_view &code, lars::TypeIndex type);
     
-    template <class T> T get_value(const std::string &code){
+    template <class T> T getValue(const std::string &code){
       using RawType = typename std::remove_reference<typename std::remove_const<T>::type>::type;
-      auto anyValue = get_value(code, lars::get_type_index<RawType>());
+      auto anyValue = getValue(code, lars::getTypeIndex<RawType>());
       return anyValue.template get<T>();
     }
 
-    double get_numeric(const std::string &code){
-      auto anyValue = get_value(code, lars::get_type_index<double>());
-      return anyValue.template get_numeric<double>();
-    }
-    
     DuktapeGlue &get_glue();
     void collect_garbage();
   };

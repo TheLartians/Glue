@@ -49,14 +49,15 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsEvent
-  VERSION 1.0
+  VERSION 2.0.3
   GIT_REPOSITORY https://github.com/TheLartians/Event.git
 )
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 0.7
+  VERSION 1.6
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
+  GIT_TAG dev
 )
 
 # ---- enable C++ ----
@@ -71,22 +72,22 @@ set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources
   ${glue_source_dir}/glue.cpp
-  ${glue_source_dir}/definitions.cpp
+  ${glue_source_dir}/extension.cpp
 )
 
 set(headers
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/glue.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/definitions.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/glue.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/extension.h
 )
 
 if(${GLUE_ENABLE_DUKTAPE})
-  list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)
-  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/duktape.h)
+  list(APPEND sources ${glue_source_dir}/duktape.cpp)
+  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/duktape.h)
 endif()
 
 if(${GLUE_ENABLE_LUA})
-  list(APPEND sources ${glue_source_dir}/lua_glue.cpp)
-  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/lua.h)
+  list(APPEND sources ${glue_source_dir}/lua.cpp)
+  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/lua.h)
 endif()
 
 add_library(Glue ${sources} ${headers})

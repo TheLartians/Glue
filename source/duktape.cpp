@@ -1,7 +1,8 @@
 
-#include <lars/glue/duktape.h>
+#include <glue/duktape.h>
 #include <lars/log.h>
 #include <lars/to_string.h>
+#include <lars/unused.h>
 #include <lars/destructor.h>
 #include <duktape.h>
 
@@ -53,7 +54,7 @@ namespace {
         duk_push_this(ctx);
         
         // Store the underlying object
-        auto ptr = new internal_type<T>(lars::get_type_index<T>(),T());
+        auto ptr = new internal_type<T>(lars::getTypeIndex<T>(),T());
         duk_push_pointer(ctx, ptr);
         DUK_MEMORY_DEBUG_LOG("created " << ptr);
         
@@ -100,7 +101,7 @@ namespace {
       DUK_MEMORY_DEBUG_LOG("get: " << ptr);
       if(!ptr) return nullptr;
       auto * res = static_cast<internal_type<T> *>(ptr);
-      if(res->first != lars::get_type_index<T>()) return nullptr;
+      if(res->first != lars::getTypeIndex<T>()) return nullptr;
       return &res->second;
     }
     
@@ -165,28 +166,29 @@ namespace {
     void push_function(duk_context * ctx,const lars::AnyFunction &f);
     
     void push_value(duk_context * ctx,const lars::Any &value){
-      using namespace lars;
+      using namespace glue;
       
       if(!value){
         duk_push_undefined(ctx);
         return;
       }
       
-      struct PushVisitor:public ConstVisitor<lars::VisitableType<double>,lars::VisitableType<std::string>,lars::VisitableType<lars::AnyFunction>,lars::VisitableType<int>,lars::VisitableType<bool>,lars::VisitableType<StashedObject>>{
+      struct PushVisitor:public lars::RecursiveVisitor<bool, const char &, const int &, double,const std::string &,const lars::AnyFunction &,const StashedObject &>{
         duk_context * ctx;
-        bool push_any = false;
-        void visit_default(const lars::VisitableBase &)override{ DUK_VERBOSE_LOG("push any<" << data.type().name() << ">"); push_any = true; }
-        void visit(const lars::VisitableType<bool> &data)override{ DUK_VERBOSE_LOG("push bool"); duk_push_boolean(ctx, data.data); }
-        void visit(const lars::VisitableType<int> &data)override{ DUK_VERBOSE_LOG("push int"); duk_push_int(ctx, data.data); }
-        void visit(const lars::VisitableType<double> &data)override{ DUK_VERBOSE_LOG("push double"); duk_push_number(ctx, data.data); }
-        void visit(const lars::VisitableType<std::string> &data)override{ DUK_VERBOSE_LOG("push string"); duk_push_string(ctx, data.data.c_str()); }
-        void visit(const lars::VisitableType<lars::AnyFunction> &data)override{ DUK_VERBOSE_LOG("push function"); push_function(ctx,data.data); }
-        void visit(const lars::VisitableType<StashedObject> &data)override{ DUK_VERBOSE_LOG("push object"); data.data.push(); }
+        bool visit(bool data)override{ DUK_VERBOSE_LOG("push bool"); duk_push_boolean(ctx, data); return true; }
+        bool visit(const int &data)override{ DUK_VERBOSE_LOG("push int"); duk_push_int(ctx, data); return true; }
+        bool visit(const char &data)override{ DUK_VERBOSE_LOG("push int"); duk_push_int(ctx, data); return true; }
+        bool visit(double data)override{ DUK_VERBOSE_LOG("push char"); duk_push_number(ctx, data); return true; }
+        bool visit(const std::string &data)override{ DUK_VERBOSE_LOG("push string"); duk_push_string(ctx, data.c_str()); return true; }
+        bool visit(const lars::AnyFunction &data)override{ DUK_VERBOSE_LOG("push function"); push_function(ctx,data); return true; }
+        bool visit(const StashedObject &data)override{ DUK_VERBOSE_LOG("push object"); data.push(); return true; }
       } visitor;
       
       visitor.ctx = ctx;
-      value.accept_visitor(visitor);
-      if(visitor.push_any) create_and_push_object<lars::Any>(ctx) = value;
+      if(!value.accept(visitor)){
+        DUK_VERBOSE_LOG("push any<" << data.type().name() << ">");
+        create_and_push_object<lars::Any>(ctx) = lars::AnyReference(value);
+      };
     }
     
     lars::Any extract_value(duk_context * ctx,duk_idx_t idx,lars::TypeIndex type){
@@ -194,32 +196,32 @@ namespace {
       DUK_VERBOSE_LOG("extract " << type.name());
       
       if(auto ptr = get_object_ptr<lars::Any>(ctx,idx)){
-        if(ptr->type() == type || type == lars::get_type_index<lars::Any>()){
+        if(ptr->type() == type || type == lars::getTypeIndex<lars::Any>()){
           DUK_VERBOSE_LOG("extracted any<" << ptr->type().name() << ">");
-          return *ptr;
+          return std::move(*ptr);
         }
         else{
           DUK_VERBOSE_LOG("unsafe extracted any<" << ptr->type().name() << ">");
-          return *ptr;
+          return std::move(*ptr);
         }
       }
       
-      if(type == lars::get_type_index<lars::Any>()){
+      if(type == lars::getTypeIndex<lars::Any>()){
         switch (duk_get_type(ctx, idx)) {
-          case DUK_TYPE_NUMBER: type = lars::get_type_index<double>(); break;
-          case DUK_TYPE_STRING: type = lars::get_type_index<std::string>(); break;
-          case DUK_TYPE_BOOLEAN: type = lars::get_type_index<bool>(); break;
-          case DUK_TYPE_OBJECT: type = lars::get_type_index<StashedObject>(); break;
+          case DUK_TYPE_NUMBER: type = lars::getTypeIndex<double>(); break;
+          case DUK_TYPE_STRING: type = lars::getTypeIndex<std::string>(); break;
+          case DUK_TYPE_BOOLEAN: type = lars::getTypeIndex<bool>(); break;
+          case DUK_TYPE_OBJECT: type = lars::getTypeIndex<StashedObject>(); break;
           default: break;
         }
       }
       
-      if(type == lars::get_type_index<std::string>()){ return lars::make_any<std::string>(assert_value_exists(duk_to_string(ctx, idx))); }
-      else if(type == lars::get_type_index<double>()){ return lars::make_any<double>(assert_value_exists(duk_to_number(ctx, idx))); }
-      else if(type == lars::get_type_index<int>()){ return lars::make_any<int>(assert_value_exists(duk_to_int(ctx, idx))); }
-      else if(type == lars::get_type_index<bool>()){ return lars::make_any<bool>(assert_value_exists(duk_to_boolean(ctx, idx))); }
-      else if(type == lars::get_type_index<StashedObject>()){ return lars::make_any<StashedObject>(ctx,add_to_stash(ctx,idx)); }
-      else if(type == lars::get_type_index<lars::AnyFunction>()){
+      if(type == lars::getTypeIndex<std::string>()){ return lars::makeAny<std::string>(assert_value_exists(duk_to_string(ctx, idx))); }
+      else if(type == lars::getTypeIndex<double>()){ return lars::makeAny<double>(assert_value_exists(duk_to_number(ctx, idx))); }
+      else if(type == lars::getTypeIndex<int>()){ return lars::makeAny<int>(assert_value_exists(duk_to_int(ctx, idx))); }
+      else if(type == lars::getTypeIndex<bool>()){ return lars::makeAny<bool>(assert_value_exists(duk_to_boolean(ctx, idx))); }
+      else if(type == lars::getTypeIndex<StashedObject>()){ return lars::makeAny<StashedObject>(ctx,add_to_stash(ctx,idx)); }
+      else if(type == lars::getTypeIndex<lars::AnyFunction>()){
         auto key = add_to_stash(ctx,idx);
         auto active = get_duktape_active_flag(ctx);
         lars::AnyFunction f = [=,destructor = lars::make_shared_destructor([=](){
@@ -233,12 +235,12 @@ namespace {
           for(auto && arg:args) push_value(ctx, arg);
           duk_call(ctx, args.size());
           if(duk_is_undefined(ctx, -1)){ DUK_VERBOSE_LOG("call has no return value"); return lars::Any(); }
-          auto result = extract_value(ctx, -1, lars::get_type_index<lars::Any>());
+          auto result = extract_value(ctx, -1, lars::getTypeIndex<lars::Any>());
           DUK_VERBOSE_LOG("result type: " << result.type().name());
           duk_pop(ctx);
           return result;
         };
-        return lars::make_any<lars::AnyFunction>(f);
+        return lars::makeAny<lars::AnyFunction>(f);
       }
       else{
         DUK_VERBOSE_LOG("cannot extract from: " << as_string(ctx, idx));
@@ -261,11 +263,10 @@ namespace {
         
         lars::AnyArguments args;
         
-        auto argc = f.argument_count();
-        if(argc == -1) argc = duk_get_top(ctx);
+        auto argc = f.isVariadic() ? duk_get_top(ctx) : f.argumentCount();
         DUK_VERBOSE_LOG("calling function " << &f << " with " << argc << " arguments");
         
-        for(int i=0;i<argc;++i) args.emplace_back(extract_value(ctx, i, f.argument_type(i)));
+        for(size_t i=0;i<argc;++i) args.emplace_back(extract_value(ctx, i, f.argumentType(i)));
         
         auto result = f.call(args);
         
@@ -275,7 +276,7 @@ namespace {
         }
         
         return 0;
-      }, f.argument_count() != -1 ? f.argument_count() : DUK_VARARGS);
+      }, f.isVariadic() ? DUK_VARARGS : f.argumentCount());
       
       create_and_push_object<lars::AnyFunction>(ctx) = f;
       duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("data"));
@@ -301,7 +302,7 @@ namespace {
   }
 }
   
-namespace lars {
+namespace glue {
   
   DuktapeGlue::DuktapeGlue(duk_context * c):ctx(c){
     duk_push_global_object(ctx);
@@ -337,7 +338,7 @@ namespace lars {
   
 }
 
-namespace lars {
+namespace glue {
   
   const char * DuktapeContext::Error::what() const noexcept {
     return duk_safe_to_string(ctx, -1);
@@ -372,7 +373,7 @@ namespace lars {
     duk_pop(ctx);
   }
   
-  lars::Any DuktapeContext::get_value(const std::string_view &code, lars::TypeIndex type){
+  lars::Any DuktapeContext::getValue(const std::string_view &code, lars::TypeIndex type){
     duk_push_lstring(ctx, code.data(), code.size());
     if (duk_peval(ctx) != 0) { throw Error(ctx); }
     auto result = duk_glue::extract_value(ctx, -1, type);

@@ -1,9 +1,10 @@
+/*
 #include <catch2/catch.hpp>
-#include <lars/glue/definitions.h>
+#include <glue/definitions.h>
 
 
 TEST_CASE("Definitions"){
-  using namespace lars;
+  using namespace glue;
 
   struct A {
     void a(double, const A &){}    
@@ -55,3 +56,4 @@ function g(arg1: number, arg2: string):void;
 }
 
 
+*/

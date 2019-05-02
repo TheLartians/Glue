@@ -1,29 +1,36 @@
 #pragma once
 
 #include <lars/any.h>
+#include <lars/any_function.h>
+
 #include <lars/mutator.h>
 #include <lars/visitor.h>
 #include <lars/event.h>
 
 #include <map>
+#include <unordered_map>
+#include <variant>
+#include <vector>
+#include <exception>
+#include <memory>
 
-namespace lars{
+namespace glue{
   
   class Extension;
   
   class Glue{
   private:
     friend Extension;
-    MultiOberserver function_added_observer;
-    MultiOberserver extension_added_observer;
+    std::vector<lars::Observer> observers;
   public:
-    virtual void connect_function(const Extension *parent,const std::string &name,const AnyFunction &f) = 0;
+    virtual void connect_function(const Extension *parent,const std::string &name,const lars::AnyFunction &f) = 0;
     virtual void connect_extension(const Extension *parent,const std::string &name,const Extension &e) = 0;
     virtual ~Glue(){}
   };
   
   class Extension{
-    using FunctionMap = std::map<std::string, AnyFunction>;
+  private:
+    using FunctionMap = std::map<std::string, lars::AnyFunction>;
     using ExtensionMap = std::map<std::string, std::shared_ptr<Extension>>;
     
     MUTATOR_MEMBER_PROTECTED(FunctionMap, functions, , );
@@ -31,17 +38,29 @@ namespace lars{
     MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, class_type, , );
     MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, shared_class_type, , );
     MUTATOR_MEMBER_PROTECTED(std::unique_ptr<lars::TypeIndex>, base_class_type, , );
-    public:
     
-    Event<std::string,AnyFunction> on_function_added;
-    Event<std::string,const Extension &> on_extension_added;
+  public:
 
-    void add_function(const std::string &name,const AnyFunction &f);
+    class MemberNotFoundException:public std::exception{
+    private:
+      mutable std::string buffer;
+    public:
+      std::string name;
+      MemberNotFoundException(const std::string &_name):name(_name){}
+      const char * what()const noexcept override;
+    };
+    
+    lars::Event<std::string,lars::AnyFunction> on_function_added;
+    lars::Event<std::string,const Extension &> on_extension_added;
+
+    void add_function(const std::string &name,const lars::AnyFunction &f);
     void add_extension(const std::string &name,const std::shared_ptr<Extension> &);
 
-    const AnyFunction &get_function(const std::string &name){
+    const lars::AnyFunction &get_function(const std::string &name){
       auto it = functions().find(name);
-      if(it == functions().end()) throw std::runtime_error("function not found");
+      if(it == functions().end()){
+        throw MemberNotFoundException(name);
+      }
       return it->second;
     }
     
@@ -54,13 +73,18 @@ namespace lars{
     void connect(Glue & glue)const;
     
     template <class T> void set_class(){
-      set_class_type(new TypeIndex(get_type_index<T>()));
-      set_shared_class_type(new TypeIndex(get_type_index<std::shared_ptr<T>>()));
+      set_class_type(new lars::TypeIndex(lars::getTypeIndex<T>()));
+      set_shared_class_type(new lars::TypeIndex(lars::getTypeIndex<std::shared_ptr<T>>()));
     }
-    template <class T> void set_base_class(){ set_base_class_type(new TypeIndex(get_type_index<T>())); }
+    
+    template <class T> void set_base_class(){
+      set_base_class_type(new lars::TypeIndex(lars::getTypeIndex<T>()));
+    }
     
     virtual ~Extension(){}
   };
+
+  
   
   
 }
