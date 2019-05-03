@@ -18,21 +18,18 @@ namespace glue{
     struct MemberNotFoundException;
     struct Member;
     
-    NewExtension():data(std::make_shared<Data>()){}
+    NewExtension();
     
     Member &getMember();
     const Member &getMember()const;
     
     NewExtension::Member * getMember(const std::string &key);
     const NewExtension::Member * getMember(const std::string &key)const;
-    Member &operator[](const std::string &key){ return data->members[key]; }
+    Member &operator[](const std::string &key);
     const Member &operator[](const std::string &key) const ;
     
   private:
-    struct Data {
-      std::unordered_map<std::string, Member> members;
-    };
-    
+    struct Data;
     std::shared_ptr<Data> data;
   };
   

@@ -2,6 +2,13 @@
 
 using namespace glue;
 
+struct NewExtension::Data {
+  std::unordered_map<std::string, Member> members;
+};
+
+NewExtension::NewExtension():data(std::make_shared<Data>()){
+  
+}
 
 NewExtension::Member * NewExtension::getMember(const std::string &key){
   auto it = data->members.find(key);
@@ -23,6 +30,10 @@ const NewExtension::Member * NewExtension::getMember(const std::string &key)cons
     }
     return nullptr;
   }
+}
+
+NewExtension::Member &NewExtension::operator[](const std::string &key){
+  return data->members[key];
 }
 
 const NewExtension::Member &NewExtension::operator[](const std::string &key)const{

@@ -1,3 +1,5 @@
+#if false
+
 
 #include <glue/duktape.h>
 #include <lars/log.h>
@@ -386,3 +388,4 @@ namespace glue {
   }
 
 }
+#endif

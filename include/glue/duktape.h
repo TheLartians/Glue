@@ -1,5 +1,7 @@
 #pragma once
 
+#if false
+
 #include <glue/glue.h>
 
 #include <string>
@@ -53,3 +55,5 @@ namespace glue {
   };
 
 }
+
+#endif
