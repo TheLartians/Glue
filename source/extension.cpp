@@ -2,16 +2,16 @@
 
 using namespace glue;
 
-struct NewExtension::Data {
+struct Extension::Data {
   std::unordered_map<std::string, Member> members;
   lars::Event<const std::string &, const Member &> onMemberChanged;
 };
 
-NewExtension::NewExtension():data(std::make_shared<Data>()),onMemberChanged(data->onMemberChanged){
+Extension::Extension():data(std::make_shared<Data>()),onMemberChanged(data->onMemberChanged){
   
 }
 
-NewExtension::Member * NewExtension::getMember(const std::string &key){
+Extension::Member * Extension::getMember(const std::string &key){
   auto it = data->members.find(key);
   if (it != data->members.end()) {
     return &it->second;
@@ -20,7 +20,7 @@ NewExtension::Member * NewExtension::getMember(const std::string &key){
   }
 }
 
-const NewExtension::Member * NewExtension::getMember(const std::string &key)const{
+const Extension::Member * Extension::getMember(const std::string &key)const{
   auto it = data->members.find(key);
   if (it != data->members.end()) {
     return &it->second;
@@ -34,79 +34,79 @@ const NewExtension::Member * NewExtension::getMember(const std::string &key)cons
 }
 
 
-NewExtension::Member &NewExtension::getOrCreateMember(const std::string &key){
+Extension::Member &Extension::getOrCreateMember(const std::string &key){
   return data->members[key];
 }
 
-NewExtension::MemberDelegate NewExtension::operator[](const std::string &key){
+Extension::MemberDelegate Extension::operator[](const std::string &key){
   return MemberDelegate(this, key);
 }
 
-const NewExtension::Member &NewExtension::operator[](const std::string &key)const{
+const Extension::Member &Extension::operator[](const std::string &key)const{
   if (auto member = getMember(key)) {
     return *member;
   } else {
-    throw NewExtension::MemberNotFoundException(key);
+    throw Extension::MemberNotFoundException(key);
   }
 }
 
-const char * NewExtension::MemberNotFoundException::what()const noexcept{
+const char * Extension::MemberNotFoundException::what()const noexcept{
   if (buffer.size() == 0) {
     buffer = "extension contains no function '" + name + "'.";
   }
   return buffer.c_str();
 }
 
-const lars::Any & NewExtension::Member::asAny() const {
+const lars::Any & Extension::Member::asAny() const {
   if (auto res = std::get_if<lars::Any>(&data)) {
     return *res;
   }
-  throw NewExtension::Member::InvalidCastException();
+  throw Extension::Member::InvalidCastException();
 }
 
-lars::Any & NewExtension::Member::asAny() {
+lars::Any & Extension::Member::asAny() {
   if (auto res = std::get_if<lars::Any>(&data)) {
     return *res;
   }
-  throw NewExtension::Member::InvalidCastException();
+  throw Extension::Member::InvalidCastException();
 }
 
-const lars::AnyFunction & NewExtension::Member::asFunction() const {
+const lars::AnyFunction & Extension::Member::asFunction() const {
   if (auto res = std::get_if<lars::AnyFunction>(&data)) {
     return *res;
   } else if(auto res = asAny().tryGet<const lars::AnyFunction>()) {
     return *res;
   }
-  throw NewExtension::Member::InvalidCastException();
+  throw Extension::Member::InvalidCastException();
 }
 
-const NewExtension & NewExtension::Member::asExtension() const {
-  if (auto res = std::get_if<NewExtension>(&data)) {
+const Extension & Extension::Member::asExtension() const {
+  if (auto res = std::get_if<Extension>(&data)) {
     return *res;
-  } else if(auto res = asAny().tryGet<const NewExtension>()) {
+  } else if(auto res = asAny().tryGet<const Extension>()) {
     return *res;
   }
-  throw NewExtension::Member::InvalidCastException();
+  throw Extension::Member::InvalidCastException();
 }
 
-void NewExtension::Member::setValue(lars::Any &&v){
+void Extension::Member::setValue(lars::Any &&v){
   data = std::move(v);
 }
 
-void NewExtension::Member::setFunction(const lars::AnyFunction &f){
+void Extension::Member::setFunction(const lars::AnyFunction &f){
   data = f;
 }
 
-void NewExtension::Member::setExtension(const NewExtension &e){
+void Extension::Member::setExtension(const Extension &e){
   data = e;
 }
 
-NewExtension::Member &NewExtension::Member::operator=(const lars::AnyFunction &f){
+Extension::Member &Extension::Member::operator=(const lars::AnyFunction &f){
   setFunction(f);
   return *this;
 }
 
-NewExtension::Member &NewExtension::Member::operator=(const NewExtension &e){
+Extension::Member &Extension::Member::operator=(const Extension &e){
   setExtension(e);
   return *this;
 }

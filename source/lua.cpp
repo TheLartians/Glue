@@ -479,7 +479,7 @@ namespace {
         LARS_LUA_GLUE_LOG("captured function " << as_string(L,idx) << " with context " << L);
         auto captured = std::make_shared<RegistryObject>(L,add_to_registry(L,idx));
         
-        lars::AnyFunction f = [captured](lars::AnyArguments &args){
+        lars::AnyFunction f = [captured](const lars::AnyArguments &args){
           if (!*captured->lua_active) {
             throw std::runtime_error("calling function with invalid lua context");
           }
@@ -585,6 +585,7 @@ namespace glue {
     return keys.find(nullptr)->second;
   }
   
+  /*
   void LuaGlue::connect_function(const Extension *parent,const std::string &name,const lars::AnyFunction &f){
     LARS_LUA_GLUE_LOG("connecting function " << name << " with parent " << &parent);
     INCREASE_INDENT;
@@ -636,7 +637,7 @@ namespace glue {
     DECREASE_INDENT;
     LARS_LUA_GLUE_LOG("finished connecting extension " << name << " with parent " << &parent);
   }
-  
+  */
 }
 
 namespace glue {
@@ -708,14 +709,14 @@ namespace glue {
     
   }
   
-  lars::Any LuaState::get(const std::string &str, const std::string &name) const {
+  lars::Any LuaState::get(const std::string &str) const {
     LARS_LUA_GLUE_LOG("getting value: " << str);
 
     auto N = lua_gettop(L);
     auto code = "return " + str;
     
     INCREASE_INDENT;
-    luaL_loadbuffer(L, code.data(), code.size(), name.c_str());
+    luaL_loadbuffer(L, code.data(), code.size(), "LuaGlue get value");
     DECREASE_INDENT;
     
     if(lua_pcall(L, 0, 1, 0)) {
@@ -729,6 +730,11 @@ namespace glue {
     LARS_LUA_GLUE_LOG("finished running code");
     lua_settop(L, N);
     return result;
+  }
+  
+  void LuaState::set(const std::string &name, const lars::AnyReference &value)const{
+    lua_glue::push_value(L, value);
+    lua_setglobal(L, name.c_str());
   }
   
   void LuaState::collectGarbage()const{

@@ -14,7 +14,7 @@ namespace glue{
   using Any = lars::Any;
   using AnyFunction = lars::AnyFunction;
   
-  class NewExtension {
+  class Extension {
   private:
     struct Data;
     std::shared_ptr<Data> data;
@@ -26,10 +26,10 @@ namespace glue{
 
     lars::EventReference<const std::string &, const Member &> onMemberChanged;
     
-    NewExtension();
+    Extension();
     
-    NewExtension::Member * getMember(const std::string &key);
-    const NewExtension::Member * getMember(const std::string &key)const;
+    Extension::Member * getMember(const std::string &key);
+    const Extension::Member * getMember(const std::string &key)const;
     MemberDelegate operator[](const std::string &key);
     const Member &operator[](const std::string &key) const ;
     
@@ -37,7 +37,7 @@ namespace glue{
     Member &getOrCreateMember(const std::string &key);
   };
   
-  struct NewExtension::MemberNotFoundException:public std::exception{
+  struct Extension::MemberNotFoundException:public std::exception{
   private:
     mutable std::string buffer;
   public:
@@ -55,16 +55,16 @@ namespace glue{
   template <class T, class = void> struct is_callable : std::false_type { };
   template <class T> struct is_callable<T, void_t<has_opr_t<typename std::decay<T>::type>>> : std::true_type { };
   
-  struct NewExtension::Member{
+  struct Extension::Member{
   private:
     void setValue(lars::Any &&);
     void setFunction(const lars::AnyFunction &);
-    void setExtension(const NewExtension &);
+    void setExtension(const Extension &);
 
     std::variant<
       lars::Any,
       lars::AnyFunction,
-      NewExtension
+      Extension
     > data;
 
   public:
@@ -77,7 +77,7 @@ namespace glue{
     const lars::Any & asAny() const;
     
     const lars::AnyFunction & asFunction() const;
-    const NewExtension & asExtension() const;
+    const Extension & asExtension() const;
     
     template <typename ... Args> lars::Any operator()(Args && ... args)const{
       return asFunction()(std::forward<Args>(args)...);
@@ -88,11 +88,11 @@ namespace glue{
     }
 
     Member &operator=(const lars::AnyFunction &);
-    Member &operator=(const NewExtension &);
+    Member &operator=(const Extension &);
     
     template <class T> typename std::enable_if<
       !is_callable<T>::value && !std::is_base_of<
-        NewExtension, typename std::remove_reference<T>::type
+        Extension, typename std::remove_reference<T>::type
       >::value,
       Member &
     >::type operator=(T && v){
@@ -103,16 +103,16 @@ namespace glue{
     template <class T> T get()const{ return asAny().get<T>(); }
     template <class T> T get(){ return asAny().get<T>(); }
     operator const lars::AnyFunction &()const{ return asFunction(); }
-    operator const NewExtension &()const{ return asExtension(); }
+    operator const Extension &()const{ return asExtension(); }
     operator const lars::Any &()const{ return asAny(); }
     operator lars::Any &(){ return asAny(); }
   };
   
-  struct NewExtension::MemberDelegate {
+  struct Extension::MemberDelegate {
   private:
-    NewExtension * parent;
+    Extension * parent;
     std::string key;
-    NewExtension::Member * member;
+    Extension::Member * member;
     
     Member &getMember()const{
       if (member){
@@ -124,7 +124,7 @@ namespace glue{
     
   public:
     
-    MemberDelegate(NewExtension * p, const std::string &k):parent(p),key(k){
+    MemberDelegate(Extension * p, const std::string &k):parent(p),key(k){
       member = parent->getMember(key);
     }
     MemberDelegate(const MemberDelegate &) = delete;
@@ -142,7 +142,7 @@ namespace glue{
     explicit operator bool(){ return member != nullptr; }
     
     operator const lars::AnyFunction &()const{ return getMember(); }
-    operator const NewExtension &()const{ return getMember(); }
+    operator const Extension &()const{ return getMember(); }
     operator lars::Any &()const{ return getMember(); }
     
     template <typename ... Args> lars::Any operator()(Args && ... args)const{
@@ -158,7 +158,7 @@ namespace glue{
    * Tells a language binding that extension methods may be interpreted as class methods.
    */
   static const std::string classKey = "__class";
-  template <class T> void setClass(NewExtension &extension){
+  template <class T> void setClass(Extension &extension){
     extension[classKey] = lars::getTypeIndex<T>();
   }
   
@@ -166,7 +166,7 @@ namespace glue{
    * Tells a language binding that members may be inherited from the other extension.
    */
   static const std::string extendsKey = "__extends";
-  inline void setExtends(NewExtension &extension, const NewExtension &other){
+  inline void setExtends(Extension &extension, const Extension &other){
     extension[extendsKey] = other;
   }
   

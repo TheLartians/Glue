@@ -1,12 +1,12 @@
 #include <catch2/catch.hpp>
-#include <stdexcept>
+#include <set>
 
 #include <glue/extension.h>
 
 using namespace glue;
 
 TEST_CASE("Extension", "[extension]"){
-  NewExtension extension;
+  Extension extension;
   
   SECTION("Values"){
     extension["v"] = 42;
@@ -19,7 +19,7 @@ TEST_CASE("Extension", "[extension]"){
     REQUIRE_THROWS(extension["v"].get<std::string>());
     REQUIRE_NOTHROW(static_cast<lars::Any &>(extension["v"]));
     REQUIRE_NOTHROW(static_cast<const lars::Any &>(extension["v"]));
-    REQUIRE_THROWS(static_cast<const NewExtension &>(extension["v"]));
+    REQUIRE_THROWS(static_cast<const Extension &>(extension["v"]));
     REQUIRE_THROWS(static_cast<const lars::AnyFunction &>(extension["v"]));
     
     extension["s"] = "Hello Glue!";
@@ -30,7 +30,7 @@ TEST_CASE("Extension", "[extension]"){
     SECTION("Undefined member"){
       REQUIRE_NOTHROW(extension.getMember("add") == nullptr);
       REQUIRE_NOTHROW(std::as_const(extension).getMember("add") == nullptr);
-      REQUIRE_THROWS_AS(std::as_const(extension)["add"], NewExtension::MemberNotFoundException);
+      REQUIRE_THROWS_AS(std::as_const(extension)["add"], Extension::MemberNotFoundException);
       REQUIRE_THROWS_WITH(std::as_const(extension)["add"], Catch::Matchers::Contains("add"));
     }
     
@@ -47,7 +47,7 @@ TEST_CASE("Extension", "[extension]"){
     SECTION("function casting"){
       extension["f"] = [](){ };
       REQUIRE_NOTHROW(extension["f"]());
-      REQUIRE_THROWS_AS(static_cast<const NewExtension&>(extension["f"]), NewExtension::Member::InvalidCastException);
+      REQUIRE_THROWS_AS(static_cast<const Extension&>(extension["f"]), Extension::Member::InvalidCastException);
     }
     
     SECTION("Arguments"){
@@ -69,19 +69,30 @@ TEST_CASE("Extension", "[extension]"){
  
   SECTION("Inner extension"){
     {
-    NewExtension inner;
+    Extension inner;
     inner["f"] = [](){ return 5; };
     extension["inner"] = inner;
     }
-    REQUIRE_NOTHROW(static_cast<const NewExtension &>(extension["inner"]));
+    REQUIRE_NOTHROW(static_cast<const Extension &>(extension["inner"]));
     REQUIRE(extension["inner"]["f"]().get<int>() == 5);
   }
   
   SECTION("extends"){
-    NewExtension inner;
+    Extension inner;
     inner["v"] = 5;
     setExtends(extension, inner);
     REQUIRE(std::as_const(extension)["v"].get<int>() == 5);
+  }
+  
+  SECTION("events"){
+    unsigned changes = 0;
+    std::set<std::string> changedItems;
+    extension.onMemberChanged.connect([&](auto &key, auto &){ changes++; changedItems.insert(key); });
+    extension["a"] = 1;
+    extension["b"] = 2;
+    extension["a"] = 3;
+    REQUIRE(changedItems.size() == 2);
+    REQUIRE(changes == 3);
   }
   
 }
@@ -99,11 +110,11 @@ TEST_CASE("Class extension", "[extension]"){
     int member(int v){ return value + v; };
   };
   
-  NewExtension baseExtension;
+  Extension baseExtension;
   setClass<Base>(baseExtension);
   baseExtension["value"] = [](Base &b){ return b.value; };
   
-  NewExtension aExtension;
+  Extension aExtension;
   setClass<A>(aExtension);
   aExtension["create"] = [](int v){ return Any::withBases<A,Base>(v); };
   setExtends(aExtension, baseExtension);

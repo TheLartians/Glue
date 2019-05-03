@@ -9,6 +9,11 @@ TEST_CASE("LuaState","[lua]"){
   LuaState lua;
   lua.openLibs();
   
+  SECTION("get nothing"){
+    REQUIRE(!lua.get("nil"));
+    REQUIRE_THROWS(lua.get<int>("nil"));
+  }
+  
   SECTION("get number"){
     REQUIRE_NOTHROW(lua.run("x = 40"));
     REQUIRE(lua.get<char>("x+2") == 42);
@@ -17,7 +22,7 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua.get<long>("x+2") == 42);
     REQUIRE(lua.get<size_t>("x+2") == 42);
     REQUIRE(lua.get<float>("x+2") == 42);
-    REQUIRE(lua.get<double>("x/16") == Approx(2.5));
+    REQUIRE(lua.get<double>("(x/16-0.4)*2") == Approx(4.2));
   }
   
   SECTION("get boolean"){
@@ -29,6 +34,20 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua.get<std::string>("'Hello Lua!'") == "Hello Lua!");
   }
   
+  SECTION("get and call function"){
+    REQUIRE(lua.get<lars::AnyFunction>("function(x) return x+1 end")(41).get<int>() == 42);
+  }
+  
+  SECTION("set and call function"){
+    lua.set("f", lars::AnyFunction([](int x){ return x+3; }));
+    REQUIRE(lua.get<int>("f(39)") == 42);
+  }
+
+  SECTION("set value"){
+    lua.set("y", 21);
+    REQUIRE(lua.get<int>("2*y") == 42);
+  }
+ 
 }
 
 

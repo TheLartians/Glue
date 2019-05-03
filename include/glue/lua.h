@@ -19,10 +19,7 @@ namespace glue {
   public:
   
     LuaGlue(lua_State * state);
-    ~LuaGlue();
-    
-    void connect_function(const Extension *parent,const std::string &name,const lars::AnyFunction &f)override;
-    void connect_extension(const Extension *parent,const std::string &name,const Extension &e)override;
+    ~LuaGlue();    
   };
  
   class LuaState {
@@ -76,14 +73,19 @@ namespace glue {
     /**
      * Runs the code and returns the result as a `lars::Any`
      */
-    lars::Any get(const std::string &value, const std::string &name = "anonymous lua code") const;
+    lars::Any get(const std::string &value) const;
     
     /**
      * Runs the code and returns the result as `T`
      */
-    template <class T> T get(const std::string &code,const std::string &name = "anonymous lua code") const {
-      return get(code, name).get<T>();
+    template <class T> T get(const std::string &code) const {
+      return get(code).get<T>();
     }
+    
+    /**
+     * Sets the global variable named `name` to `value`
+     */
+    void set(const std::string &name, const lars::AnyReference & value) const;
     
     /**
      * Runs lua garbage collector
