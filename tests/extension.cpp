@@ -68,11 +68,20 @@ TEST_CASE("Extension", "[extension]"){
   }
  
   SECTION("Inner extension"){
+    {
     NewExtension inner;
     inner["f"] = [](){ return 5; };
     extension["inner"] = inner;
+    }
     REQUIRE_NOTHROW(static_cast<const NewExtension &>(extension["inner"]));
     REQUIRE(extension["inner"]["f"]().get<int>() == 5);
+  }
+  
+  SECTION("extends"){
+    NewExtension inner;
+    inner["v"] = 5;
+    setExtends(extension, inner);
+    REQUIRE(std::as_const(extension)["v"].get<int>() == 5);
   }
   
 }
@@ -100,21 +109,5 @@ TEST_CASE("Class extension", "[extension]"){
   setExtends(aExtension, baseExtension);
   
   auto a = aExtension["create"](42);
-  REQUIRE(baseExtension["value"](a).get<int>() == 42);
+  REQUIRE(std::as_const(aExtension)["value"](a).get<int>() == 42);
 }
-
-/*
-
-TEST_CASE("Automatic Casting", "[extension]"){
-  using namespace glue;
-
-  struct A: public lars::Visitable<A> { int value = 0; };
-  struct B: public lars::DerivedVisitable<B, A> { B(){ value = 1; } };
-  struct C: public lars::DerivedVisitable<C, B> { C(){ value = 2; } };
-
-  Extension extension;
-  extension.add_function("add_A", [](A & x,A & y){ A a; a.value = x.value+y.value; return a; });
-  REQUIRE( extension.get_function("add_A")(B(),C()).get<A &>().value == 3 );
-}
-
-*/

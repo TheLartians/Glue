@@ -107,12 +107,20 @@ namespace glue{
     operator lars::Any &(){ return asAny(); }
   };
   
+  /**
+   * Tells a language binding that extension methods may be interpreted as class methods.
+   */
+  static const std::string classKey = "__class";
   template <class T> void setClass(NewExtension &extension){
-    extension["__class"] = lars::getTypeIndex<T>();
+    extension[classKey] = lars::getTypeIndex<T>();
   }
   
+  /**
+   * Tells a language binding that members may be inherited from the other extension.
+   */
+  static const std::string extendsKey = "__extends";
   inline void setExtends(NewExtension &extension, const NewExtension &other){
-    extension["__extends"] = other;
+    extension[extendsKey] = other;
   }
   
 }

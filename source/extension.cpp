@@ -17,6 +17,10 @@ const NewExtension::Member * NewExtension::getMember(const std::string &key)cons
   if (it != data->members.end()) {
     return &it->second;
   } else {
+    auto extends = data->members.find("__extends");
+    if (extends != data->members.end()) {
+      return extends->second.asExtension().getMember(key);
+    }
     return nullptr;
   }
 }
