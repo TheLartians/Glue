@@ -3,6 +3,7 @@
 #include <lars/any.h>
 #include <lars/any_function.h>
 #include <lars/make_function.h>
+#include <lars/event.h>
 
 #include <unordered_map>
 #include <variant>

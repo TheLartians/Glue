@@ -85,7 +85,7 @@ const NewExtension & NewExtension::Member::asExtension() const {
 
 void NewExtension::Member::setValue(lars::Any &&v){
   data = std::move(v);
-};
+}
 
 void NewExtension::Member::setFunction(const lars::AnyFunction &f){
   data = f;
