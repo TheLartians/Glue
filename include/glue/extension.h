@@ -127,6 +127,7 @@ namespace glue{
     MemberDelegate(NewExtension * p, const std::string &k):parent(p),key(k){
       member = parent->getMember(key);
     }
+    MemberDelegate(const MemberDelegate &) = delete;
     
     template <class T> MemberDelegate &operator=(T && value){
       if (!member) {
@@ -139,13 +140,15 @@ namespace glue{
     
     template <class T> T get(){ return getMember().get<T>(); }
     explicit operator bool(){ return member != nullptr; }
+    
     operator const lars::AnyFunction &()const{ return getMember(); }
     operator const NewExtension &()const{ return getMember(); }
-    operator const lars::Any &()const{ return getMember(); }
-    operator lars::Any &(){ return getMember(); }
+    operator lars::Any &()const{ return getMember(); }
+    
     template <typename ... Args> lars::Any operator()(Args && ... args)const{
       return getMember()(args...);
     }
+    
     const Member &operator[](const std::string &key)const{
       return getMember()[key];
     }
