@@ -10,23 +10,11 @@
 struct lua_State;
 
 namespace glue {
-  
-  class LuaGlue:public Glue{
-    lua_State * L = nullptr;
-    std::unordered_map<const Extension *, std::string> keys;
-    const std::string & get_key(const Extension *parent)const;
-    
-  public:
-  
-    LuaGlue(lua_State * state);
-    ~LuaGlue();    
-  };
- 
+   
   class LuaState {
   private:
     lua_State * L;
     bool ownsState;
-    LuaGlue glue;
     
   public:
     
@@ -53,12 +41,6 @@ namespace glue {
     LuaState(lua_State * state);
     
     LuaState(const LuaState &other) = delete;
-
-    /**
-     * The glue associated with this lua state.
-     * Will be destroyed with the state.
-     */
-    LuaGlue &getGlue() { return glue; };
     
     /**
      * Loads the standard lua libraries

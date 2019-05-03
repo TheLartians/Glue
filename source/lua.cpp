@@ -564,13 +564,14 @@ namespace {
 }
 
 namespace glue {
+  /*
 
   LuaGlue::LuaGlue(lua_State * s):L(s){
     LARS_LUA_GLUE_LOG("creating Glue " << this);
     INCREASE_INDENT;
-    lua_pushglobaltable(L);
-    keys[nullptr] = lua_glue::add_to_registry(s);
-    lua_pop(L, 1);
+    //lua_pushglobaltable(L);
+    //keys[nullptr] = lua_glue::add_to_registry(s);
+    //lua_pop(L, 1);
     DECREASE_INDENT;
     LARS_LUA_GLUE_LOG("finished creating Glue");
   }
@@ -579,13 +580,14 @@ namespace glue {
     
   }
 
+  
+
   const std::string &LuaGlue::get_key(const Extension *parent)const{
     auto it = keys.find(parent);
     if(it != keys.end()) return it->second;
     return keys.find(nullptr)->second;
   }
   
-  /*
   void LuaGlue::connect_function(const Extension *parent,const std::string &name,const lars::AnyFunction &f){
     LARS_LUA_GLUE_LOG("connecting function " << name << " with parent " << &parent);
     INCREASE_INDENT;
@@ -670,10 +672,10 @@ namespace glue {
     }
   }
   
-  LuaState::LuaState(lua_State * s): L(s), ownsState(false), glue(L){
+  LuaState::LuaState(lua_State * s): L(s), ownsState(false){
   }
   
-  LuaState::LuaState(): L(luaL_newstate()), ownsState(true), glue(L){
+  LuaState::LuaState(): L(luaL_newstate()), ownsState(true){
   }
   
   LuaState::~LuaState(){

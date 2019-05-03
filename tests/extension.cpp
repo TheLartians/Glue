@@ -18,12 +18,16 @@ TEST_CASE("Element", "[extension]"){
     REQUIRE_NOTHROW(element = 42);
     REQUIRE(element);
     REQUIRE(element.get<int>() == 42);
+    REQUIRE(element.asMap() == nullptr);
   }
   
   SECTION("set and get keys"){
     REQUIRE_NOTHROW(element["a"] = 4);
     REQUIRE_NOTHROW(element["b"] = 2);
     REQUIRE_NOTHROW(element["c"]["d"]["e"] = 3);
+    REQUIRE(element.asMap() != nullptr);
+    REQUIRE(element["a"]);
+    REQUIRE(!element["d"]);
     REQUIRE(element);
     REQUIRE(element["a"]);
     REQUIRE(element["b"]);
@@ -44,8 +48,58 @@ TEST_CASE("Element", "[extension]"){
     REQUIRE(element["a"](40).get<int>() == 42);
     REQUIRE(element["b"](21).get<int>() == 42);
   }
+ 
+  SECTION("events"){
+    unsigned changes = 0;
+    std::set<std::string> changedItems;
+    element.set<ElementMap>().onValueChanged.connect([&](auto &key, auto &){
+      changes++; changedItems.insert(key);
+    });
+    element["a"] = 1;
+    element["b"] = 2;
+    element["a"] = 3;
+    REQUIRE(changedItems.size() == 2);
+    REQUIRE(changes == 3);
+  }
   
+  SECTION("extends"){
+    element["a"] = 5;
+    Element inner;
+    inner[extendsKey] = element;
+    REQUIRE(inner["a"].get<int>() == 5);
+  }
+
 }
+
+
+TEST_CASE("Class extension", "[extension]"){
+  struct Base {
+    int value;
+    Base() = default;
+    Base(Base &&) = default;
+    Base(const Base &other) = delete;
+  };
+  
+  struct A: public Base {
+    A(int v){ value = v; }
+    int member(int v){ return value + v; };
+  };
+  
+  Element base;
+  base[classKey] = lars::getTypeIndex<Base>();
+  base["value"] = [](Base &b){ return b.value; };
+  
+  Element a;
+  a[classKey] = lars::getTypeIndex<A>();
+  a["create"] = [](int v){ return Any::withBases<A,Base>(v); };
+  a[extendsKey] = base;
+  
+  auto av = a["create"](42);
+  REQUIRE(a["value"](av).get<int>() == 42);
+}
+
+
+#if false
 
 TEST_CASE("Extension", "[extension]"){
   Extension extension;
@@ -164,3 +218,5 @@ TEST_CASE("Class extension", "[extension]"){
   auto a = aExtension["create"](42);
   REQUIRE(std::as_const(aExtension)["value"](a).get<int>() == 42);
 }
+
+#endif

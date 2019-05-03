@@ -3,7 +3,7 @@
 using namespace glue;
 
 Element & Element::operator=(AnyFunction && f){
-  data = f;
+  data.set<AnyFunction>(f);
   return *this;
 }
 
@@ -11,11 +11,13 @@ Element *ElementMap::getElement(const std::string &key){
   auto it = data.find(key);
   if (it != data.end()) {
     return &it->second;
-  } else {
-    return nullptr;
   }
+  it = data.find(extendsKey);
+  if (it != data.end()) if (auto map = it->second.asMap()) {
+    return map->getElement(key);
+  }
+  return nullptr;
 }
-
 
 Element &ElementMap::getOrCreateElement(const std::string &key){
   if (auto element = getElement(key)) {
@@ -30,10 +32,7 @@ ElementMap::Entry ElementMap::operator[](const std::string &key){
 }
 
 Element &ElementMap::Entry::getOrCreateElement(){
-  if (!element) {
-    element = &parent->getOrCreateElement(key);
-  }
-  return *element;
+  return parent->getOrCreateElement(key);
 }
 
 ElementMapEntry Element::operator[](const std::string &key){
