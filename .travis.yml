@@ -26,7 +26,7 @@ matrix:
         - sudo make install -C lcov-1.14
         - lcov --version
         # compile and run with coverage
-        - cmake -H. -Bbuild/coverage -Bbuild -DGLUE_BUILD_DUKTAPE=true -DGLUE_BUILD_LUA=true -DGLUE_ENABLE_LUA=true -DGLUE_ENABLE_DUKTAPE=true -DGLUE_ENABLE_TESTS=On -DENABLE_TEST_COVERAGE=On -DCMAKE_CXX_COMPILER=g++-8
+        - cmake -H. -Bbuild/coverage -DGLUE_BUILD_DUKTAPE=true -DGLUE_BUILD_LUA=true -DGLUE_ENABLE_LUA=true -DGLUE_ENABLE_DUKTAPE=true -DGLUE_ENABLE_TESTS=On -DENABLE_TEST_COVERAGE=On -DCMAKE_CXX_COMPILER=g++-8
         - cmake --build build/coverage
         - cmake --build build/coverage --target test
         # create coverage report

@@ -39,7 +39,7 @@ if (${GLUE_BUILD_DUKTAPE})
   set(GLUE_DUKTAPE_LIB GlueDuktape)
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
+include(cmake/CPM.cmake)
 
 CPMAddPackage(
   NAME LHC

@@ -10,15 +10,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   find_package(Glue REQUIRED)
 endif()
 
-include(FetchContent)
+include(../cmake/CPM.cmake)
 
-FetchContent_Declare(
-  Catch2
+CPMAddPackage(
+  NAME Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v2.5.0
+  VERSION 2.5.0
 )
-
-FetchContent_MakeAvailable(Catch2)
 
 # ---- Create binary ----
 
