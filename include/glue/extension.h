@@ -4,13 +4,13 @@
 #include <lars/any_function.h>
 #include <lars/make_function.h>
 #include <lars/event.h>
+#include <glue/element.h>
 
 #include <unordered_map>
 #include <variant>
 #include <type_traits>
 
 namespace glue{
-  
   using Any = lars::Any;
   using AnyFunction = lars::AnyFunction;
   
@@ -45,15 +45,6 @@ namespace glue{
     MemberNotFoundException(const std::string &_name):name(_name){}
     const char * what()const noexcept override;
   };
-  
-  /**
-   * detect callable types.
-   * source: https://stackoverflow.com/questions/15393938/
-   */
-  template <class... > using void_t = void;
-  template <class T> using has_opr_t = decltype(&T::operator());
-  template <class T, class = void> struct is_callable : std::false_type { };
-  template <class T> struct is_callable<T, void_t<has_opr_t<typename std::decay<T>::type>>> : std::true_type { };
   
   struct Extension::Member{
   private:
@@ -91,7 +82,7 @@ namespace glue{
     Member &operator=(const Extension &);
     
     template <class T> typename std::enable_if<
-      !is_callable<T>::value && !std::is_base_of<
+      !detail::is_callable<T>::value && !std::is_base_of<
         Extension, typename std::remove_reference<T>::type
       >::value,
       Member &

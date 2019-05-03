@@ -37,17 +37,17 @@ TEST_CASE("LuaState","[lua]"){
   SECTION("get and call function"){
     REQUIRE(lua.get<lars::AnyFunction>("function(x) return x+1 end")(41).get<int>() == 42);
   }
+
+  SECTION("set value"){
+    lua.set("y", 21);
+    REQUIRE(lua.get<int>("2*y") == 42);
+  }
   
   SECTION("set and call function"){
     lua.set("f", lars::AnyFunction([](int x){ return x+3; }));
     REQUIRE(lua.get<int>("f(39)") == 42);
   }
 
-  SECTION("set value"){
-    lua.set("y", 21);
-    REQUIRE(lua.get<int>("2*y") == 42);
-  }
- 
 }
 
 

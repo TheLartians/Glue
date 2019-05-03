@@ -2,8 +2,33 @@
 #include <set>
 
 #include <glue/extension.h>
+#include <glue/element.h>
 
 using namespace glue;
+
+TEST_CASE("Element", "[extension]"){
+  Element element;
+  
+  SECTION("set and get value"){
+    REQUIRE_NOTHROW(element = 42);
+    REQUIRE(element.get<int>() == 42);
+  }
+  
+  SECTION("set and get keys"){
+    REQUIRE_NOTHROW(element["a"] = 4);
+    REQUIRE_NOTHROW(element["b"] = 2);
+    REQUIRE_NOTHROW(element["c"]["d"]["e"] = 3);
+    REQUIRE(element["a"].get<int>() == 4);
+    REQUIRE(element["b"].get<int>() == 2);
+    REQUIRE(element["c"]["d"]["e"].get<float>() == 3);
+  }
+  
+  SECTION("set and call function"){
+    REQUIRE_NOTHROW(element = [](){ return 42; });
+    REQUIRE(element().get<int>() == 42);
+  }
+  
+}
 
 TEST_CASE("Extension", "[extension]"){
   Extension extension;
