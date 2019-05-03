@@ -27,11 +27,14 @@ namespace glue{
     lars::EventReference<const std::string &, const Member &> onMemberChanged;
     
     NewExtension();
-        
+    
     NewExtension::Member * getMember(const std::string &key);
     const NewExtension::Member * getMember(const std::string &key)const;
-    Member &operator[](const std::string &key);
+    MemberDelegate operator[](const std::string &key);
     const Member &operator[](const std::string &key) const ;
+    
+  protected:
+    Member &getOrCreateMember(const std::string &key);
   };
   
   struct NewExtension::MemberNotFoundException:public std::exception{
@@ -53,16 +56,22 @@ namespace glue{
   template <class T> struct is_callable<T, void_t<has_opr_t<typename std::decay<T>::type>>> : std::true_type { };
   
   struct NewExtension::Member{
-    /** Custom exception for invalid variant access (to be able to target iOS < 11) */
-    struct InvalidCastException: std::exception {
-      const char * what()const noexcept override{ return "invalid extension member cast"; }
-    };
-    
+  private:
+    void setValue(lars::Any &&);
+    void setFunction(const lars::AnyFunction &);
+    void setExtension(const NewExtension &);
+
     std::variant<
       lars::Any,
       lars::AnyFunction,
       NewExtension
     > data;
+
+  public:
+    /** Custom exception for invalid variant access (to be able to target iOS < 11) */
+    struct InvalidCastException: std::exception {
+      const char * what()const noexcept override{ return "invalid extension member cast"; }
+    };
     
     lars::Any & asAny();
     const lars::Any & asAny() const;
@@ -77,10 +86,6 @@ namespace glue{
     const Member &operator[](const std::string &key)const{
       return asExtension()[key];
     }
-    
-    void setValue(lars::Any &&);
-    void setFunction(const lars::AnyFunction &);
-    void setExtension(const NewExtension &);
 
     Member &operator=(const lars::AnyFunction &);
     Member &operator=(const NewExtension &);
@@ -97,8 +102,6 @@ namespace glue{
     
     template <class T> T get()const{ return asAny().get<T>(); }
     template <class T> T get(){ return asAny().get<T>(); }
-
-    explicit operator bool()const{ return data.index() != std::variant_npos; }
     operator const lars::AnyFunction &()const{ return asFunction(); }
     operator const NewExtension &()const{ return asExtension(); }
     operator const lars::Any &()const{ return asAny(); }
@@ -106,11 +109,45 @@ namespace glue{
   };
   
   struct NewExtension::MemberDelegate {
+  private:
     NewExtension * parent;
     std::string key;
-    MemberDelegate(NewExtension * p, const std::string &k):parent(p),key(k){}
-    template <class T> MemberDelegate &operator=(T &&){
-      
+    NewExtension::Member * member;
+    
+    Member &getMember()const{
+      if (member){
+        return *member;
+      } else {
+        throw MemberNotFoundException(key);
+      }
+    }
+    
+  public:
+    
+    MemberDelegate(NewExtension * p, const std::string &k):parent(p),key(k){
+      member = parent->getMember(key);
+    }
+    
+    template <class T> MemberDelegate &operator=(T && value){
+      if (!member) {
+        member = &parent->getOrCreateMember(key);
+      }
+      *member = value;
+      parent->onMemberChanged.emit(key, *member);
+      return *this;
+    }
+    
+    template <class T> T get(){ return getMember().get<T>(); }
+    explicit operator bool(){ return member != nullptr; }
+    operator const lars::AnyFunction &()const{ return getMember(); }
+    operator const NewExtension &()const{ return getMember(); }
+    operator const lars::Any &()const{ return getMember(); }
+    operator lars::Any &(){ return getMember(); }
+    template <typename ... Args> lars::Any operator()(Args && ... args)const{
+      return getMember()(args...);
+    }
+    const Member &operator[](const std::string &key)const{
+      return getMember()[key];
     }
   };
   

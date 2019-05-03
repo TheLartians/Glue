@@ -47,7 +47,7 @@ TEST_CASE("Extension", "[extension]"){
     SECTION("function casting"){
       extension["f"] = [](){ };
       REQUIRE_NOTHROW(extension["f"]());
-      REQUIRE_THROWS_AS(extension["f"].asExtension(), NewExtension::Member::InvalidCastException);
+      REQUIRE_THROWS_AS(static_cast<const NewExtension&>(extension["f"]), NewExtension::Member::InvalidCastException);
     }
     
     SECTION("Arguments"){

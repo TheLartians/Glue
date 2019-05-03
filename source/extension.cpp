@@ -33,8 +33,13 @@ const NewExtension::Member * NewExtension::getMember(const std::string &key)cons
   }
 }
 
-NewExtension::Member &NewExtension::operator[](const std::string &key){
+
+NewExtension::Member &NewExtension::getOrCreateMember(const std::string &key){
   return data->members[key];
+}
+
+NewExtension::MemberDelegate NewExtension::operator[](const std::string &key){
+  return MemberDelegate(this, key);
 }
 
 const NewExtension::Member &NewExtension::operator[](const std::string &key)const{
