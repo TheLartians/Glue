@@ -15,9 +15,14 @@ namespace glue{
   using AnyFunction = lars::AnyFunction;
   
   class NewExtension {
+  private:
+    struct Data;
+    std::shared_ptr<Data> data;
   public:
     struct MemberNotFoundException;
     struct Member;
+
+    lars::EventReference<const std::string &, const Member &> onMemberChanged;
     
     NewExtension();
     
@@ -28,10 +33,6 @@ namespace glue{
     const NewExtension::Member * getMember(const std::string &key)const;
     Member &operator[](const std::string &key);
     const Member &operator[](const std::string &key) const ;
-    
-  private:
-    struct Data;
-    std::shared_ptr<Data> data;
   };
   
   struct NewExtension::MemberNotFoundException:public std::exception{

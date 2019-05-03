@@ -49,7 +49,7 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsEvent
-  VERSION 2.0.3
+  VERSION 2.1
   GIT_REPOSITORY https://github.com/TheLartians/Event.git
 )
 

@@ -4,9 +4,10 @@ using namespace glue;
 
 struct NewExtension::Data {
   std::unordered_map<std::string, Member> members;
+  lars::Event<const std::string &, const Member &> onMemberChanged;
 };
 
-NewExtension::NewExtension():data(std::make_shared<Data>()){
+NewExtension::NewExtension():data(std::make_shared<Data>()),onMemberChanged(data->onMemberChanged){
   
 }
 
