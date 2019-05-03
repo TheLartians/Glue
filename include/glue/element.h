@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <unordered_map>
 #include <string>
+#include <initializer_list>
+#include <utility>
 
 namespace glue{
   
@@ -28,19 +30,23 @@ namespace glue{
   class ElementMapEntry;
   
   class Element {
-  public:
+  private:
     Any data;
+    friend ElementMapEntry;
     
+  public:
     using Map = ElementMap;
+    
+    Element() = default;
+    Element(Element &&) = default;
 
     template <
       class T,
       typename = typename std::enable_if<!detail::is_callable<T>::value>::type
     > Element(T && v):data(std::forward<T>(v)){}
-    
+
     Element(AnyFunction && f):data(f){}
-    Element() = default;
-    
+
     template <
       class T,
       typename = typename std::enable_if<!detail::is_callable<T>::value>::type
@@ -55,15 +61,14 @@ namespace glue{
       return data.get<AnyFunction>()(std::forward<Args>(args)...);
     }
     
-    template <class T> T get(){
+    template <class T> T get()const{
       return data.get<T>();
     }
-    
-    Map &asMap();
     
     ElementMapEntry operator[](const std::string &key);
     
     explicit operator bool()const{ return bool(data); }
+    Map * asMap()const{ return data.tryGet<Map>(); }
   };
 
   class ElementMap {
@@ -109,9 +114,7 @@ namespace glue{
       return getOrCreateElement()(std::forward<Args>(args)...);
     }
     
-    ElementMapEntry operator[](const std::string &key){
-      return getOrCreateElement()[key];
-    }
+    ElementMapEntry operator[](const std::string &key);
     
     template <class T> T get(){
       return getOrCreateElement().get<T>();

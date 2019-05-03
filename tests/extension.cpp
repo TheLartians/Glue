@@ -11,6 +11,7 @@ TEST_CASE("Element", "[extension]"){
   
   SECTION("empty element"){
     REQUIRE(!element);
+    REQUIRE(element.asMap() == nullptr);
   }
   
   SECTION("set and get value"){
@@ -43,7 +44,7 @@ TEST_CASE("Element", "[extension]"){
     REQUIRE(element["a"](40).get<int>() == 42);
     REQUIRE(element["b"](21).get<int>() == 42);
   }
-
+  
 }
 
 TEST_CASE("Extension", "[extension]"){

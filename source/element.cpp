@@ -2,15 +2,6 @@
 
 using namespace glue;
 
-Element::Map &Element::asMap(){
-  if (auto map = data.tryGet<Element::Map>()){
-    return *map;
-  } else {
-    data.set<Element::Map>();
-    return asMap();
-  }
-}
-
 Element & Element::operator=(AnyFunction && f){
   data = f;
   return *this;
@@ -46,5 +37,21 @@ Element &ElementMap::Entry::getOrCreateElement(){
 }
 
 ElementMapEntry Element::operator[](const std::string &key){
-  return asMap()[key];
+  if (auto map = data.tryGet<ElementMap>()) {
+    return (*map)[key];
+  } else {
+    data.set<ElementMap>();
+    return (*this)[key];
+  }
+}
+
+ElementMapEntry ElementMapEntry::operator[](const std::string &key){
+  auto &entry = getOrCreateElement();
+  if(auto map = entry.asMap()){
+    return (*map)[key];
+  } else {
+    entry.data.set<ElementMap>();
+    parent->onValueChanged.emit(key, entry);
+    return (*this)[key];
+  }
 }
