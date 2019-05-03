@@ -1,12 +1,12 @@
 
 language: cpp
 sudo: require
-dist: xenial
+dist: trusty
 
 common_sources: &all_sources
   - ubuntu-toolchain-r-test
   - llvm-toolchain-trusty
-  - llvm-toolchain-trusty-6.0
+  - llvm-toolchain-trusty-7
 
 matrix:
   include:
@@ -42,9 +42,9 @@ matrix:
               sources: *all_sources
               packages:
                 - g++-8
-                - clang-6.0
+                - clang-7.0
       env:
-        - MATRIX_EVAL="export CC=clang-6.0; export CXX=clang++-6.0;"
+        - MATRIX_EVAL="export CC=clang-7.0; export CXX=clang++-7.0;"
 
 before_install:
   # Update compilers

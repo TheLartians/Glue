@@ -60,7 +60,10 @@ namespace glue{
     }
     
     Map &asMap();
+    
     ElementMapEntry operator[](const std::string &key);
+    
+    explicit operator bool()const{ return bool(data); }
   };
 
   class ElementMap {
@@ -89,7 +92,9 @@ namespace glue{
     Element &getOrCreateElement();
     
   public:
-    ElementMapEntry(ElementMap * p, const std::string &k):parent(p), key(k){ }
+    ElementMapEntry(ElementMap * p, const std::string &k):parent(p), key(k){
+      element = parent->getElement(key);
+    }
     
     explicit operator bool()const{ return element != nullptr; }
     
