@@ -23,6 +23,8 @@ namespace glue{
     Member &getMember();
     const Member &getMember()const;
     
+    NewExtension::Member * getMember(const std::string &key);
+    const NewExtension::Member * getMember(const std::string &key)const;
     Member &operator[](const std::string &key){ return data->members[key]; }
     const Member &operator[](const std::string &key) const ;
     
@@ -74,6 +76,10 @@ namespace glue{
       return asFunction()(std::forward<Args>(args)...);
     }
     
+    const Member &operator[](const std::string &key)const{
+      return asExtension()[key];
+    }
+    
     void setValue(lars::Any &&);
     void setFunction(const lars::AnyFunction &);
     void setExtension(const NewExtension &);
@@ -82,7 +88,9 @@ namespace glue{
     Member &operator=(const NewExtension &);
     
     template <class T> typename std::enable_if<
-      !is_callable<T>::value,
+      !is_callable<T>::value && !std::is_base_of<
+        NewExtension, typename std::remove_reference<T>::type
+      >::value,
       Member &
     >::type operator=(T && v){
       setValue(std::forward<T>(v));
@@ -92,6 +100,7 @@ namespace glue{
     template <class T> T get()const{ return asAny().get<T>(); }
     template <class T> T get(){ return asAny().get<T>(); }
 
+    explicit operator bool()const{ return data.index() != std::variant_npos; }
     operator const lars::AnyFunction &()const{ return asFunction(); }
     operator const NewExtension &()const{ return asExtension(); }
     operator const lars::Any &()const{ return asAny(); }

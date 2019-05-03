@@ -10,6 +10,10 @@ TEST_CASE("Extension", "[extension]"){
   
   SECTION("Values"){
     extension["v"] = 42;
+
+    REQUIRE(extension.getMember("v") != nullptr);
+    REQUIRE(extension.getMember("v")->get<int>() == 42);
+    REQUIRE(std::as_const(extension).getMember("v")->get<int>() == 42);
     REQUIRE(extension["v"].get<int>() == 42);
     REQUIRE(extension["v"].get<float>() == 42);
     REQUIRE_THROWS(extension["v"].get<std::string>());
@@ -23,7 +27,9 @@ TEST_CASE("Extension", "[extension]"){
   }
   
   SECTION("Functions"){
-    SECTION("Undefined function"){
+    SECTION("Undefined member"){
+      REQUIRE_NOTHROW(extension.getMember("add") == nullptr);
+      REQUIRE_NOTHROW(std::as_const(extension).getMember("add") == nullptr);
       REQUIRE_THROWS_AS(std::as_const(extension)["add"], NewExtension::MemberNotFoundException);
       REQUIRE_THROWS_WITH(std::as_const(extension)["add"], Catch::Matchers::Contains("add"));
     }
@@ -60,11 +66,18 @@ TEST_CASE("Extension", "[extension]"){
       REQUIRE(extension["addAny"](2,3.5).get<double>() == Approx(5.5));
     }
   }
+ 
+  SECTION("Inner extension"){
+    NewExtension inner;
+    inner["f"] = [](){ return 5; };
+    extension["inner"] = inner;
+    REQUIRE_NOTHROW(static_cast<const NewExtension &>(extension["inner"]));
+    REQUIRE(extension["inner"]["f"]().get<int>() == 5);
+  }
   
 }
 
 TEST_CASE("Class extension", "[extension]"){
-
   struct Base {
     int value;
     Base() = default;

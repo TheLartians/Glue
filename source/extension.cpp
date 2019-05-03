@@ -2,12 +2,31 @@
 
 using namespace glue;
 
-const NewExtension::Member &NewExtension::operator[](const std::string &key)const{
+
+NewExtension::Member * NewExtension::getMember(const std::string &key){
   auto it = data->members.find(key);
-  if (it == data->members.end()) {
+  if (it != data->members.end()) {
+    return &it->second;
+  } else {
+    return nullptr;
+  }
+}
+
+const NewExtension::Member * NewExtension::getMember(const std::string &key)const{
+  auto it = data->members.find(key);
+  if (it != data->members.end()) {
+    return &it->second;
+  } else {
+    return nullptr;
+  }
+}
+
+const NewExtension::Member &NewExtension::operator[](const std::string &key)const{
+  if (auto member = getMember(key)) {
+    return *member;
+  } else {
     throw NewExtension::MemberNotFoundException(key);
   }
-  return it->second;
 }
 
 const char * NewExtension::MemberNotFoundException::what()const noexcept{
@@ -34,7 +53,7 @@ lars::Any & NewExtension::Member::asAny() {
 const lars::AnyFunction & NewExtension::Member::asFunction() const {
   if (auto res = std::get_if<lars::AnyFunction>(&data)) {
     return *res;
-  } else if(auto res = asAny().tryGet<lars::AnyFunction>()) {
+  } else if(auto res = asAny().tryGet<const lars::AnyFunction>()) {
     return *res;
   }
   throw NewExtension::Member::InvalidCastException();
@@ -42,6 +61,8 @@ const lars::AnyFunction & NewExtension::Member::asFunction() const {
 
 const NewExtension & NewExtension::Member::asExtension() const {
   if (auto res = std::get_if<NewExtension>(&data)) {
+    return *res;
+  } else if(auto res = asAny().tryGet<const NewExtension>()) {
     return *res;
   }
   throw NewExtension::Member::InvalidCastException();
