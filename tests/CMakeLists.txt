@@ -33,6 +33,7 @@ ADD_TEST(GlueTests GlueTests)
 # ---- code coverage ----
 
 if (${ENABLE_TEST_COVERAGE})
+  set_target_properties(Glue PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-O0 -g -fprofile-arcs -ftest-coverage --coverage")
   set_target_properties(GlueTests PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-O0 -g -fprofile-arcs -ftest-coverage --coverage")
   target_link_options(GlueTests PUBLIC "--coverage")
 endif()
