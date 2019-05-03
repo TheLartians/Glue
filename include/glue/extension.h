@@ -18,17 +18,16 @@ namespace glue{
   private:
     struct Data;
     std::shared_ptr<Data> data;
+
   public:
     struct MemberNotFoundException;
     struct Member;
+    struct MemberDelegate;
 
     lars::EventReference<const std::string &, const Member &> onMemberChanged;
     
     NewExtension();
-    
-    Member &getMember();
-    const Member &getMember()const;
-    
+        
     NewExtension::Member * getMember(const std::string &key);
     const NewExtension::Member * getMember(const std::string &key)const;
     Member &operator[](const std::string &key);
@@ -104,6 +103,15 @@ namespace glue{
     operator const NewExtension &()const{ return asExtension(); }
     operator const lars::Any &()const{ return asAny(); }
     operator lars::Any &(){ return asAny(); }
+  };
+  
+  struct NewExtension::MemberDelegate {
+    NewExtension * parent;
+    std::string key;
+    MemberDelegate(NewExtension * p, const std::string &k):parent(p),key(k){}
+    template <class T> MemberDelegate &operator=(T &&){
+      
+    }
   };
   
   /**
