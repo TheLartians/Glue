@@ -98,10 +98,10 @@ void NewExtension::Member::setExtension(const NewExtension &e){
 NewExtension::Member &NewExtension::Member::operator=(const lars::AnyFunction &f){
   setFunction(f);
   return *this;
-};
+}
 
 NewExtension::Member &NewExtension::Member::operator=(const NewExtension &e){
   setExtension(e);
   return *this;
-};
+}
 
