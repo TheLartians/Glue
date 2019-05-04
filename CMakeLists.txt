@@ -25,6 +25,8 @@ project(Glue
 
 # ---- Dependencies ----
 
+include(cmake/CPM.cmake)
+
 if(TARGET Glue)
   return()
 endif()
@@ -39,8 +41,6 @@ if (${GLUE_BUILD_DUKTAPE})
   set(GLUE_DUKTAPE_LIB GlueDuktape)
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
-
 CPMAddPackage(
   NAME LHC
   VERSION 0.7
@@ -49,13 +49,13 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsEvent
-  VERSION 1.0
+  VERSION 2.1
   GIT_REPOSITORY https://github.com/TheLartians/Event.git
 )
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 0.7
+  VERSION 1.6
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 
@@ -70,23 +70,21 @@ endif()
 set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources
-  ${glue_source_dir}/glue.cpp
-  ${glue_source_dir}/definitions.cpp
+  ${glue_source_dir}/element.cpp
 )
 
 set(headers
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/glue.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/definitions.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/element.h
 )
 
 if(${GLUE_ENABLE_DUKTAPE})
-  list(APPEND sources ${glue_source_dir}/duktape_glue.cpp)
-  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/duktape.h)
+  list(APPEND sources ${glue_source_dir}/duktape.cpp)
+  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/duktape.h)
 endif()
 
 if(${GLUE_ENABLE_LUA})
-  list(APPEND sources ${glue_source_dir}/lua_glue.cpp)
-  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/lars/glue/lua.h)
+  list(APPEND sources ${glue_source_dir}/lua.cpp)
+  list(APPEND headers ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/lua.h)
 endif()
 
 add_library(Glue ${sources} ${headers})

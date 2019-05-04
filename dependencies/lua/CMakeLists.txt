@@ -7,13 +7,12 @@ project(GlueLua
   LANGUAGES C
 )
 
-FetchContent_Declare(
-  lua
+CPMAddPackage(
+  NAME lua
   GIT_REPOSITORY https://github.com/lua/lua.git
-  GIT_TAG v5-3-4
-  GIT_SHALLOW 1
-  UPDATE_DISCONNECTED 1
-  QUIET
+  VERSION 5-3-4
+  GIT_SHALLOW YES
+  DOWNLOAD_ONLY YES
 )
 
 FetchContent_GetProperties(lua)

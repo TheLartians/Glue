@@ -1,21 +1,22 @@
-#include <lars/glue/definitions.h>
+#include <glue/definitions.h>
 #include <lars/type_index.h>
 #include <lars/iterators.h>
+
 #include <unordered_map>
 #include <sstream>
 
 namespace {
   void add_typescript_type_name(std::ostream &stream, const lars::TypeIndex &type, const std::unordered_map<lars::TypeIndex, std::string> &typenames){
     if (
-      type == lars::get_type_index<bool>()
-      || type == lars::get_type_index<int>()
-      || type == lars::get_type_index<unsigned>()
-      || type == lars::get_type_index<size_t>()
-      || type == lars::get_type_index<float>()
-      || type == lars::get_type_index<double>()
+      type == lars::getTypeIndex<bool>()
+      || type == lars::getTypeIndex<int>()
+      || type == lars::getTypeIndex<unsigned>()
+      || type == lars::getTypeIndex<size_t>()
+      || type == lars::getTypeIndex<float>()
+      || type == lars::getTypeIndex<double>()
     ) {
       stream << "number";
-    } else if (type == lars::get_type_index<std::string>()) {
+    } else if (type == lars::getTypeIndex<std::string>()) {
       stream << "string";
     } else {
       auto it = typenames.find(type);
@@ -28,7 +29,7 @@ namespace {
   }
 
 
-  void add_typenames(const lars::Extension &extension, std::unordered_map<lars::TypeIndex, std::string> &typenames){
+  void add_typenames(const glue::Extension &extension, std::unordered_map<lars::TypeIndex, std::string> &typenames){
     for (auto [name, ext]: extension.extensions()) {
       auto &type = ext->class_type();
       if (type) { typenames[*type] = name; }
@@ -36,28 +37,28 @@ namespace {
     }
   }
 
-  void add_typescript_class_definitions(std::ostream &stream, const lars::Extension &extension, std::unordered_map<lars::TypeIndex, std::string> &typenames, const std::string &indent, const lars::TypeIndex &class_type){
+  void add_typescript_class_definitions(std::ostream &stream, const glue::Extension &extension, std::unordered_map<lars::TypeIndex, std::string> &typenames, const std::string &indent, const lars::TypeIndex &class_type){
     for (auto [name, f]: extension.functions()) {
       stream << indent;
-      auto member_function = f.argument_count() > 0 && f.argument_type(0) == class_type;
+      auto member_function = f.argumentCount() > 0 && f.argumentType(0) == class_type;
       if (!member_function) {
         stream << "static ";
       }
-      auto return_type = f.return_type();
+      auto returnType = f.returnType();
       stream << name << '(';
-      auto argc = f.argument_count();
-      for (auto i: lars::range(member_function ? 1 : 0, argc)) {
+      auto argc = f.argumentCount();
+      for (auto i: lars::range<size_t>(member_function ? 1 : 0, argc)) {
         stream << "arg" << i+1 << ": ";
-        add_typescript_type_name(stream, f.argument_type(i), typenames);
+        add_typescript_type_name(stream, f.argumentType(i), typenames);
         if (i+1 != argc) { stream << ", "; }
       }
       stream << "):";
-      add_typescript_type_name(stream, return_type, typenames);
+      add_typescript_type_name(stream, returnType, typenames);
       stream << ";\n";
     }
   }
 
-  void add_typescript_namespace_definitions(std::ostream &stream, const lars::Extension &extension, std::unordered_map<lars::TypeIndex, std::string> &typenames, const std::string &indent){
+  void add_typescript_namespace_definitions(std::ostream &stream, const glue::Extension &extension, std::unordered_map<lars::TypeIndex, std::string> &typenames, const std::string &indent){
 
     auto inner_indent = indent + "  ";
     for (auto [name, ext]: extension.extensions()) {
@@ -81,23 +82,23 @@ namespace {
 
     for (auto [name, f]: extension.functions()) {
       stream << indent;
-      auto return_type = f.return_type();
+      auto returnType = f.returnType();
       stream << "function " << name << '(';
-      auto argc = f.argument_count();
+      auto argc = f.argumentCount();
       for (auto i: lars::range(argc)) {
         stream << "arg" << i+1 << ": ";
-        add_typescript_type_name(stream, f.argument_type(i), typenames);
+        add_typescript_type_name(stream, f.argumentType(i), typenames);
         if (i+1 != argc) { stream << ", "; }
       }
       stream << "):";
-      add_typescript_type_name(stream, return_type, typenames);
+      add_typescript_type_name(stream, returnType, typenames);
       stream << ";\n";
     }
   }
 
 }
 
-std::string lars::get_typescript_definitions(const lars::Extension &extension){
+std::string glue::get_typescript_definitions(const glue::Extension &extension){
   std::unordered_map<lars::TypeIndex, std::string> typenames;
   add_typenames(extension, typenames);
   std::stringstream stream;
