@@ -43,6 +43,12 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua.get<int>("2*y") == 42);
   }
   
+  SECTION("set lua value"){
+    auto x = lua.get("42");
+    lua.set("y",x);
+    REQUIRE(lua.get<int>("y") == 42);
+  }
+  
   SECTION("set and call function"){
     lua.set("f", lars::AnyFunction([](int x){ return x+3; }));
     REQUIRE(lua.get<int>("f(39)") == 42);
@@ -65,7 +71,7 @@ TEST_CASE("LuaState","[lua]"){
       REQUIRE(lua.get<std::string>("x.a") == "42");
     }
     
-    SECTION("set table"){
+    SECTION("update table"){
       REQUIRE_NOTHROW(map["a"]["b"]["c"] = 42);
       REQUIRE(map["a"]["b"]["c"].get<int>() == 42);
       REQUIRE(lua.get<int>("x.a.b.c") == 42);
@@ -77,6 +83,7 @@ TEST_CASE("LuaState","[lua]"){
   SECTION("global table"){
     lua.run("x = 42");
     REQUIRE(lua["x"].get<int>() == 42);
+    REQUIRE(lua["tostring"](lua["x"]).get<std::string>() == "42");
   }
   
 }

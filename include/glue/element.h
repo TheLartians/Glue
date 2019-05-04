@@ -82,8 +82,6 @@ namespace glue{
     friend ElementMapEntry;
     
   public:
-    using Map = Map;
-    
     Element() = default;
     Element(const ElementInterface &e):data(e.getValue()){ }
 
@@ -165,3 +163,4 @@ namespace glue{
   }
   
 }
+

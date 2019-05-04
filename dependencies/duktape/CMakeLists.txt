@@ -7,13 +7,12 @@ project(Duktape
   LANGUAGES C
 )
 
-FetchContent_Declare(
-  duktape
+CPMAddPackage(
+  NAME duktape
   URL https://duktape.org/duktape-2.3.0.tar.xz
   URL_HASH MD5=352105b39979fc766bbd0b3721e8c2b5
-  UPDATE_DISCONNECTED 1
-  GIT_SHALLOW 1
-  QUIET
+  VERSION 2.3.0
+  DOWNLOAD_ONLY YES
 )
 
 FetchContent_GetProperties(duktape)
