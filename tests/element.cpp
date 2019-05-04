@@ -71,6 +71,8 @@ TEST_CASE("Element", "[element]"){
     inner["a"] = 42;
     REQUIRE(inner["a"].get<int>() == 42);
     REQUIRE(element["a"].get<int>() == 5);
+    inner["a"] = Any();
+    REQUIRE(inner["a"].get<int>() == 5);
   }
 
 }

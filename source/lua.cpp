@@ -8,7 +8,7 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-//#define LARS_LUA_GLUE_DEBUG
+// #define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
@@ -319,7 +319,7 @@ namespace {
         if (!ptr) throw_lua_error(L, "glue error: corrupted internal pointer");
         lua_rawgeti(L, -1, ptr->type.hash() );
         if(lua_isnil(L, -1)){
-          LARS_LUA_GLUE_LOG("no class table exists");
+          LARS_LUA_GLUE_LOG("no class table exists for  " << ptr->type.name() << "(" << ptr->type.hash() << ")");
           return 1;
         }
         lua_pushvalue(L, 2);
@@ -333,26 +333,14 @@ namespace {
     }
     
     // sets metatable for subclass. leaves stack unchanged.
-    template <class T> void set_subclass_metatable(lua_State * L,const lars::TypeIndex &type){
+    template <class T> void set_subclass_table(lua_State * L,const lars::TypeIndex &type){
+      LARS_LUA_GLUE_LOG("setting subclass table for " << type.name() << "(" << type.hash() << ")" << ": " << as_string(L));
       push_class_metatable<T>(L);
       lua_pushvalue(L, -2);
       lua_rawseti(L, -2, type.hash());
       lua_pop(L, 1);
     }
-    
-    template <class T> void push_subclass_metatable(lua_State * L,const lars::TypeIndex &type){
-      push_class_metatable<T>(L); // get parent metatable
-      lua_rawgeti(L, -1, type.hash()); // get base metatable if it exists
-      if(lua_isnil(L, -1)){
-        lua_pop(L, 1); // pop nil
-        lua_newtable(L); // create subclass metatable
-        lua_rawseti(L, -2, type.hash()); // assign base metatble to parent;
-        lua_rawgeti(L, -1, type.hash()); // get base metatable
-      }
-      lua_insert(L,-2); // set base metatable at -2
-      lua_pop(L, 1); // pop current and parent metatable
-    }
-    
+        
     template <class T> size_t buffer_size_for_type(){
       return sizeof(internal_type<T>) + alignof(T) - 1;
     }
@@ -438,9 +426,20 @@ namespace {
           lua_createtable(L, 0, keys.size());
           
           auto addToTable = [](auto L, const auto &key, const auto &value){
-            lua_pushstring(L, key.c_str());
-            push_value(L, value);
-            lua_settable(L, -3);
+            if (key == glue::extendsKey) {
+              lua_createtable(L, 0, 1);
+              lua_pushstring(L, "__index");
+              push_value(L, value);
+              lua_settable(L, -3);
+              lua_setmetatable(L, -2);
+            } else if (key == glue::classKey) {
+              set_subclass_table<Any>(L, value.template get<const lars::TypeIndex &>());
+            } else {
+              lua_pushstring(L, key.c_str());
+              push_value(L, value);
+              lua_settable(L, -3);
+            }
+            
           };
           
           for (auto key: keys) {
@@ -452,7 +451,7 @@ namespace {
           auto observer = data.onValueChanged.createObserver([reg,addToTable](auto &key,auto &element){
             auto L = reg->L;
             reg->push_into(L);
-            addToTable(L, key, element.getValue());
+            addToTable(L, key, element);
             lua_pop(L, 1);
           });
           

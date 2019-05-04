@@ -86,6 +86,73 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua["tostring"](lua["x"]).get<std::string>() == "42.0");
   }
   
+  SECTION("extended element"){
+    Element base;
+    base["a"] = 1;
+    base["b"] = 2;
+    Element extends;
+    setExtends(extends, base);
+    lua["e"] = extends;
+    REQUIRE(lua.get<int>("e.a") == 1);
+    REQUIRE(lua.get<int>("e.b") == 2);
+    extends["a"] = 3;
+    REQUIRE(lua.get<int>("e.a") == 3);
+    REQUIRE(lua.get<int>("e.b") == 2);
+    extends["a"] = Any();
+    REQUIRE(lua.get<int>("e.a") == 1);
+    REQUIRE(lua.get<int>("e.b") == 2);
+  }
+  
+  SECTION("class element"){
+    struct Base {
+      int value;
+      Base() = default;
+      Base(Base &&) = default;
+      Base(const Base &other) = delete;
+    };
+    
+    struct A: public Base {
+      A(int v){ value = v; }
+      int member(int v){ return value + v; };
+    };
+    
+    Element base;
+    setClass<Base>(base);
+    base["value"] = [](Base &b){ return b.value; };
+    
+    Element a;
+    setClass<A>(a);
+    setExtends(a, base);
+    a["create"] = [](int v){ return Any::withBases<A,Base>(v); };
+    
+    lua["A"] = a;
+    
+    lua.run("a = A.create(42)");
+    REQUIRE_THAT(lua.get<std::string>("tostring(a)"), Catch::Matchers::Contains("A"));
+    REQUIRE(lua.get<int>("A.value(a)") == 42);
+    REQUIRE(lua.get<int>("a:value()") == 42);
+  }
+  
+  SECTION("memory"){
+    unsigned count = 0;
+    struct MemoryCounter {
+      unsigned * count = nullptr;
+      MemoryCounter(unsigned &c):count(&c){ (*count)++; }
+      MemoryCounter(const MemoryCounter &) = delete;
+      MemoryCounter(MemoryCounter &&other){ std::swap(count, other.count); }
+      ~MemoryCounter(){ if(count) (*count)--; }
+    };
+    lua["a"] = MemoryCounter(count);
+    lua["b"] = MemoryCounter(count);
+    REQUIRE(count == 2);
+    lua["b"] = Any();
+    lua.collectGarbage();
+    REQUIRE(count == 1);
+    lua["a"] = Any();
+    lua.collectGarbage();
+    REQUIRE(count == 0);
+  }
+  
 }
 
 

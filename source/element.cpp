@@ -15,9 +15,16 @@ AnyReference ElementMap::getValue(const std::string &key) const {
 }
 
 void ElementMap::setValue(const std::string &key, Any && value){
-  auto & element = data[key];
-  element.setValue(std::forward<Any>(value));
-  onValueChanged.emit(key, element);
+  if (!value) {
+    auto it = data.find(key);
+    if (it != data.end()) {
+      data.erase(it);
+    }
+  } else {
+    auto & element = data[key];
+    element.setValue(std::forward<Any>(value));
+  }
+  onValueChanged.emit(key, value);
 }
 
 std::vector<std::string> ElementMap::keys()const{

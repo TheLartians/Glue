@@ -59,7 +59,7 @@ namespace glue{
       if constexpr (element_detail::is_callable<T>::value) {
         setValue(Any::create<AnyFunction>(value));
       } else {
-        setValue(lars::Any(value));
+        setValue(std::forward<T>(value));
       }
       return *this;
     }
@@ -125,7 +125,7 @@ namespace glue{
     virtual void setValue(const std::string &key, Any && value) = 0;
     virtual std::vector<std::string> keys()const = 0;
     
-    lars::Event<const std::string &, const ElementInterface &> onValueChanged;
+    lars::Event<const std::string &, const Any &> onValueChanged;
     
     Map(){}
     Map(const Map &) = delete;
