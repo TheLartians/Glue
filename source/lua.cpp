@@ -606,8 +606,6 @@ namespace {
       add_to_registry(L, LUA_VALID_REGISTRY_KEY);
       lua_pop(L, 1);
       DECREASE_INDENT;
-      assert(result.value);
-      assert(*result.value);
       return result.value;
     }
   }

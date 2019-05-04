@@ -15,8 +15,12 @@ namespace glue{
   using Any = lars::Any;
   using AnyReference = lars::AnyReference;
   using AnyFunction = lars::AnyFunction;
+
+  struct ElementInterface;
+  class Map;
+  class ElementMapEntry;
   
-  namespace detail {
+  namespace element_detail {
     /**
      * detect callable types.
      * source: https://stackoverflow.com/questions/15393938/
@@ -25,11 +29,15 @@ namespace glue{
     template <class T> using has_opr_t = decltype(&T::operator());
     template <class T, class = void> struct is_callable : std::false_type { };
     template <class T> struct is_callable<T, void_t<has_opr_t<typename std::decay<T>::type>>> : std::true_type { };
+    template <class T> auto && convertArgument(T && arg) {
+      if constexpr (std::is_base_of<ElementInterface, typename std::decay<T>::type>::value) {
+        return std::forward<lars::AnyReference>(arg.getValue());
+      } else {
+        return std::forward<T>(arg);
+      }
+    }
   }
-  
-  class Map;
-  class ElementMapEntry;
-  
+
   struct ElementInterface {
     virtual AnyReference getValue() const = 0;
     virtual void setValue(Any &&) = 0;
@@ -41,7 +49,7 @@ namespace glue{
         !std::is_base_of<ElementInterface, typename std::decay<T>::type>::value
       >::type
     > ElementInterface & operator=(T && value){
-      if constexpr (detail::is_callable<T>::value) {
+      if constexpr (element_detail::is_callable<T>::value) {
         setValue(Any::create<AnyFunction>(value));
       } else {
         setValue(lars::Any(value));
@@ -55,7 +63,7 @@ namespace glue{
     }
     
     template <typename ... Args> Any operator()(Args && ... args) const {
-      return getValue().get<AnyFunction>()(std::forward<Args>(args)...);
+      return getValue().get<AnyFunction>()(element_detail::convertArgument<Args>(std::forward<Args>(args))...);
     }
     
     template <class T, typename ... Args> auto & set(Args && ... args) {
@@ -88,7 +96,7 @@ namespace glue{
     template <
       class T,
       typename = typename std::enable_if<
-        !detail::is_callable<T>::value
+        !element_detail::is_callable<T>::value
         && !std::is_base_of<ElementInterface, typename std::decay<T>::type>::value
       >::type
     > Element(T && v):data(std::forward<T>(v)){}
