@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/TheLartians/Glue.svg?branch=master)](https://travis-ci.com/TheLartians/Glue)
+[![codecov](https://codecov.io/gh/TheLartians/Glue/branch/master/graph/badge.svg)](https://codecov.io/gh/TheLartians/Glue)
 
 # Glue
 
