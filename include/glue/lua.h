@@ -71,11 +71,6 @@ namespace glue {
     void collectGarbage() const;
     
     /**
-     * return the lua stack size
-     */
-    unsigned stackSize() const;
-    
-    /**
      * returns the element map entry of the global table.
      */
     ElementMapEntry operator[](const std::string &)const;
