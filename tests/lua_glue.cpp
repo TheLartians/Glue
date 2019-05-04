@@ -153,6 +153,26 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(count == 0);
   }
   
+  SECTION("errors"){
+    SECTION("lua errors"){
+      REQUIRE_THROWS_AS(lua.run("error('Hello Lua!')"), LuaState::Error);
+      REQUIRE_THROWS_WITH(lua.run("error('Hello Lua!')"), Catch::Matchers::Contains("Hello Lua!"));
+    }
+
+    SECTION("internal errors"){
+      class A{};
+      Element a;
+      setClass<A>(a);
+      lua["A"] = a;
+      lua["a"] = A();
+      REQUIRE_NOTHROW(lua.run("a + a"));
+    }
+  }
+  
+  SECTION("operators"){
+    
+  }
+  
 }
 
 

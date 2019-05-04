@@ -8,7 +8,7 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-// #define LARS_LUA_GLUE_DEBUG
+#define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
@@ -39,12 +39,14 @@ namespace {
       return result;
     }
     
+#ifdef LARS_LUA_GLUE_DEBUG
     void UNUSED print_stack(lua_State * L){
       LARS_LUA_GLUE_LOG("Dumping stack...");
       for(int i=lua_gettop(L);i>=1;--i){
         LARS_LUA_GLUE_LOG("Stack at " << i << ": " << as_string(L,i));
       }
     }
+#endif
     
     using RegistryKey = std::string;
     
@@ -198,7 +200,6 @@ namespace {
     
     namespace metamethd_names {
 #define LARS_GLUE_ADD_FORWARDED_METAMETHOD(name) lua_pushcfunction(L, (forwardedClassMetamethod<T, metamethd_names::name, 2, 1>)); lua_setfield(L, -2, #name)
-      
       char __eq[] = "__eq";
       char __lt[] = "__lt";
       char __le[] = "__le";
@@ -340,7 +341,7 @@ namespace {
       lua_rawseti(L, -2, type.hash());
       lua_pop(L, 1);
     }
-        
+    
     template <class T> size_t buffer_size_for_type(){
       return sizeof(internal_type<T>) + alignof(T) - 1;
     }
