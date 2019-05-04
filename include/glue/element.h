@@ -30,7 +30,53 @@ namespace glue{
   class ElementMap;
   class ElementMapEntry;
   
-  class Element {
+  struct ElementInterface {
+    virtual Any & getValue() = 0;
+    virtual AnyReference getValue() const = 0;
+    virtual void valueChanged() = 0;
+    
+    template <
+      class T,
+      typename = typename std::enable_if<
+        !std::is_base_of<ElementInterface, typename std::decay<T>::type>::value
+      >::type
+    > ElementInterface & operator=(T && value){
+      if constexpr (detail::is_callable<T>::value) {
+        getValue().set<AnyFunction>(value);
+      } else {
+        getValue().set<T>(value);
+      }
+      valueChanged();
+      return *this;
+    }
+    
+    ElementInterface &operator=(const ElementInterface &e){
+      getValue().setReference(e.getValue());
+      return *this;
+    }
+    
+    template <typename ... Args> Any operator()(Args && ... args) const {
+      return getValue().get<AnyFunction>()(std::forward<Args>(args)...);
+    }
+    
+    template <class T, typename ... Args> auto & set(Args && ... args) {
+      auto &res = getValue().set<T>(std::forward<Args>(args)...);
+      valueChanged();
+      return res;
+    }
+    
+    template <class T> T get() const { return getValue().get<T>(); }
+    template <class T> T * tryGet() const { return getValue().tryGet<T>(); }
+
+    ElementMap * asMap() const;
+    ElementMapEntry operator[](const std::string &key);
+    
+    explicit operator bool() const { return bool(getValue()); }
+    
+    virtual ~ElementInterface(){}
+  };
+  
+  class Element: public ElementInterface {
   private:
     AnyReference data;
     friend ElementMapEntry;
@@ -39,50 +85,23 @@ namespace glue{
     using Map = ElementMap;
     
     Element() = default;
-    Element(const Element &) = default;
-    Element(Element &&) = default;
+    Element(const ElementInterface &e):data(e.getValue()){ }
 
     template <
       class T,
       typename = typename std::enable_if<
         !detail::is_callable<T>::value
-        && !std::is_same<typename std::decay<T>::type, Element>::value
+        && !std::is_base_of<ElementInterface, typename std::decay<T>::type>::value
       >::type
     > Element(T && v):data(std::forward<T>(v)){}
 
     Element(AnyFunction && f):data(f){}
     
-    Element &operator=(const Element &) = default;
-
-    template <
-      class T,
-      typename = typename std::enable_if<
-        !detail::is_callable<T>::value
-        && !std::is_same<typename std::decay<T>::type, Element>::value
-      >::type
-    > Element & operator=(T && value){
-      data.set<T>(value);
-      return *this;
-    }
+    using ElementInterface::operator=;
     
-    Element & operator=(AnyFunction && f);
-    
-    template <typename ... Args> Any operator()(Args && ... args)const{
-      return data.get<AnyFunction>()(std::forward<Args>(args)...);
-    }
-    
-    template <class T, typename ... Args> auto & set(Args && ... args){
-      return data.set<T>(std::forward<Args>(args)...);
-    }
-    
-    template <class T> T get()const{
-      return data.get<T>();
-    }
-    
-    ElementMapEntry operator[](const std::string &key);
-    
-    explicit operator bool()const{ return bool(data); }
-    Map * asMap()const{ return data.tryGet<Map>(); }
+    Any & getValue() final override { return data; }
+    AnyReference getValue() const final override { return data; }
+    void valueChanged() final override {};
   };
 
   class ElementMap: public lars::Visitable<ElementMap> {
@@ -95,7 +114,7 @@ namespace glue{
     using Entry = ElementMapEntry;
     friend Entry;
     
-    lars::Event<const std::string &, const Element &> onValueChanged;
+    lars::Event<const std::string &, const ElementInterface &> onValueChanged;
     
     ElementMap(){}
     ElementMap(const ElementMap &) = delete;
@@ -105,7 +124,7 @@ namespace glue{
     ~ElementMap(){}
   };
   
-  class ElementMapEntry {
+  class ElementMapEntry: public ElementInterface {
   private:
     ElementMap * parent;
     std::string key;
@@ -114,39 +133,30 @@ namespace glue{
   public:
     ElementMapEntry(ElementMap * p, const std::string &k):parent(p), key(k){
     }
-    
-    explicit operator bool()const{ return parent->getElement(key) != nullptr; }
-    
-    template <class T> ElementMapEntry &operator=(T && value){
-      auto &element = getOrCreateElement();
-      element = std::forward<T>(value);
-      parent->onValueChanged.emit(key, element);
-      return *this;
-    }
-    
-    template <class T, typename ... Args> auto & set(Args && ... args){
-      auto &element = getOrCreateElement();
-      auto &value = element.set<T>(std::forward<Args>(args)...);
-      parent->onValueChanged.emit(key, element);
-      return value;
-    }
 
-    template <typename ... Args> Any operator()(Args && ... args) {
-      return getOrCreateElement()(std::forward<Args>(args)...);
-    }
-    
-    ElementMapEntry operator[](const std::string &key);
-    
-    template <class T> T get(){
-      return getOrCreateElement().get<T>();
-    }
-    
+    using ElementInterface::operator=;
+
+    Any & getValue() final override { return parent->getOrCreateElement(key).getValue(); }
+    AnyReference getValue() const final override { if(auto e = parent->getElement(key)) return e->getValue(); return AnyReference(); }
+    void valueChanged() final override { parent->onValueChanged.emit(key, *this); };
   };
 
   /**
    * Internal keys
    */
-  static const std::string extendsKey = "__extends";
-  static const std::string classKey = "__class";
-
+  static const std::string extendsKey = "__glue_extends";
+  static const std::string classKey = "__glue_class";
+  
+  inline void setExtends(ElementInterface &extends, const ElementInterface &element){
+    extends[extendsKey] = element;
+  }
+  
+  template <class T> void setClass(ElementInterface &element){
+    element[classKey] = lars::getTypeIndex<T>();
+  }
+  
+  inline lars::TypeIndex * getClass(ElementInterface &element){
+    return element.tryGet<lars::TypeIndex>();
+  }
+  
 }
