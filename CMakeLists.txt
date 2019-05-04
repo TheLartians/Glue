@@ -25,6 +25,8 @@ project(Glue
 
 # ---- Dependencies ----
 
+include(cmake/CPM.cmake)
+
 if(TARGET Glue)
   return()
 endif()
@@ -38,8 +40,6 @@ if (${GLUE_BUILD_DUKTAPE})
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/duktape)
   set(GLUE_DUKTAPE_LIB GlueDuktape)
 endif()
-
-include(cmake/CPM.cmake)
 
 CPMAddPackage(
   NAME LHC

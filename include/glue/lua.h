@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glue/glue.h>
+#include <glue/element.h>
 
 #include <string>
 #include <unordered_map>
@@ -15,6 +16,7 @@ namespace glue {
   private:
     lua_State * L;
     bool ownsState;
+    std::shared_ptr<Map> globalTable;
     
   public:
     
@@ -45,7 +47,7 @@ namespace glue {
     /**
      * Loads the standard lua libraries
      */
-    void openLibs() const;
+    void openStandardLibs() const;
     
     /**
      * Runs the code. The name is used for debugging purposes.
@@ -78,6 +80,11 @@ namespace glue {
      * return the lua stack size
      */
     unsigned stackSize() const;
+    
+    /**
+     * returns the element map entry of the global table.
+     */
+    ElementMapEntry operator[](const std::string &)const;
     
     ~LuaState();
   };

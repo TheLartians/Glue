@@ -27,13 +27,13 @@ namespace glue{
     template <class T> struct is_callable<T, void_t<has_opr_t<typename std::decay<T>::type>>> : std::true_type { };
   }
   
-  class ElementMap;
+  class Map;
   class ElementMapEntry;
   
   struct ElementInterface {
-    virtual Any & getValue() = 0;
     virtual AnyReference getValue() const = 0;
-    virtual void valueChanged() = 0;
+    virtual void setValue(Any &&) = 0;
+    virtual Map& setToMap() = 0;
     
     template <
       class T,
@@ -42,16 +42,15 @@ namespace glue{
       >::type
     > ElementInterface & operator=(T && value){
       if constexpr (detail::is_callable<T>::value) {
-        getValue().set<AnyFunction>(value);
+        setValue(Any::create<AnyFunction>(value));
       } else {
-        getValue().set<T>(value);
+        setValue(lars::Any(value));
       }
-      valueChanged();
       return *this;
     }
     
     ElementInterface &operator=(const ElementInterface &e){
-      getValue().setReference(e.getValue());
+      setValue(e.getValue());
       return *this;
     }
     
@@ -60,15 +59,16 @@ namespace glue{
     }
     
     template <class T, typename ... Args> auto & set(Args && ... args) {
-      auto &res = getValue().set<T>(std::forward<Args>(args)...);
-      valueChanged();
+      Any value;
+      auto &res = value.set<T>(std::forward<Args>(args)...);
+      setValue(std::move(value));
       return res;
     }
     
     template <class T> T get() const { return getValue().get<T>(); }
-    template <class T> T * tryGet() const { return getValue().tryGet<T>(); }
+    template <class T> std::shared_ptr<T> tryGet() const { return getValue().getShared<T>(); }
 
-    ElementMap * asMap() const;
+    std::shared_ptr<Map> asMap() const;
     ElementMapEntry operator[](const std::string &key);
     
     explicit operator bool() const { return bool(getValue()); }
@@ -78,11 +78,11 @@ namespace glue{
   
   class Element: public ElementInterface {
   private:
-    AnyReference data;
+    mutable AnyReference data;
     friend ElementMapEntry;
     
   public:
-    using Map = ElementMap;
+    using Map = Map;
     
     Element() = default;
     Element(const ElementInterface &e):data(e.getValue()){ }
@@ -99,46 +99,51 @@ namespace glue{
     
     using ElementInterface::operator=;
     
-    Any & getValue() final override { return data; }
-    AnyReference getValue() const final override { return data; }
-    void valueChanged() final override {};
+    AnyReference getValue() const final override;
+    void setValue(Any&&) final override;
+    Map& setToMap() final override;
   };
 
-  class ElementMap: public lars::Visitable<ElementMap> {
-  private:
-    std::unordered_map<std::string, Element> data;
-    Element *getElement(const std::string &key);
-    Element &getOrCreateElement(const std::string &key);
-    
+  class Map: public lars::Visitable<Map>, public std::enable_shared_from_this<Map> {
   public:
     using Entry = ElementMapEntry;
-    friend Entry;
+    
+    virtual AnyReference getValue(const std::string &key) const = 0;
+    virtual void setValue(const std::string &key, Any && value) = 0;
+    virtual std::vector<std::string> keys()const = 0;
     
     lars::Event<const std::string &, const ElementInterface &> onValueChanged;
     
-    ElementMap(){}
-    ElementMap(const ElementMap &) = delete;
-    
+    Map(){}
+    Map(const Map &) = delete;
     Entry operator[](const std::string &key);
     
-    ~ElementMap(){}
+    virtual ~Map(){}
+  };
+  
+  class ElementMap: public Map {
+    AnyReference getValue(const std::string &key)const final override;
+    void setValue(const std::string &key, Any && value)final override;
+    std::vector<std::string> keys()const final override;
+
+    std::unordered_map<std::string, Element> data;
   };
   
   class ElementMapEntry: public ElementInterface {
   private:
-    ElementMap * parent;
+    std::shared_ptr<Map> parent;
     std::string key;
     Element &getOrCreateElement();
     
   public:
-    ElementMapEntry(ElementMap * p, const std::string &k):parent(p), key(k){
+    ElementMapEntry(const std::shared_ptr<Map> &p, const std::string &k):parent(p), key(k){
     }
 
     using ElementInterface::operator=;
 
-    Any & getValue() final override { return parent->getOrCreateElement(key).getValue(); }
-    AnyReference getValue() const final override { if(auto e = parent->getElement(key)) return e->getValue(); return AnyReference(); }
-    void valueChanged() final override { parent->onValueChanged.emit(key, *this); };
+    AnyReference getValue() const final override;
+    void setValue(Any&&) final override;
+    Map& setToMap() final override;
   };
 
   /**
@@ -155,8 +160,8 @@ namespace glue{
     element[classKey] = lars::getTypeIndex<T>();
   }
   
-  inline lars::TypeIndex * getClass(ElementInterface &element){
-    return element.tryGet<lars::TypeIndex>();
+  inline std::shared_ptr<lars::TypeIndex> getClass(ElementInterface &element){
+    return element[classKey].tryGet<lars::TypeIndex>();
   }
   
 }

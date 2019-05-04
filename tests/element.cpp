@@ -17,6 +17,8 @@ TEST_CASE("Element", "[element]"){
     REQUIRE_NOTHROW(element = 42);
     REQUIRE(element);
     REQUIRE(element.get<int>() == 42);
+    REQUIRE_THROWS(element.get<std::string>());
+    REQUIRE(element.tryGet<std::string>() == nullptr);
     REQUIRE(element.asMap() == nullptr);
   }
   
@@ -51,7 +53,7 @@ TEST_CASE("Element", "[element]"){
   SECTION("events"){
     unsigned changes = 0;
     std::set<std::string> changedItems;
-    element.set<ElementMap>().onValueChanged.connect([&](auto &key, auto &){
+    element.setToMap().onValueChanged.connect([&](auto &key, auto &){
       changes++; changedItems.insert(key);
     });
     element["a"] = 1;
@@ -88,10 +90,13 @@ TEST_CASE("Class element", "[element]"){
   
   Element base;
   setClass<Base>(base);
+  REQUIRE(getClass(base) != nullptr);
+  REQUIRE(*getClass(base) == lars::getTypeIndex<Base>());
   base["value"] = [](Base &b){ return b.value; };
   
   Element a;
   setClass<A>(a);
+  REQUIRE(*getClass(a) == lars::getTypeIndex<A>());
   setExtends(a, base);
   a["create"] = [](int v){ return Any::withBases<A,Base>(v); };
   
