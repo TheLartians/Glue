@@ -8,7 +8,7 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-#define LARS_LUA_GLUE_DEBUG
+//#define LARS_LUA_GLUE_DEBUG
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
