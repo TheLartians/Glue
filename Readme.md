@@ -2,4 +2,6 @@
 
 # Glue
 
-Simple multi-language bindings. Written in C++.
+C++17 multi-language bindings.
+This is a work in progress.
+Currently only the lua binding is fully supported.
