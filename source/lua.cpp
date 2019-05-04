@@ -70,8 +70,6 @@ namespace {
     }
     
     RegistryKey add_to_registry(lua_State * L, const std::string &key,int idx = -1){
-      static int obj_id = 0;
-      obj_id++;
       lua_pushstring(L, key.c_str());
       lua_pushvalue(L, idx > 0 ? idx : idx - 1);
       LARS_LUA_GLUE_LOG("add " << key << " to registry: " << as_string(L));
@@ -134,7 +132,7 @@ namespace {
     
     struct Map: public glue::Map {
       lua_glue::RegistryObject object;
-      Map(lua_glue::RegistryObject &&o): object(std::forward<lua_glue::RegistryObject>(o)){}
+      explicit Map(lua_glue::RegistryObject &&o): object(std::forward<lua_glue::RegistryObject>(o)){}
       glue::AnyReference getValue(const std::string &key) const final override;
       void setValue(const std::string &key, glue::Any && value) final override;
       std::vector<std::string> keys()const final override;
