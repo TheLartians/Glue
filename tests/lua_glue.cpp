@@ -83,7 +83,7 @@ TEST_CASE("LuaState","[lua]"){
   SECTION("global table"){
     lua.run("x = 42");
     REQUIRE(lua["x"].get<int>() == 42);
-    REQUIRE(lua["tostring"](lua["x"]).get<std::string>() == "42");
+    REQUIRE(lua["tostring"](lua["x"]).get<std::string>() == "42.0");
   }
   
 }
