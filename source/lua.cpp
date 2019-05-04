@@ -437,20 +437,22 @@ namespace {
           auto keys = data.keys();
           lua_createtable(L, 0, keys.size());
           
-          for (auto key: keys) {
+          auto addToTable = [](auto L, const auto &key, const auto &value){
             lua_pushstring(L, key.c_str());
-            push_value(L, data.getValue(key));
+            push_value(L, value);
             lua_settable(L, -3);
+          };
+          
+          for (auto key: keys) {
+            addToTable(L, key, data.getValue(key));
           }
           
           auto reg = std::make_shared<RegistryObject>(L, add_to_registry(L));
           
-          auto observer = data.onValueChanged.createObserver([reg](auto &key,auto &element){
+          auto observer = data.onValueChanged.createObserver([reg,addToTable](auto &key,auto &element){
             auto L = reg->L;
             reg->push_into(L);
-            lua_pushstring(L, key.c_str());
-            push_value(L, element.getValue());
-            lua_settable(L, -3);
+            addToTable(L, key, element.getValue());
             lua_pop(L, 1);
           });
           

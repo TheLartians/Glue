@@ -1,12 +1,6 @@
 #pragma once
 
-#include <glue/glue.h>
 #include <glue/element.h>
-
-#include <string>
-#include <unordered_map>
-#include <stdexcept>
-#include <type_traits>
 
 struct lua_State;
 
