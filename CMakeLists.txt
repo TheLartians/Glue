@@ -71,14 +71,10 @@ endif()
 set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources
-  ${glue_source_dir}/glue.cpp
-  ${glue_source_dir}/extension.cpp
   ${glue_source_dir}/element.cpp
 )
 
 set(headers
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/glue.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/extension.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/element.h
 )
 
