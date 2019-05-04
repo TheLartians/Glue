@@ -12,9 +12,16 @@ extern "C" {
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
-namespace { std::string ____indent; }
 #define INCREASE_INDENT ____indent += "  "
 #define DECREASE_INDENT ____indent.erase(____indent.end() - 2, ____indent.end())
+namespace {
+  std::string ____indent;
+  struct Indenter {
+    Indenter(){ INCREASE_INDENT; }
+    ~Indenter(){ DECREASE_INDENT; }
+  };
+}
+#define AUTO_INDENT Indenter indenter
 #define LARS_LUA_GLUE_LOG(X) LARS_LOG("lua glue[" << (L ? lua_gettop(L) : -1) << "]: " << ____indent << X)
 #else
 #define LARS_LUA_GLUE_LOG(X)
@@ -33,9 +40,10 @@ namespace {
     };
 
     std::string UNUSED as_string(lua_State * L,int idx = -1){
-      auto res = luaL_tolstring(L,idx,nullptr);
-      std::string result = res ? res : "nullptr";
-      lua_pop(L, 1);
+      lua_pushvalue(L, idx);
+      auto res = luaL_tolstring(L,-1,nullptr);
+      std::string result = res ? res : "undefined";
+      lua_pop(L, 2);
       return result;
     }
     
@@ -157,9 +165,12 @@ namespace {
     
     // pushes the subclass table of the object at idx, if it exists
     bool getSubclassTable(lua_State * L, int idx, const lars::TypeIndex &type){
+      //AUTO_INDENT;
+      //LARS_LUA_GLUE_LOG("getSubclassTable");
       lua_getmetatable(L, idx); // push metatable
       auto t = lua_rawgeti(L, -1, type.hash() ); // push subclass table
       if(t == LUA_TNIL){
+        //LARS_LUA_GLUE_LOG("unavailable");
         lua_pop(L, 2); // leave stack unchagned
         return false;
       }
@@ -169,10 +180,13 @@ namespace {
     }
     
     // pushes the subclass field of the object at idx, if it exists
-    bool getSubclassField(lua_State * L, int idx, const lars::TypeIndex &type, const std::string &name){
+    bool getSubclassField(lua_State * L, int idx, const lars::TypeIndex &type, const char *name){
+      //AUTO_INDENT;
+      //LARS_LUA_GLUE_LOG("getSubclassField " << name);
       if(!getSubclassTable(L, idx, type)){ return false; } // push subclass table
-      auto t = lua_getfield(L, -1, name.c_str()); // get the fiels
+      auto t = lua_getfield(L, -1, name); // get the field
       if(t == LUA_TNIL){ // field type is nil
+        //LARS_LUA_GLUE_LOG("unavailable");
         lua_pop(L, 2); // leave stack unchagned
         return false;
       }
@@ -182,8 +196,14 @@ namespace {
     }
     
     // calls the subclass metamethod with arguments on the stack, if it exist
-    bool forwardSubclassCall(lua_State * L, int idx, const lars::TypeIndex &type, const std::string &name, int argc, int retc = 1){
-      if(!getSubclassField(L, idx, type, name)) return false; // push the method
+    bool forwardSubclassCall(lua_State * L, int idx, const lars::TypeIndex &type, const char *name, int argc, int retc = 1){
+      //AUTO_INDENT;
+      //LARS_LUA_GLUE_LOG("forwardSubclassCall " << name);
+      if(!getSubclassField(L, idx, type, name)){ // push the method
+        //LARS_LUA_GLUE_LOG("unavailable");
+        return false;
+      }
+      //LARS_LUA_GLUE_LOG("will call " << as_string(L));
       for(auto i = 0; i<argc; ++i){
         lua_pushvalue(L, -argc-1); // push the arguments
       }
@@ -192,6 +212,7 @@ namespace {
     }
     
     template <class T,const char *f, unsigned argc, unsigned resc> int forwardedClassMetamethod(lua_State * L){
+      LARS_LUA_GLUE_LOG("calling forwarded metamethod");
       auto * data = get_internal_object_ptr<T>(L,1);
       if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
       if(forwardSubclassCall(L, -1, data->type, f, argc, resc)) return resc;
@@ -247,7 +268,9 @@ namespace {
       lua_pushcfunction(L, +[](lua_State *L){
         auto * data = get_internal_object_ptr<T>(L,1);
         if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
-        if(forwardSubclassCall(L, -1, data->type, "__tostring", 1, 1)) return 1;
+        if(forwardSubclassCall(L, -1, data->type, "__tostring", 1, 1)){
+          return 1;
+        }
         auto type_name = data->type.name();
         lua_pushstring(L, (type_name + std::string("(") + std::to_string((size_t)&data->data) + ")").c_str());
         return 1;
@@ -269,6 +292,7 @@ namespace {
       LARS_GLUE_ADD_FORWARDED_METAMETHOD(__unm);
 
       lua_pushcfunction(L, +[](lua_State *L){
+        LARS_LUA_GLUE_LOG("calling class destructor");
         auto * data = get_object_ptr<T>(L,1);
         if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
         data->~T();
@@ -753,10 +777,6 @@ namespace glue {
     lua_gc(L, LUA_GCCOLLECT, 0);
   }
   
-  unsigned LuaState::stackSize()const{
-    return lua_gettop(L);
-  }
-
   ElementMapEntry LuaState::operator[](const std::string &key)const{
     return (*globalTable)[key];
   }

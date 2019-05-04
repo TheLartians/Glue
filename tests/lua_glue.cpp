@@ -1,6 +1,8 @@
 #include <catch2/catch.hpp>
 #include <stdexcept>
 
+#include <cmath>
+
 #include <glue/lua.h>
 
 TEST_CASE("LuaState","[lua]"){
@@ -78,6 +80,10 @@ TEST_CASE("LuaState","[lua]"){
       map["a"]["d"] = 3;
       REQUIRE(lua.get<int>("x.a.d") == 3);
     }
+    
+    SECTION("inspect table"){
+      REQUIRE(map.keys().size() == 3);
+    }
   }
   
   SECTION("global table"){
@@ -153,26 +159,42 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(count == 0);
   }
   
+  SECTION("operators"){
+    struct A{ int value = 1; };
+    Element a;
+    setClass<A>(a);
+    a[operators::add] = [](A&a, A&b){ return A{a.value + b.value}; };
+    a[operators::mul] = [](A&a, A&b){ return A{a.value * b.value}; };
+    a[operators::sub] = [](A&a, A&b){ return A{a.value - b.value}; };
+    a[operators::div] = [](A&a, A&b){ return A{a.value / b.value}; };
+    a[operators::lt ] = [](A&a, A&b){ return a.value < b.value; };
+    a[operators::gt ] = [](A&a, A&b){ return a.value > b.value; };
+    a[operators::le ] = [](A&a, A&b){ return a.value <= b.value; };
+    a[operators::ge ] = [](A&a, A&b){ return a.value >= b.value; };
+    a[operators::unm] = [](A&a){ return -a.value; };
+    a[operators::pow] = [](A&a, A&b){ return pow(a.value,b.value); };
+    a[operators::mod] = [](A&a, A&b){ return a.value % b.value; };
+    a[operators::idiv] = [](A&a, A&b){ return a.value / b.value; };
+
+    lua["A"] = a;
+    lua["a"] = A();
+    REQUIRE(lua.get<A&>("(a + a) * (a / a + a) - a").value == 3);
+    REQUIRE(lua.get<bool>("a + a > a"));
+    REQUIRE(!lua.get<bool>("a + a < a"));
+    REQUIRE(lua.get<bool>("a <= a"));
+    REQUIRE(lua.get<bool>("a >= a"));
+    REQUIRE(lua.get<int>("-a") == -1);
+    REQUIRE(lua.get<int>("(a+a)^(a+a)") == 4);
+    REQUIRE(lua.get<int>("a % (a+a)") == 1);
+    REQUIRE(lua.get<int>("a // a") == 1);
+  }
+
   SECTION("errors"){
     SECTION("lua errors"){
       REQUIRE_THROWS_AS(lua.run("error('Hello Lua!')"), LuaState::Error);
       REQUIRE_THROWS_WITH(lua.run("error('Hello Lua!')"), Catch::Matchers::Contains("Hello Lua!"));
     }
-
-    SECTION("internal errors"){
-      class A{};
-      Element a;
-      setClass<A>(a);
-      lua["A"] = a;
-      lua["a"] = A();
-      // REQUIRE_NOTHROW(lua.run("a + a"));
-    }
-  }
-  
-  SECTION("operators"){
-    
   }
   
 }
-
 

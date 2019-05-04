@@ -165,6 +165,22 @@ namespace glue{
   static const std::string extendsKey = "__glue_extends";
   static const std::string classKey = "__glue_class";
   
+  namespace operators{
+    static const std::string eq = "__eq";
+    static const std::string lt = "__lt";
+    static const std::string le = "__le";
+    static const std::string gt = "__gt";
+    static const std::string ge = "__ge";
+    static const std::string mul = "__mul";
+    static const std::string div = "__div";
+    static const std::string idiv = "__idiv";
+    static const std::string add = "__add";
+    static const std::string sub = "__sub";
+    static const std::string mod = "__mod";
+    static const std::string pow = "__pow";
+    static const std::string unm = "__unm";
+  }
+  
   inline void setExtends(ElementInterface &extends, const ElementInterface &element){
     extends[extendsKey] = element;
   }
