@@ -235,8 +235,7 @@ namespace {
     }
 
     std::string class_mt_key(const lars::TypeIndex &idx){
-      auto name = idx.name();
-      auto key = "lars.glue." + std::string(name.begin(),name.end());
+      auto key = "lars.glue." + idx.name();
       return key;
     }
     
@@ -504,7 +503,7 @@ namespace {
       
       auto assert_value_exists = [&](auto && v){
         if(!v){
-          error_handler(L, "invalid argument type for argument " + std::to_string(idx-1) + ". Expected " + std::string(type.name().begin(),type.name().end()) + ", got " + as_string(L,idx));
+          error_handler(L, "invalid argument type for argument " + std::to_string(idx-1) + ". Expected " + type.name() + ", got " + as_string(L,idx));
         }
         return v;
       };
@@ -592,7 +591,7 @@ namespace {
         };
         return lars::makeAny<lars::AnyFunction>(f);
       } else{
-        auto msg = "cannot extract type '" + std::string(type.name().begin(),type.name().end()) + "' from \"" + as_string(L, idx) + "\"";
+        auto msg = "cannot extract type '" + type.name() + "' from \"" + as_string(L, idx) + "\"";
         LARS_LUA_GLUE_LOG(msg);
         error_handler(L, msg);
       }
