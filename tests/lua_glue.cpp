@@ -129,14 +129,28 @@ TEST_CASE("LuaState","[lua]"){
     Element a;
     setClass<A>(a);
     setExtends(a, base);
+
     a["create"] = [](int v){ return Any::withBases<A,Base>(v); };
+    a["create_shared"] = [](int v){ return std::shared_ptr<Base>(std::make_shared<A>(v)); };
     
+    lua["Base"] = base;
     lua["A"] = a;
     
-    lua.run("a = A.create(42)");
-    REQUIRE_THAT(lua.get<std::string>("tostring(a)"), Catch::Matchers::Contains("A"));
-    REQUIRE(lua.get<int>("A.value(a)") == 42);
-    REQUIRE(lua.get<int>("a:value()") == 42);
+    SECTION("value and inheritance"){
+      lua.run("a = A.create(42)");
+      REQUIRE_THAT(lua.get<std::string>("tostring(a)"), Catch::Matchers::Contains("A"));
+      REQUIRE(lua.get<int>("Base.value(a)") == 42);
+      REQUIRE(lua.get<int>("A.value(a)") == 42);
+      REQUIRE(lua.get<int>("a:value()") == 42);
+    }
+
+    SECTION("shared pointer value"){
+      lua.run("b = A.create_shared(420)");
+      REQUIRE_THAT(lua.get<std::string>("tostring(b)"), Catch::Matchers::Contains("Base"));
+      REQUIRE(lua.get<int>("Base.value(b)") == 420);
+      REQUIRE(lua.get<int>("b:value()") == 420);
+    }
+
   }
   
   SECTION("memory"){
