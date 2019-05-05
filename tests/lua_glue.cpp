@@ -195,6 +195,13 @@ TEST_CASE("LuaState","[lua]"){
       REQUIRE_THROWS_WITH(lua.run("error('Hello Lua!')"), Catch::Matchers::Contains("Hello Lua!"));
     }
   }
+
+  SECTION("call function with any arguments"){
+    lua["f"] = [](const lars::AnyArguments &args){
+      return args.size();
+    };
+    REQUIRE(lua.get<int>("f(1,2,3,4)") == 4);
+  }
   
 }
 
