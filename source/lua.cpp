@@ -730,7 +730,9 @@ namespace glue {
     auto N = lua_gettop(L);
     
     INCREASE_INDENT;
-    luaL_loadbuffer(L, code.data(), code.size(), name.c_str());
+    if (luaL_loadbuffer(L, code.data(), code.size(), name.c_str())) {
+      throw Error(L, N);
+    }
     DECREASE_INDENT;
 
     if(lua_pcall(L, 0, LUA_MULTRET, 0)) {
@@ -749,7 +751,9 @@ namespace glue {
     auto code = "return " + str;
     
     INCREASE_INDENT;
-    luaL_loadbuffer(L, code.data(), code.size(), "LuaGlue get value");
+    if (luaL_loadbuffer(L, code.data(), code.size(), "LuaGlue get value")){
+      throw Error(L, N);
+    }
     DECREASE_INDENT;
     
     if(lua_pcall(L, 0, 1, 0)) {

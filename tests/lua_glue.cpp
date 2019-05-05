@@ -216,6 +216,26 @@ TEST_CASE("LuaState","[lua]"){
     };
     REQUIRE(lua.get<int>("f(1,2,3,4)") == 4);
   }
-  
+
+  SECTION("callbacks"){
+    SECTION("scalar values"){
+      lua["count"] = [](lars::AnyFunction f){
+        for (int i = 0; i<10; ++i) f(i);
+      };
+      REQUIRE_NOTHROW(lua.run("res = 0; count(function(i) res = res + i; end);"));
+      REQUIRE_NOTHROW(lua.get<int>("res") == 45);
+    }
+    SECTION("class values"){
+      struct A{ int value; };
+      Element AGLue;
+      setClass<A>(AGLue);
+      AGLue["value"] = [](const A &a){ return a.value; };
+      lua["A"] = AGLue;
+      lua["count"] = [](lars::AnyFunction f){ for (int i = 0; i<10; ++i) f(A{i}); };
+      REQUIRE_NOTHROW(lua.run("res = 0; count(function(i) res = res + i:value(); end);"));
+      REQUIRE_NOTHROW(lua.get<int>("res") == 45);
+    }
+  }
+
 }
 
