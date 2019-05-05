@@ -44,6 +44,7 @@ endif()
 CPMAddPackage(
   NAME LHC
   VERSION 0.7
+  GIT_TAG dev
   GIT_REPOSITORY https://github.com/TheLartians/LHC.git
 )
 

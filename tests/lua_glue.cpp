@@ -231,9 +231,26 @@ TEST_CASE("LuaState","[lua]"){
       setClass<A>(AGLue);
       AGLue["value"] = [](const A &a){ return a.value; };
       lua["A"] = AGLue;
-      lua["count"] = [](lars::AnyFunction f){ for (int i = 0; i<10; ++i) f(A{i}); };
+
+      SECTION("checks"){
+        lua["a"] = A{42};
+        REQUIRE(lua.get<int>("a:value()") == 42);
+        A a{42};
+        lua["a"] = std::reference_wrapper(a);
+        REQUIRE(lua.get<int>("a:value()") == 42);
+        lua["a"] = std::reference_wrapper(std::as_const(a));
+        REQUIRE(lua.get<int>("a:value()") == 42);
+      }
+
+      lua["count"] = [](lars::AnyFunction f){ 
+        for (int i = 0; i<10; ++i){
+          auto a = A{i};
+          f(a);
+          f(std::as_const(a));
+        };
+      };
       REQUIRE_NOTHROW(lua.run("res = 0; count(function(i) res = res + i:value(); end);"));
-      REQUIRE_NOTHROW(lua.get<int>("res") == 45);
+      REQUIRE_NOTHROW(lua.get<int>("res") == 90);
     }
   }
 
