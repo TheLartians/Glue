@@ -254,5 +254,9 @@ TEST_CASE("LuaState","[lua]"){
     }
   }
 
+  SECTION("recursive map"){
+    
+  }
+
 }
 

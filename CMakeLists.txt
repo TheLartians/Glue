@@ -43,8 +43,7 @@ endif()
 
 CPMAddPackage(
   NAME LHC
-  VERSION 0.7
-  GIT_TAG dev
+  VERSION 0.8
   GIT_REPOSITORY https://github.com/TheLartians/LHC.git
 )
 
@@ -58,6 +57,7 @@ CPMAddPackage(
   NAME LarsVisitor
   VERSION 1.7
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
+  GIT_TAG master
 )
 
 # ---- enable C++ ----
