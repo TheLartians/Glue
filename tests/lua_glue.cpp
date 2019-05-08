@@ -230,7 +230,7 @@ TEST_CASE("LuaState","[lua]"){
       Element AGLue;
       setClass<A>(AGLue);
       AGLue["value"] = [](const A &a){ return a.value; };
-      lua["A"] = AGLue;
+      lua["classes"]["A"] = AGLue;
 
       SECTION("checks"){
         lua["a"] = A{42};

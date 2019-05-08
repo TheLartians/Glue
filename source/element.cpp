@@ -1,31 +1,52 @@
 #include <glue/element.h>
+#include <easy_iterator.h>
 
 using namespace glue;
+using easy_iterator::eraseIfFound;
+using easy_iterator::found;
 
 AnyReference ElementMap::getValue(const std::string &key) const {
-  auto it = data.find(key);
-  if (it != data.end()) {
-    return it->second.getValue();
-  }
-  it = data.find(extendsKey);
-  if (it != data.end()) if (auto map = it->second.asMap()) {
-    return map->getValue(key);
+  if (auto v = found(data.find(key), data)) {
+    return v->second.getValue();
+  } else if (auto v = found(data.find(extendsKey), data)) {
+    if (auto map = v->second.asMap()) {
+      return map->getValue(key);
+    }
   }
   return AnyReference();
 }
 
 void ElementMap::setValue(const std::string &key, Any && value){
   if (!value) {
-    auto it = data.find(key);
-    if (it != data.end()) {
-      data.erase(it);
-    }
+    eraseIfFound(data.find(key), data);
+    eraseIfFound(elementObservers.find(key), elementObservers);
   } else {
+    if (key == classKey) {
+      auto & type = value.get<const lars::TypeIndex &>();
+      addClass(type, shared_from_this());
+    }
+    if (auto *map = value.tryGet<ElementMap>()) {
+      for (auto c: map->classes) {
+        addClass(c.first, c.second);
+      }
+      elementObservers.emplace(key, map->onClassAdded.createObserver([this](auto &type, auto &map){
+        addClass(type, map);
+      }));
+    }
     auto & element = data[key];
     element.setValue(std::forward<Any>(value));
   }
   onValueChanged.emit(key, value);
 }
+
+void ElementMap::addClass(const lars::TypeIndex &type, const std::shared_ptr<Map> &map){
+  auto alreadyAdded = found(classes.find(type), classes);
+  classes.emplace(type, map);
+  if (!alreadyAdded) {
+    onClassAdded.emit(type, map);
+  }
+}
+
 
 std::vector<std::string> ElementMap::keys()const{
   std::vector<std::string> result;
@@ -75,3 +96,9 @@ AnyReference Element::getValue() const {
 Map& Element::setToMap() {
   return set<ElementMap>();
 }
+
+glue::ClassMaps glue::getClasses(const glue::ElementInterface &){
+  glue::ClassMaps classes;
+  return classes;
+}
+

@@ -85,7 +85,7 @@ namespace glue{
 
     std::shared_ptr<Map> asMap() const;
     ElementMapEntry operator[](const std::string &key);
-    
+
     explicit operator bool() const { return bool(getValue()); }
     
     virtual ~ElementInterface(){}
@@ -129,17 +129,23 @@ namespace glue{
     
     Map(){}
     Map(const Map &) = delete;
+    
     Entry operator[](const std::string &key);
     
     virtual ~Map(){}
   };
   
-  class ElementMap: public Map {
+  using ClassMaps = std::unordered_map<lars::TypeIndex, std::shared_ptr<Map>>;
+
+  struct ElementMap: public lars::DerivedVisitable<ElementMap,Map> {
     AnyReference getValue(const std::string &key)const final override;
     void setValue(const std::string &key, Any && value)final override;
     std::vector<std::string> keys()const final override;
-
     std::unordered_map<std::string, Element> data;
+    std::unordered_map<std::string, lars::Observer> elementObservers;
+    lars::Event<const lars::TypeIndex &, const std::shared_ptr<Map> &> onClassAdded;
+    void addClass(const lars::TypeIndex &, const std::shared_ptr<Map> &);
+    ClassMaps classes;
   };
   
   class ElementMapEntry: public ElementInterface {
@@ -193,5 +199,7 @@ namespace glue{
     return element[classKey].tryGet<lars::TypeIndex>();
   }
   
+  ClassMaps getClasses(const ElementInterface &element);
+
 }
 

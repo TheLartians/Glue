@@ -3,6 +3,7 @@
 include(CMakeFindDependencyMacro)
 
 find_dependency(LHC)
+find_dependency(EasyIterator)
 find_dependency(LarsVisitor)
 find_dependency(LarsEvent)
 

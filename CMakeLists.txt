@@ -42,6 +42,13 @@ if (${GLUE_BUILD_DUKTAPE})
 endif()
 
 CPMAddPackage(
+  NAME EasyIterator
+  VERSION 1.0
+  GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
+  GIT_TAG dev
+)
+
+CPMAddPackage(
   NAME LHC
   VERSION 0.8
   GIT_REPOSITORY https://github.com/TheLartians/LHC.git
@@ -99,7 +106,7 @@ if(${GLUE_ENABLE_DUKTAPE})
   target_link_libraries(Glue PUBLIC ${GLUE_DUKTAPE_LIB})  
 endif()
 
-target_link_libraries(Glue PUBLIC LHC LarsEvent LarsVisitor)
+target_link_libraries(Glue PUBLIC EasyIterator LHC LarsEvent LarsVisitor)
 
 target_include_directories(Glue
   PUBLIC

@@ -8,8 +8,8 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-//#define LARS_LUA_GLUE_DEBUG
-//#include <lars/log.h>
+// #define LARS_LUA_GLUE_DEBUG
+// #include <lars/log.h>
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
@@ -457,7 +457,8 @@ namespace {
         const std::string &,
         const lars::AnyFunction &,
         const RegistryObject &,
-        const glue::Map &
+        const glue::Map &,
+        const glue::ElementMap &
       >{
         lua_State * L;
         bool visit(bool data)override{ LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data); return true; }
@@ -466,18 +467,33 @@ namespace {
         bool visit(double data)override{ LUA_GLUE_LOG("push char"); lua_pushnumber(L, data); return true; }
         bool visit(const std::string &data)override{ LUA_GLUE_LOG("push string"); lua_pushstring(L, data.c_str()); return true; }
         bool visit(const lars::AnyFunction &data)override{ LUA_GLUE_LOG("push function"); push_function(L,data); return true; }
-        bool visit(const RegistryObject &data)override{ 
+        bool visit(const RegistryObject &data)override{
           LUA_GLUE_LOG("push registry from " << data.L << " into " << L); 
           data.push_into(L); 
           return true; 
+        }
+        bool visit(const ElementMap &data)override{
+          for (auto& type: data.classes) {
+            LUA_GLUE_LOG("add class: " << type.first);
+            AUTO_INDENT;
+            create_and_push_object<std::shared_ptr<glue::Map>>(L,lars::getTypeIndex<glue::Map>(),type.second);
+            set_subclass_table<glue::Any>(L,type.first);
+            lua_pop(L, 1);
+          }
+          visit((const Map &)data);
+          auto observer = data.onClassAdded.createObserver([L=L](auto &type, auto &map){
+            LUA_GLUE_LOG("add class from observer: " << type);
+            create_and_push_object<std::shared_ptr<glue::Map>>(L,lars::getTypeIndex<glue::Map>(),map);
+            set_subclass_table<glue::Any>(L,type);
+          });
+          create_and_push_object<decltype(observer)>(L, lars::getTypeIndex<decltype(observer)>(), std::move(observer));
+          lua_setfield(L, -2, "__type_observer");
+          return true;
         }
         bool visit(const glue::Map &data)override{
           LUA_GLUE_LOG("push map");
           std::shared_ptr<glue::Map> sharedMap = const_cast<glue::Map &>(data).shared_from_this();
           create_and_push_object<std::shared_ptr<glue::Map>>(L,lars::getTypeIndex<glue::Map>(),sharedMap);
-          if (auto type = data.getValue(glue::classKey)) {
-            set_subclass_table<glue::Any>(L,type.get<const lars::TypeIndex &>());
-          }
           return true;
         }
       } visitor;
