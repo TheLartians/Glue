@@ -55,7 +55,7 @@ TEST_CASE("LuaState","[lua]"){
     lua.set("f", lars::AnyFunction([](int x){ return x+3; }));
     REQUIRE(lua.get<int>("f(39)") == 42);
   }
-  
+
   SECTION("get element map"){
     lua.run("x = { a = 1, b = 'b', c = { d = 42 } }");
     auto ptr = lua.get<std::shared_ptr<Map>>("x");
@@ -83,6 +83,10 @@ TEST_CASE("LuaState","[lua]"){
     
     SECTION("inspect table"){
       REQUIRE(map.keys().size() == 3);
+      REQUIRE_NOTHROW(map["e"]["f"] = 1);
+      REQUIRE_NOTHROW(map["e"]["f"] = 1);
+      REQUIRE(map["e"].asMap());
+      REQUIRE(map["e"].asMap()->keys().size() == 2);
     }
   }
   
@@ -129,14 +133,28 @@ TEST_CASE("LuaState","[lua]"){
     Element a;
     setClass<A>(a);
     setExtends(a, base);
+
     a["create"] = [](int v){ return Any::withBases<A,Base>(v); };
+    a["create_shared"] = [](int v){ return std::shared_ptr<Base>(std::make_shared<A>(v)); };
     
+    lua["Base"] = base;
     lua["A"] = a;
     
-    lua.run("a = A.create(42)");
-    REQUIRE_THAT(lua.get<std::string>("tostring(a)"), Catch::Matchers::Contains("A"));
-    REQUIRE(lua.get<int>("A.value(a)") == 42);
-    REQUIRE(lua.get<int>("a:value()") == 42);
+    SECTION("value and inheritance"){
+      lua.run("a = A.create(42)");
+      REQUIRE_THAT(lua.get<std::string>("tostring(a)"), Catch::Matchers::Contains("A"));
+      REQUIRE(lua.get<int>("Base.value(a)") == 42);
+      REQUIRE(lua.get<int>("A.value(a)") == 42);
+      REQUIRE(lua.get<int>("a:value()") == 42);
+    }
+
+    SECTION("shared pointer value"){
+      lua.run("b = A.create_shared(420)");
+      REQUIRE_THAT(lua.get<std::string>("tostring(b)"), Catch::Matchers::Contains("Base"));
+      REQUIRE(lua.get<int>("Base.value(b)") == 420);
+      REQUIRE(lua.get<int>("b:value()") == 420);
+    }
+
   }
   
   SECTION("memory"){
@@ -195,6 +213,50 @@ TEST_CASE("LuaState","[lua]"){
       REQUIRE_THROWS_WITH(lua.run("error('Hello Lua!')"), Catch::Matchers::Contains("Hello Lua!"));
     }
   }
-  
+
+  SECTION("call function with any arguments"){
+    lua["f"] = [](const lars::AnyArguments &args){
+      return args.size();
+    };
+    REQUIRE(lua.get<int>("f(1,2,3,4)") == 4);
+  }
+
+  SECTION("callbacks"){
+    SECTION("scalar values"){
+      lua["count"] = [](lars::AnyFunction f){
+        for (int i = 0; i<10; ++i) f(i);
+      };
+      REQUIRE_NOTHROW(lua.run("res = 0; count(function(i) res = res + i; end);"));
+      REQUIRE_NOTHROW(lua.get<int>("res") == 45);
+    }
+    SECTION("class values"){
+      struct A{ int value; };
+      Element AGLue;
+      setClass<A>(AGLue);
+      AGLue["value"] = [](const A &a){ return a.value; };
+      lua["classes"]["A"] = AGLue;
+
+      SECTION("checks"){
+        lua["a"] = A{42};
+        REQUIRE(lua.get<int>("a:value()") == 42);
+        A a{42};
+        lua["a"] = std::reference_wrapper(a);
+        REQUIRE(lua.get<int>("a:value()") == 42);
+        lua["a"] = std::reference_wrapper(std::as_const(a));
+        REQUIRE(lua.get<int>("a:value()") == 42);
+      }
+
+      lua["count"] = [](lars::AnyFunction f){ 
+        for (int i = 0; i<10; ++i){
+          auto a = A{i};
+          f(a);
+          f(std::as_const(a));
+        };
+      };
+      REQUIRE_NOTHROW(lua.run("res = 0; count(function(i) res = res + i:value(); end);"));
+      REQUIRE_NOTHROW(lua.get<int>("res") == 90);
+    }
+  }
+
 }
 
