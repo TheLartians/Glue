@@ -96,9 +96,3 @@ AnyReference Element::getValue() const {
 Map& Element::setToMap() {
   return set<ElementMap>();
 }
-
-glue::ClassMaps glue::getClasses(const glue::ElementInterface &){
-  glue::ClassMaps classes;
-  return classes;
-}
-

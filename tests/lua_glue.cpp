@@ -83,6 +83,10 @@ TEST_CASE("LuaState","[lua]"){
     
     SECTION("inspect table"){
       REQUIRE(map.keys().size() == 3);
+      REQUIRE_NOTHROW(map["e"]["f"] = 1);
+      REQUIRE_NOTHROW(map["e"]["f"] = 1);
+      REQUIRE(map["e"].asMap());
+      REQUIRE(map["e"].asMap()->keys().size() == 2);
     }
   }
   

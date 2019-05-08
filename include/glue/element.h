@@ -198,8 +198,6 @@ namespace glue{
   inline std::shared_ptr<lars::TypeIndex> getClass(ElementInterface &element){
     return element[classKey].tryGet<lars::TypeIndex>();
   }
-  
-  ClassMaps getClasses(const ElementInterface &element);
 
 }
 

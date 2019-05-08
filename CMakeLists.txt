@@ -43,9 +43,8 @@ endif()
 
 CPMAddPackage(
   NAME EasyIterator
-  VERSION 1.0
+  VERSION 1.1
   GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
-  GIT_TAG dev
 )
 
 CPMAddPackage(
