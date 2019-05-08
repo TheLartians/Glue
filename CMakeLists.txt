@@ -63,7 +63,6 @@ CPMAddPackage(
   NAME LarsVisitor
   VERSION 1.7
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
-  GIT_TAG master
 )
 
 # ---- enable C++ ----
