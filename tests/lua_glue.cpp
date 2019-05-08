@@ -55,7 +55,7 @@ TEST_CASE("LuaState","[lua]"){
     lua.set("f", lars::AnyFunction([](int x){ return x+3; }));
     REQUIRE(lua.get<int>("f(39)") == 42);
   }
-  
+
   SECTION("get element map"){
     lua.run("x = { a = 1, b = 'b', c = { d = 42 } }");
     auto ptr = lua.get<std::shared_ptr<Map>>("x");
