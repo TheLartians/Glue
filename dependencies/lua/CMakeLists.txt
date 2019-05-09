@@ -15,10 +15,7 @@ CPMAddPackage(
   DOWNLOAD_ONLY YES
 )
 
-FetchContent_GetProperties(lua)
-if(NOT lua_POPULATED)
-  FetchContent_Populate(lua)
-endif()
+CPMGetProperties(lua)
 
 FILE(GLOB lua_sources ${lua_SOURCE_DIR}/*.c)
 FILE(GLOB lua_headers ${lua_SOURCE_DIR}/*.h)

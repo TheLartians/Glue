@@ -15,10 +15,7 @@ CPMAddPackage(
   DOWNLOAD_ONLY YES
 )
 
-FetchContent_GetProperties(duktape)
-if(NOT duktape_POPULATED)
-  FetchContent_Populate(duktape)
-endif()
+CPMGetProperties(duktape)
 
 FILE(GLOB duktape_sources ${duktape_SOURCE_DIR}/src/*.c)
 FILE(GLOB duktape_headers ${duktape_SOURCE_DIR}/src/*.h)
