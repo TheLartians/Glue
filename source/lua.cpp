@@ -8,8 +8,8 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-// #define LARS_LUA_GLUE_DEBUG
-// #include <lars/log.h>
+//#define LARS_LUA_GLUE_DEBUG
+//#include <lars/log.h>
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
@@ -114,7 +114,7 @@ namespace {
     
     std::shared_ptr<bool> get_lua_active_ptr(lua_State * L);
     
-    struct RegistryObject{
+    struct RegistryObject: public lars::Visitable<RegistryObject>{
       lua_State * L;
       RegistryKey key;
       std::shared_ptr<bool> lua_active;
@@ -134,9 +134,8 @@ namespace {
       void push_into(lua_State * L)const{ push_from_registry(L, key); }
     };
     
-    struct Map: public glue::Map {
-      lua_glue::RegistryObject object;
-      explicit Map(lua_glue::RegistryObject &&o): object(std::forward<lua_glue::RegistryObject>(o)){}
+    struct Map: public lars::VirtualVisitable<lua_glue::RegistryObject, glue::Map> {
+      explicit Map(lua_glue::RegistryObject &&o): lua_glue::RegistryObject(std::forward<lua_glue::RegistryObject>(o)){}
       glue::AnyReference getValue(const std::string &key) const final override;
       void setValue(const std::string &key, glue::Any && value) final override;
       std::vector<std::string> keys()const final override;
@@ -305,12 +304,14 @@ namespace {
         lua_pushcfunction(L, +[](lua_State *L){
           try{
             LUA_GLUE_LOG("will call " << as_string(L,1) << " with " << lua_gettop(L)-1 << " arguments");
+            INCREASE_INDENT;
             auto & f = get_object<lars::AnyFunction>(L,1);
             lars::AnyArguments args;
             auto argc = f.isVariadic() ? lua_gettop(L)-1 : f.argumentCount();
             for(size_t i=0;i<argc;++i) args.emplace_back(extract_value(L, i+2, f.argumentType(i)));
             INCREASE_INDENT;
             try{
+              DECREASE_INDENT;
               DECREASE_INDENT;
               auto result = f.call(args);
               if(result){
@@ -321,7 +322,6 @@ namespace {
               LUA_GLUE_LOG("returning nothing");
               return 0;
             } catch (...) {
-              DECREASE_INDENT;
               throw;
             }
           }
@@ -480,7 +480,7 @@ namespace {
             set_subclass_table<glue::Any>(L,type.first);
             lua_pop(L, 1);
           }
-          visit((const Map &)data);
+          visit((const glue::Map &)data);
           auto observer = data.onClassAdded.createObserver([L=L](auto &type, auto &map){
             LUA_GLUE_LOG("add class from observer: " << type);
             create_and_push_object<std::shared_ptr<glue::Map>>(L,lars::getTypeIndex<glue::Map>(),map);
@@ -661,8 +661,7 @@ namespace {
 }
 
 glue::AnyReference lua_glue::Map::getValue(const std::string &key) const {
-  auto L = object.L;
-  object.push_into(L);
+  push_into(L);
   lua_getfield(L, -1, key.c_str());
   auto value = lua_glue::extract_value(L);
   lua_pop(L, 2);
@@ -670,8 +669,7 @@ glue::AnyReference lua_glue::Map::getValue(const std::string &key) const {
 }
 
 void lua_glue::Map::setValue(const std::string &key, glue::Any && value) {
-  auto L = object.L;
-  object.push_into(L);
+  push_into(L);
   lua_glue::push_value(L, value);
   lua_setfield(L, -2, key.c_str());
   lua_pop(L, 1);
@@ -679,8 +677,7 @@ void lua_glue::Map::setValue(const std::string &key, glue::Any && value) {
 
 std::vector<std::string> lua_glue::Map::keys() const {
   std::vector<std::string> result;
-  auto L = object.L;
-  object.push_into(L);
+  push_into(L);
   if (!lua_istable(L, -1)) { // something went wrong
     lua_pop(L, 1);
     return result;
