@@ -256,6 +256,14 @@ TEST_CASE("LuaState","[lua]"){
       REQUIRE_NOTHROW(lua.run("res = 0; count(function(i) res = res + i:value(); end);"));
       REQUIRE_NOTHROW(lua.get<int>("res") == 90);
     }
+    
+  }
+  
+  SECTION("convert objects from lua object and back"){
+    lua["f"] = [](const Any &v)->AnyReference{ return v; };
+    REQUIRE(lua.get<int>("f(42)") == 42);
+    REQUIRE(lua.get<int>("f({a = 42}).a") == 42);
+    REQUIRE((*lua.get<std::shared_ptr<glue::Map>>("f({a = 42})"))["a"].get<int>() == 42);
   }
 
 }

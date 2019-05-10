@@ -19,7 +19,7 @@ option(GLUE_DUKTAPE_LIB "The duktape library to link with glue.")
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.7
+  VERSION 0.8.1
   LANGUAGES CXX
 )
 
@@ -61,15 +61,9 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 1.7
+  VERSION 1.7.1
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
-
-# ---- enable C++ ----
-
-if(NOT CMAKE_CXX_STANDARD GREATER 17)
-  set (CMAKE_CXX_STANDARD 17)
-endif()
 
 # ---- create module ----
 
@@ -94,7 +88,7 @@ if(${GLUE_ENABLE_LUA})
 endif()
 
 add_library(Glue ${sources} ${headers})
-set_target_properties(Glue PROPERTIES COMPILE_FLAGS "-Wall -pedantic -Wextra -Werror")
+set_target_properties(Glue PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-Wall -pedantic -Wextra -Werror")
 
 if(${GLUE_ENABLE_LUA})
   target_link_libraries(Glue PUBLIC ${GLUE_LUA_LIB})  
