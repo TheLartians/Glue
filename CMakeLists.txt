@@ -19,7 +19,7 @@ option(GLUE_DUKTAPE_LIB "The duktape library to link with glue.")
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.7
+  VERSION 0.8.1
   LANGUAGES CXX
 )
 
