@@ -3,29 +3,28 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 include(FetchContent)
 
 project(GlueLua
-  VERSION 5.3.4
+  VERSION 5.3.5
   LANGUAGES C
 )
 
 CPMAddPackage(
-  NAME lua
+  NAME GlueLua
   GIT_REPOSITORY https://github.com/lua/lua.git
-  VERSION 5-3-4
+  VERSION 5.3.5
   GIT_SHALLOW YES
   DOWNLOAD_ONLY YES
 )
 
-CPMGetProperties(lua)
+if (GlueLua_ADDED)
+  # lua has no CMakeLists, so we create our own target
+  FILE(GLOB GlueLua_sources ${GlueLua_SOURCE_DIR}/*.c)
+  add_library(GlueLua STATIC ${GlueLua_sources})
 
-FILE(GLOB lua_sources ${lua_SOURCE_DIR}/*.c)
-FILE(GLOB lua_headers ${lua_SOURCE_DIR}/*.h)
-
-add_library(GlueLua STATIC ${lua_sources} ${lua_headers})
-
-target_include_directories(GlueLua
-  PUBLIC
-    $<BUILD_INTERFACE:${lua_SOURCE_DIR}>
-)
+  target_include_directories(GlueLua
+    PUBLIC
+      $<BUILD_INTERFACE:${GlueLua_SOURCE_DIR}>
+  )
+endif()
 
 # ---- Install ----
 
