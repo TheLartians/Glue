@@ -772,11 +772,10 @@ namespace glue {
     
   }
   
-  lars::Any LuaState::get(const std::string &str) const {
+  lars::Any LuaState::rawGet(const std::string_view &code) const {
     LUA_GLUE_LOG("getting value: " << str);
     
     auto N = lua_gettop(L);
-    auto code = "return " + str;
     
     INCREASE_INDENT;
     if (luaL_loadbuffer(L, code.data(), code.size(), "LuaGlue get value")){

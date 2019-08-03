@@ -49,10 +49,17 @@ namespace glue {
     void run(const std::string_view &code, const std::string &name = "anonymous lua code") const;
     
     /**
-     * Runs the code and returns the result as a `lars::Any`
+     * Runs the code and returns the returned result as a `lars::Any`
      */
-    lars::Any get(const std::string &value) const;
-    
+    lars::Any rawGet(const std::string_view &value) const;
+
+    /**
+     * Runs the expression and returns the result as a `lars::Any`
+     */
+    lars::Any get(const std::string &value) const {
+      return rawGet("return " + value);
+    }
+        
     /**
      * Runs the code and returns the result as `T`
      */
