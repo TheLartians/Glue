@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 #include <sstream>
+#include <assert>
 
 using namespace glue;
 

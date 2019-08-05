@@ -88,7 +88,9 @@ namespace glue {
     }
 
     template <class O> ClassElement addMember(const std::string &name, O T::*ptr) {
-      assert(name.size() != 0);
+      if(name.size() == 0) { 
+        throw std::runtime_error("glue: member must have a valid name");
+      }
       addConstMember(name,ptr);
       std::string setName = "set" + name;
       setName[3] = toupper(setName[3]);
