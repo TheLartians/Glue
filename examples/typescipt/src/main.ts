@@ -1,4 +1,12 @@
 
+function test() {
+  const a = lib.A.create(46);
+  const b = lib.B.create(-5);
+  console.assert(a.add(b).next().data() == 42);
+}
+
+test();
+
 class Greeter {
   name: string;
 
@@ -13,8 +21,3 @@ class Greeter {
 
 const greeter = new Greeter("C++");
 greeter.greet();
-
-
-const a = lib.A.create(46);
-const b = lib.B.create(-5);
-console.assert(a.add(b).next().data() == 42);
