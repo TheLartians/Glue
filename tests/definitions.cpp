@@ -24,7 +24,7 @@ TEST_CASE("definitions") {
   .addConstructor<int>("create")
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
-  .addFunction("custom", [](const A &a){ return a.data+1; })
+  .addMethod("custom", [](const A &a){ return a.data+1; })
   ;
 
   glue::ClassElement<B> BElement = glue::ClassElement<B>()

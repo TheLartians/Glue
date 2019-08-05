@@ -80,6 +80,10 @@ namespace glue {
       return addConstMethod(name, f);
     }
     
+    template <class F> ClassElement addMethod(const std::string &name, F && f) {
+      return addFunction(name, std::forward<F>(f));
+    }
+    
     template <class F> ClassElement addFunction(const std::string &name, F && f) {
       (*this)[name] = f;
       return *this;
