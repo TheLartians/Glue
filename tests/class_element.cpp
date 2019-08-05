@@ -17,6 +17,9 @@ namespace {
     std::string description() const {
       return name + ": " + std::to_string(data);
     }
+    std::string description() {
+      return "non const " + name + ": " + std::to_string(data);
+    }
   };
 
 }
@@ -31,13 +34,13 @@ TEST_CASE("class element") {
   .addConstructor<int>("create")
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
-  .addMethod("custom", [](const A &a){ return a.data+1; })
+  .addFunction("custom", [](const A &a){ return a.data+1; })
   ;
 
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
   .addConstructor<int>("create")
   .addMember("name", &B::name)
-  .addMethod("description", &B::description)
+  .addConstMethod("description", &B::description)
   .setExtends(AElement)
   ;
 

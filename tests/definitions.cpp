@@ -24,13 +24,13 @@ TEST_CASE("definitions") {
   .addConstructor<int>("create")
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
-  .addMethod("custom", [](const A &a){ return a.data+1; })
+  .addFunction("custom", [](const A &a){ return a.data+1; })
   ;
 
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
   .addConstructor<int>("create")
   .addMember("name", &B::name)
-  .addMethod("description", &B::description)
+  .addConstMethod("description", &B::description)
   .setExtends(AElement)
   ;
 
