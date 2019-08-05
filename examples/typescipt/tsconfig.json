@@ -19,7 +19,6 @@
 
   "tstl": {
     "luaTarget": "5.3",
-    "luaLibImport": "require",
-    "noHeader": true
+    "luaLibImport": "inline",
   }
 }

@@ -184,7 +184,7 @@ function(GlueCreateTypescriptTarget target directory)
 
   ADD_CUSTOM_COMMAND(
     OUTPUT ${directory}/lua
-    DEPENDS ${sources}
+    DEPENDS ${sources} "${directory}/tsconfig.json"
     COMMAND npm run build
     COMMAND touch lua
     WORKING_DIRECTORY ${directory}

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project(TSExample)
 
-add_executable(TSExample main.cpp)
+add_executable(TSExample lib/main.cpp)
 set_target_properties(TSExample PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-Wall -pedantic -Wextra -Werror")
 
 include(cmake/CPM.cmake)
