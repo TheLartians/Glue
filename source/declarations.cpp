@@ -1,4 +1,4 @@
-#include <glue/definitions.h>
+#include <glue/declarations.h>
 #include <lars/type_index.h>
 #include <lars/iterators.h>
 #include <easy_iterator.h>
@@ -16,7 +16,7 @@ namespace {
   }
 }
 
-TypeScriptDefinitions::TypeScriptDefinitions(){
+TypescriptDeclarations::TypescriptDeclarations(){
   typenames[lars::getTypeIndex<bool>()] = "bool";
   typenames[lars::getTypeIndex<int>()] = "number";
   typenames[lars::getTypeIndex<unsigned>()] = "number";
@@ -27,7 +27,7 @@ TypeScriptDefinitions::TypeScriptDefinitions(){
   typenames[lars::getTypeIndex<std::string>()] = "string";
 }
 
-void TypeScriptDefinitions::addMap(const std::shared_ptr<Map> &map, std::vector<std::string> &context) {
+void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector<std::string> &context) {
   if (context.size() > 0) {
     if (auto c = (*map)[classKey]) {
       std::string name;
@@ -52,18 +52,18 @@ void TypeScriptDefinitions::addMap(const std::shared_ptr<Map> &map, std::vector<
   }
 }
 
-void TypeScriptDefinitions::addElement(const ElementInterface &e, std::vector<std::string> &context) {
+void TypescriptDeclarations::addElement(const ElementInterface &e, std::vector<std::string> &context) {
   if (auto map = e.asMap()) {
     addMap(map,context);
   }
 }
 
-void TypeScriptDefinitions::addElement(const ElementInterface &e) {
+void TypescriptDeclarations::addElement(const ElementInterface &e) {
   std::vector<std::string> context;
   addElement(e, context);
 }
 
-void TypeScriptDefinitions::printNamespace(std::ostream &stream, const std::string &name, const std::shared_ptr<Map> &map, Context & context)const{
+void TypescriptDeclarations::printNamespace(std::ostream &stream, const std::string &name, const std::shared_ptr<Map> &map, Context & context)const{
   stream << context.indent() << "namespace " << name << " {\n";
   ++context.depth;
   for (auto key: sorted(map->keys())) {
@@ -73,7 +73,7 @@ void TypeScriptDefinitions::printNamespace(std::ostream &stream, const std::stri
   stream << context.indent() << "}";
 }
 
-void TypeScriptDefinitions::printClass(std::ostream &stream, const std::string &name, const std::shared_ptr<Map> &map, Context & context)const{  
+void TypescriptDeclarations::printClass(std::ostream &stream, const std::string &name, const std::shared_ptr<Map> &map, Context & context)const{  
   assert(context.hasType());
   stream << context.indent() << "class " << name;
   if (auto et = (*map)[extendsKey]) {
@@ -91,7 +91,7 @@ void TypeScriptDefinitions::printClass(std::ostream &stream, const std::string &
   stream << context.indent() << "}";
 }
 
-std::ostream &TypeScriptDefinitions::printElement(std::ostream &stream, const std::string &name, const ElementInterface &element, const Context & context) const {
+std::ostream &TypescriptDeclarations::printElement(std::ostream &stream, const std::string &name, const ElementInterface &element, const Context & context) const {
   if (context.depth == 0) {
     stream << context.indent() << "declare ";
   }
@@ -118,7 +118,7 @@ std::ostream &TypeScriptDefinitions::printElement(std::ostream &stream, const st
   return stream;
 }
 
-void TypeScriptDefinitions::printType(std::ostream &stream, const lars::TypeIndex &type)const {
+void TypescriptDeclarations::printType(std::ostream &stream, const lars::TypeIndex &type)const {
   auto it = typenames.find(type);
   if (it != typenames.end()) {
     stream << it->second;
@@ -127,7 +127,7 @@ void TypeScriptDefinitions::printType(std::ostream &stream, const lars::TypeInde
   }
 }
 
-void TypeScriptDefinitions::printFunction(std::ostream &stream, const std::string &name, const lars::AnyFunction &f, const Context & context)const {
+void TypescriptDeclarations::printFunction(std::ostream &stream, const std::string &name, const lars::AnyFunction &f, const Context & context)const {
   bool memberFunction = false;
   if (context.hasType()) {
     if (f.argumentCount() > 0 && f.argumentType(0) == context.type) {
@@ -157,13 +157,13 @@ void TypeScriptDefinitions::printFunction(std::ostream &stream, const std::strin
   printType(stream, f.returnType());
 }
 
-void TypeScriptDefinitions::printValue(std::ostream &stream, const std::string &name, const lars::AnyReference &v, const Context &)const {
+void TypescriptDeclarations::printValue(std::ostream &stream, const std::string &name, const lars::AnyReference &v, const Context &)const {
   stream << "let " << name << ": ";
   printType(stream, v.type());
 }
 
-std::string glue::getTypescriptDefinitions(const std::string &name, const ElementInterface &element){
-  TypeScriptDefinitions definitions;
+std::string glue::getTypescriptDeclarations(const std::string &name, const ElementInterface &element){
+  TypescriptDeclarations definitions;
   std::vector<std::string> context{name};
   definitions.addElement(element, context);
   std::stringstream stream;

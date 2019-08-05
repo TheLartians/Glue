@@ -1,10 +1,10 @@
 #include <glue/class_element.h>
-#include <glue/definitions.h>
+#include <glue/declarations.h>
 #include <sstream>
 #include <iostream>
 #include <catch2/catch.hpp>
 
-TEST_CASE("definitions") {
+TEST_CASE("declarations") {
 
   struct A {
     int data;
@@ -44,7 +44,7 @@ TEST_CASE("definitions") {
   elements["B"] = BElement;
   elements["constants"] = constants;
 
-  CHECK(glue::getTypescriptDefinitions("elements", elements) == 
+  CHECK(glue::getTypescriptDeclarations("elements", elements) == 
 R"(declare namespace elements {
   class A {
     add(arg1: elements.A): elements.A;

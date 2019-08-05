@@ -34,10 +34,6 @@ project(Glue
 
 include(cmake/CPM.cmake)
 
-if(TARGET Glue)
-  return()
-endif()
-
 if (${GLUE_BUILD_LUA})
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
   set(GLUE_LUA_LIB GlueLua)
@@ -78,7 +74,7 @@ set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources
   ${glue_source_dir}/element.cpp
-  ${glue_source_dir}/definitions.cpp
+  ${glue_source_dir}/declarations.cpp
   ${glue_source_dir}/class_element.cpp
 )
 
@@ -161,9 +157,33 @@ install(
   DESTINATION include
 )
 
-# ---- Test ----
+# ---- Tests ----
 
 if(${GLUE_ENABLE_TESTS})
   ENABLE_TESTING()  
   add_subdirectory(tests)  
 endif()
+
+# ---- Convinience functions ----
+
+function(GlueCreateTypescriptTarget target directory)
+  add_custom_target(
+    ${target}_init_typescript
+    COMMENT "${target}: initializing typescript"
+    COMMAND npm install
+    WORKING_DIRECTORY ${directory}
+  )
+
+  file(GLOB_RECURSE sources "${directory}/*.ts")
+
+  add_custom_target(
+    ${target}_compile_typescript
+    COMMENT "${target}: compiling typescript"
+    WORKING_DIRECTORY ${directory} 
+    COMMAND npm run build
+    SOURCES ${sources}
+  )
+
+  add_dependencies(${target}_compile_typescript ${target}_init_typescript)
+  add_dependencies(${target} ${target}_compile_typescript)
+endfunction()
