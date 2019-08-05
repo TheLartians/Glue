@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "pretty":  true,
-    
     "removeComments":true, 
-    "preserveSymlinks": true, 
     "target":"es6", 
     "types": ["lua-types/5.3"],
     "strict" : true,
@@ -11,7 +9,6 @@
     "rootDir":"src",   
     "baseUrl": "src",  
     "module": "commonjs",
-
   }, 
   
   "include": ["src"],
