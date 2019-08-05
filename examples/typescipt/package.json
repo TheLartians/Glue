@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "lua-types": "^2.5.2",
+    "typescript-to-lua": "^0.21.0"
+  },
+  "dependencies": {},
+  "scripts": {
+    "build": "tstl --outDir lua"
+  }
+}

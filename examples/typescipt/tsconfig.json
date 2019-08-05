@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "pretty":  true,
+    
+    "removeComments":true, 
+    "preserveSymlinks": true, 
+    "target":"es6", 
+    "types": ["lua-types/5.3"],
+    "strict" : true,
+    "outDir": "lib",
+    "rootDir":"src",   
+    "baseUrl": "src",  
+    "module": "commonjs",
+
+  }, 
+  
+  "include": ["src"],
+  "exclude": ["node_modules"],
+
+  "tstl": {
+    "luaTarget": "5.3",
+    "luaLibImport": "require",
+    "noHeader": true
+  }
+}
