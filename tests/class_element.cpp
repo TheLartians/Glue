@@ -30,14 +30,16 @@ template <> struct lars::AnyVisitable<B> {
 
 TEST_CASE("class element") {
 
-  glue::ClassElement<A> AElement = glue::ClassElement<A>()
+  glue::ClassElement<A> AElement = glue::ClassElement<A>();
+  AElement
   .addConstructor<int>("create")
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
   .addFunction("custom", [](const A &a){ return a.data+1; })
   ;
 
-  glue::ClassElement<B> BElement = glue::ClassElement<B>()
+  glue::ClassElement<B> BElement = glue::ClassElement<B>();
+  BElement
   .addConstructor<int>("create")
   .addMember("name", &B::name)
   .addConstMethod("description", &B::description)
