@@ -71,6 +71,7 @@ set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources
   ${glue_source_dir}/element.cpp
+  ${glue_source_dir}/class_element.cpp
 )
 
 set(headers
