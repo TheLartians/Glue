@@ -166,23 +166,35 @@ endif()
 
 # ---- Convinience functions ----
 
-function(GlueCreateTypescriptTarget target directory)
-  add_custom_target(
-    ${target}_init
-    COMMENT "${target}: initializing typescript"
+function(GlueCreateTypescriptTarget target directory)  
+  ADD_CUSTOM_COMMAND(
+    OUTPUT ${directory}/node_modules
+    DEPENDS ${directory}/package.json
     COMMAND npm install
+    COMMAND touch node_modules
     WORKING_DIRECTORY ${directory}
   )
 
-  file(GLOB_RECURSE sources "${directory}/*.ts")
-
-  add_custom_target(
-    ${target}
-    COMMENT "${target}: compiling typescript"
-    WORKING_DIRECTORY ${directory} 
-    COMMAND npm run build
-    SOURCES ${sources}
+  ADD_CUSTOM_TARGET(
+    ${target}_init
+    DEPENDS ${directory}/node_modules
   )
 
-  # add_dependencies(${target} ${target}_init)
+  file(GLOB_RECURSE sources "${directory}/src/*.ts")
+
+  ADD_CUSTOM_COMMAND(
+    OUTPUT ${directory}/lua
+    DEPENDS ${sources}
+    COMMAND npm run build
+    COMMAND touch lua
+    WORKING_DIRECTORY ${directory}
+  )
+
+  ADD_CUSTOM_TARGET(
+    ${target} ALL
+    DEPENDS ${directory}/lua ${directory}/node_modules
+  )
+
+  add_dependencies(${target} ${target}_init)
+
 endfunction()
