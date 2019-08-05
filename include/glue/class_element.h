@@ -1,0 +1,110 @@
+#pragma once
+
+#include <glue/element.h>
+#include <cctype>
+#include <unordered_map>
+#include <exception>
+
+namespace glue {
+
+  class BoundAny;
+
+  class ClassElementContext {
+  public:
+    void addMap(const std::shared_ptr<glue::Map> &);
+    void addElement(const ElementInterface &);
+    std::shared_ptr<glue::Map> getMapForType(const lars::TypeIndex &)const;
+    BoundAny bind(lars::Any && v)const;
+  private:
+    std::unordered_map<lars::TypeIndex, std::shared_ptr<glue::Map>> types;
+  };
+
+  class BoundAny {
+  public:
+
+    BoundAny(const ClassElementContext &c, lars::Any && v):
+      data(std::move(v)),
+      context(c),
+      map(context.getMapForType(data.type()))
+    {}
+
+    auto operator[](const std::string &name){
+      return [this,name](auto && ... args) -> BoundAny{
+        if (!map) {
+          throw std::runtime_error("called glue accessor on non-registered type");
+        } else {
+          return context.bind((*map)[name](data,args...));
+        }
+      };
+    }
+    
+    const lars::Any &operator*() const { return data; } 
+    const lars::Any *operator->() const { return &data; } 
+  private:
+    lars::Any data;
+    const ClassElementContext &context;
+    std::shared_ptr<glue::Map> map;        
+  };
+
+  template <class T> class ClassElement: public Element {
+    public:
+    
+    ClassElement(){
+      setClass<T>(*this);
+    }
+
+    template <typename ... Args> ClassElement addConstructor(const std::string &name) {
+      (*this)[name] = [](Args ... args){ return T(args...); };
+      return *this;
+    }
+
+    template <class R, typename ... Args> ClassElement addMethod(const std::string &name, R (T::*f)(Args ...)) {
+      (*this)[name] = [f](T & o, Args && ... args){
+        return std::invoke(f,o,std::forward<Args>(args)...);
+      };
+      return *this;
+    }
+    
+    template <class R, typename ... Args> ClassElement addMethod(const std::string &name, R (T::*f)(Args ...)const) {
+      (*this)[name] = [f](const T & o, Args && ... args){
+        return std::invoke(f,o,std::forward<Args>(args)...);
+      };
+      return *this;
+    }
+
+    template <class F> ClassElement addMethod(const std::string &name, F && f) {
+      (*this)[name] = f;
+      return *this;
+    }
+
+    template <class F> ClassElement addFunction(const std::string &name, F && f) {
+      (*this)[name] = f;
+      return *this;
+    }
+
+    template <class O> ClassElement addConstMember(const std::string &name, O T::*ptr) {
+      (*this)[name] = [ptr](const T &o){ return o.*ptr; };
+      return *this;
+    }
+
+    template <class O> ClassElement addMember(const std::string &name, O T::*ptr) {
+      if(name.size() == 0) { 
+        throw std::runtime_error("glue: member must have a valid name");
+      }
+      addConstMember(name,ptr);
+      std::string setName = "set" + name;
+      setName[3] = toupper(setName[3]);
+      (*this)[setName] = [ptr](T & o, const O &v){ o.*ptr = v; };
+      return *this;
+    }
+
+    ClassElement setExtends(const ElementInterface &e){
+      glue::setExtends(*this,e);
+      return *this;
+    }
+
+  };
+
+
+
+}

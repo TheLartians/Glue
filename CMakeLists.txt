@@ -19,7 +19,7 @@ option(GLUE_DUKTAPE_LIB "The duktape library to link with glue.")
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.8.2
+  VERSION 0.9
   LANGUAGES CXX
 )
 
@@ -71,6 +71,8 @@ set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources
   ${glue_source_dir}/element.cpp
+  ${glue_source_dir}/definitions.cpp
+  ${glue_source_dir}/class_element.cpp
 )
 
 set(headers

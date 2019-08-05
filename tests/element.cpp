@@ -77,7 +77,7 @@ TEST_CASE("Element", "[element]"){
 
 }
 
-TEST_CASE("Class element", "[element]"){
+TEST_CASE("element for class", "[element]"){
   struct Base {
     int value;
     Base() = default;
@@ -104,6 +104,4 @@ TEST_CASE("Class element", "[element]"){
   
   auto av = a["create"](42);
   REQUIRE(a["value"](av).get<int>() == 42);
-
-  
 }
