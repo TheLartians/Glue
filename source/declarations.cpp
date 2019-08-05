@@ -64,7 +64,7 @@ void TypescriptDeclarations::addElement(const ElementInterface &e) {
 }
 
 void TypescriptDeclarations::printNamespace(std::ostream &stream, const std::string &name, const std::shared_ptr<Map> &map, Context & context)const{
-  stream << context.indent() << "namespace " << name << " {\n";
+  stream << context.indent() << "module " << name << " {\n";
   ++context.depth;
   for (auto key: sorted(map->keys())) {
     printElement(stream,key,(*map)[key],context);

@@ -1,4 +1,4 @@
-declare namespace lib {
+declare module lib {
   class A {
     __tostring(): string;
     add(arg1: lib.A): lib.A;
