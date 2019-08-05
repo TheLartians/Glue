@@ -11,7 +11,7 @@ CPMAddPackage(
   NAME Glue
   VERSION 0.9.1
   GIT_REPOSITORY https://github.com/TheLartians/Glue.git
-  GIT_TAG e5705d75cb7609cdb211a774880f93243c954adb
+  GIT_TAG 594ddce8cb3ff991d91d7bd49c5e9f53d49790a3
   OPTIONS
     "GLUE_ENABLE_LUA YES"
     "GLUE_BUILD_LUA YES"
