@@ -161,3 +161,12 @@ void TypeScriptDefinitions::printValue(std::ostream &stream, const std::string &
   stream << "let " << name << ": ";
   printType(stream, v.type());
 }
+
+std::string glue::getTypescriptDefinitions(const std::string &name, const ElementInterface &element){
+  TypeScriptDefinitions definitions;
+  std::vector<std::string> context{name};
+  definitions.addElement(element, context);
+  std::stringstream stream;
+  definitions.printElement(stream, name, element);
+  return stream.str();
+}

@@ -34,4 +34,6 @@ namespace glue{
     std::unordered_map<lars::TypeIndex, std::string> typenames;
   };
 
+  std::string getTypescriptDefinitions(const std::string &, const ElementInterface &);
+
 }

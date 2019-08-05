@@ -44,14 +44,7 @@ TEST_CASE("definitions") {
   elements["B"] = BElement;
   elements["constants"] = constants;
 
-  glue::TypeScriptDefinitions definitions;
-  std::vector<std::string> context{"elements"};
-  definitions.addElement(elements, context);
-  
-  std::stringstream stream;
-  definitions.printElement(stream, "elements", elements);
-
-  CHECK(stream.str() == 
+  CHECK(glue::getTypescriptDefinitions("elements", elements) == 
 R"(declare namespace elements {
   class A {
     add(arg1: elements.A): elements.A;
