@@ -42,22 +42,22 @@ namespace glue {
      * Loads the standard lua libraries
      */
     void openStandardLibs() const;
+
+    /**
+     * Runs the code from path and returns the returned result as a `lars::Any`.
+     */
+    lars::Any runFile(const std::string &path) const;
     
     /**
-     * Runs the code. The name is used for debugging purposes.
+     * Runs the code and returns the returned result as a `lars::Any`.
      */
-    void run(const std::string_view &code, const std::string &name = "anonymous lua code") const;
-    
-    /**
-     * Runs the code and returns the returned result as a `lars::Any`
-     */
-    lars::Any rawGet(const std::string_view &value) const;
+    lars::Any run(const std::string_view &code, const std::string &name = "anonymous lua code") const;
 
     /**
      * Runs the expression and returns the result as a `lars::Any`
      */
     lars::Any get(const std::string &value) const {
-      return rawGet("return " + value);
+      return run("return " + value);
     }
         
     /**

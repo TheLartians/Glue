@@ -168,7 +168,7 @@ endif()
 
 function(GlueCreateTypescriptTarget target directory)
   add_custom_target(
-    ${target}_init_typescript
+    ${target}_init
     COMMENT "${target}: initializing typescript"
     COMMAND npm install
     WORKING_DIRECTORY ${directory}
@@ -177,13 +177,12 @@ function(GlueCreateTypescriptTarget target directory)
   file(GLOB_RECURSE sources "${directory}/*.ts")
 
   add_custom_target(
-    ${target}_compile_typescript
+    ${target}
     COMMENT "${target}: compiling typescript"
     WORKING_DIRECTORY ${directory} 
     COMMAND npm run build
     SOURCES ${sources}
   )
 
-  add_dependencies(${target}_compile_typescript ${target}_init_typescript)
-  add_dependencies(${target} ${target}_compile_typescript)
+  # add_dependencies(${target} ${target}_init)
 endfunction()
