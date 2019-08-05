@@ -25,11 +25,7 @@ template <> struct lars::AnyVisitable<B> {
   using type = lars::DataVisitableWithBases<B,A>;
 };
 
-
-
-
 TEST_CASE("class element") {
-
 
   glue::ClassElement<A> AElement = glue::ClassElement<A>()
   .addConstructor<int>("create")
@@ -77,4 +73,3 @@ TEST_CASE("class element") {
   }
 
 }
-
