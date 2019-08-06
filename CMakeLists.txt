@@ -8,7 +8,7 @@ endif()
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.9.2
+  VERSION 0.9.3
   LANGUAGES CXX
 )
 
@@ -64,7 +64,7 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 1.7.2
+  VERSION 1.7.3
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 
