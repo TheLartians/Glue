@@ -13,4 +13,3 @@ Yet to be written.
 ## Examples
 
 Explore the [tests](tests) or see [here](https://github.com/TheLartians/TypeScriptPP) for an example using Glue to embed TypeScript in a C++ project.
-
