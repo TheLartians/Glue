@@ -8,7 +8,7 @@ endif()
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.9.4
+  VERSION 0.9.5
   LANGUAGES CXX
 )
 
