@@ -58,33 +58,33 @@ namespace glue {
       return *this;
     }
 
-    template <class R, typename ... Args> ClassElement &addNonConstMethod(const std::string &name, R (T::*f)(Args ...)) {
+    template <class B, class R, typename ... Args> ClassElement &addNonConstMethod(const std::string &name, R (B::*f)(Args ...)) {
       (*this)[name] = [f](T & o, Args && ... args){
         return std::invoke(f,o,std::forward<Args>(args)...);
       };
       return *this;
     }
 
-    template <class R, typename ... Args> ClassElement &addConstMethod(const std::string &name, R (T::*f)(Args ...)const) {
+    template <class B, class R, typename ... Args> ClassElement &addConstMethod(const std::string &name, R (B::*f)(Args ...)const) {
       (*this)[name] = [f](const T & o, Args && ... args){
         return std::invoke(f,o,std::forward<Args>(args)...);
       };
       return *this;
     }
 
-    template <class R, typename ... Args> ClassElement &addMethod(const std::string &name, R (T::*f)(Args ...)) {
+    template <class B, class R, typename ... Args> ClassElement &addMethod(const std::string &name, R (B::*f)(Args ...)) {
       return addNonConstMethod(name, f);
     }
     
-    template <class R, typename ... Args> ClassElement &addMethod(const std::string &name, R (T::*f)(Args ...)const) {
+    template <class B, class R, typename ... Args> ClassElement &addMethod(const std::string &name, R (B::*f)(Args ...)const) {
       return addConstMethod(name, f);
     }
     
-    template <class F> ClassElement &addMethod(const std::string &name, F && f) {
-      return addFunction(name, std::forward<F>(f));
+    ClassElement &addMethod(const std::string &name, lars::AnyFunction f) {
+      return addFunction(name, f);
     }
     
-    template <class F> ClassElement &addFunction(const std::string &name, F && f) {
+    ClassElement &addFunction(const std::string &name, lars::AnyFunction f) {
       (*this)[name] = f;
       return *this;
     }

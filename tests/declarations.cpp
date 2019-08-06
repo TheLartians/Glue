@@ -31,6 +31,7 @@ TEST_CASE("declarations") {
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
   .addConstructor<int>()
   .addMember("name", &B::name)
+  .addMethod("add", &A::add)
   .addConstMethod("description", &B::description)
   .addFunction("__index", [](const B &, size_t idx){ return idx; })
   .setExtends(AElement)
@@ -62,6 +63,7 @@ R"(declare module elements {
     [idx: number]: number;
     __index(arg1: number): number;
     constructor(arg0: number)
+    add(arg1: elements.A): elements.A;
     description(): string;
     name(): string;
     setName(arg1: string): void;
