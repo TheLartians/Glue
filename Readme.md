@@ -4,6 +4,12 @@
 
 # Glue
 
-C++17 multi-language bindings.
-This is a work in progress.
-Currently only the lua binding is fully supported.
+C++17 to lua bindings with automatic TypeScript declarations.
+
+## Documentation
+
+Yet to be written.
+
+## Examples
+
+Explore the [tests](tests) or see [here](https://github.com/TheLartians/TypeScriptPP) for an example using Glue to embed TypeScript in a C++ project.
