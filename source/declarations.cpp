@@ -75,15 +75,55 @@ void TypescriptDeclarations::printNamespace(std::ostream &stream, const std::str
 
 void TypescriptDeclarations::printClass(std::ostream &stream, const std::string &name, const std::shared_ptr<Map> &map, Context & context)const{  
   assert(context.hasType());
+  
+  if (auto et = (*map)[constructorKey]) {
+    stream << context.indent() << "/** @customConstructor ";
+    printType(stream,context.type);
+    stream << "." << constructorKey << " */\n";
+  }
+
   stream << context.indent() << "class " << name;
+
   if (auto et = (*map)[extendsKey]) {
     stream << " extends ";
     printType(stream, et[classKey].get<lars::TypeIndex>());
   }
   stream << " {\n";
   ++context.depth;
+
+  // print index operator
+  if (auto fe = (*map)[operators::index] ? (*map)[operators::index] : (*map)[operators::newIndex]) {
+    if (auto f = fe.getValue().tryGet<lars::AnyFunction>()) {
+      if (f->argumentCount() == 2 && f->argumentType(0) == context.type) {
+        auto argt = f->argumentType(1);
+        if (
+          argt == lars::getTypeIndex<int>() 
+          || argt == lars::getTypeIndex<unsigned>() 
+          || argt == lars::getTypeIndex<size_t>() 
+          || argt == lars::getTypeIndex<std::string>()
+        ) {
+          stream << context.indent() << "[idx: ";
+          printType(stream, argt);
+          stream << "]: ";
+          printType(stream, f->returnType());
+          stream << ";\n";
+        }
+      }
+    }
+  }
+
   for (auto key: sorted(map->keys())) {
-    if (key != extendsKey && key != classKey) {
+    if (key == constructorKey) { // print constructor
+      auto f = (*map)[key].get<lars::AnyFunction>(); 
+      stream << context.indent() << "constructor(";
+      auto N = f.argumentCount();
+      for (auto i: easy_iterator::range(N)) {
+        stream << "arg" << i << ": ";
+        printType(stream, f.argumentType(i));
+        if (i+1 != N) { stream << ", "; }
+      }
+      stream << ")\n";
+    } else if (key != extendsKey && key != classKey) {
       printElement(stream,key,(*map)[key], context);
     }
   }

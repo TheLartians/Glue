@@ -21,16 +21,17 @@ TEST_CASE("declarations") {
   };
 
   glue::ClassElement<A> AElement = glue::ClassElement<A>()
-  .addConstructor<int>("create")
+  .addConstructor<int>()
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
   .addMethod("custom", [](const A &a){ return a.data+1; })
   ;
 
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
-  .addConstructor<int>("create")
+  .addConstructor<int>()
   .addMember("name", &B::name)
   .addConstMethod("description", &B::description)
+  .addFunction("__index", [](const B &, size_t idx){ return idx; })
   .setExtends(AElement)
   ;
 
@@ -46,15 +47,19 @@ TEST_CASE("declarations") {
 
   CHECK(glue::getTypescriptDeclarations("elements", elements) == 
 R"(declare module elements {
+  /** @customConstructor elements.A.__new */
   class A {
+    constructor(arg0: number)
     add(arg1: elements.A): elements.A;
-    static create(this: void, arg0: number): elements.A;
     custom(): number;
     data(): number;
     setData(arg1: number): void;
   }
+  /** @customConstructor elements.B.__new */
   class B extends elements.A {
-    static create(this: void, arg0: number): elements.B;
+    [idx: number]: number;
+    __index(arg1: number): number;
+    constructor(arg0: number)
     description(): string;
     name(): string;
     setName(arg1: string): void;

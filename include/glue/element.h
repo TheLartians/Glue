@@ -168,6 +168,7 @@ namespace glue{
   /**
    * Internal keys
    */
+  static const std::string constructorKey = "__new";
   static const std::string extendsKey = "__glue_extends";
   static const std::string classKey = "__glue_class";
   
@@ -185,6 +186,8 @@ namespace glue{
     static const std::string mod = "__mod";
     static const std::string pow = "__pow";
     static const std::string unm = "__unm";
+    static const std::string index = "__index";
+    static const std::string newIndex = "__newIndex";
   }
   
   inline void setExtends(ElementInterface &extends, const ElementInterface &element){
