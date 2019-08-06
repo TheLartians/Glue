@@ -5,6 +5,13 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
       message(FATAL_ERROR "Source and build directories cannot be the same.")
 endif()
 
+# ---- create project ----
+
+project(Glue 
+  VERSION 0.9.2
+  LANGUAGES CXX
+)
+
 # ---- Configuration variables ----
 
 option(GLUE_ENABLE_LUA "build glue for use with lua" OFF)
@@ -22,13 +29,6 @@ if(GLUE_ENABLE_LUA AND NOT GLUE_LUA_LIB AND NOT GLUE_BUILD_LUA)
   message(STATUS "GLUE_ENABLE_LUA without GLUE_LUA_LIB specified: enabling GLUE_BUILD_LUA")
   set(GLUE_BUILD_LUA ON)
 endif()
-
-# ---- create project ----
-
-project(Glue 
-  VERSION 0.9.1
-  LANGUAGES CXX
-)
 
 # ---- Dependencies ----
 
@@ -166,7 +166,7 @@ endif()
 
 # ---- Convinience functions ----
 
-function(GlueCreateTypescriptTarget target directory)  
+function(GlueCreateTypescriptTarget target directory result)  
   ADD_CUSTOM_COMMAND(
     OUTPUT ${directory}/node_modules
     DEPENDS ${directory}/package.json
@@ -180,19 +180,19 @@ function(GlueCreateTypescriptTarget target directory)
     DEPENDS ${directory}/node_modules
   )
 
-  file(GLOB_RECURSE sources "${directory}/src/*.ts")
+  file(GLOB_RECURSE sources "${directory}/*.ts")
 
   ADD_CUSTOM_COMMAND(
-    OUTPUT ${directory}/lua
+    OUTPUT ${result}
     DEPENDS ${sources} "${directory}/tsconfig.json"
     COMMAND npm run build
-    COMMAND touch lua
+    COMMAND touch ${result}
     WORKING_DIRECTORY ${directory}
   )
 
   ADD_CUSTOM_TARGET(
     ${target} ALL
-    DEPENDS ${directory}/lua ${directory}/node_modules
+    DEPENDS ${result} ${directory}/node_modules
   )
 
   add_dependencies(${target} ${target}_init)
