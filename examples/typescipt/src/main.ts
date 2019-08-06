@@ -8,16 +8,16 @@ function test() {
 test();
 
 class Greeter {
-  name: string;
+  private name: string;
 
   constructor(name: string){
     this.name = name;
   }
 
-  greet() {
+  public greet() {
     lib.log(`Hello ${this.name}!`);
   }
-};
+}
 
 const greeter = new Greeter("C++");
 greeter.greet();

@@ -45,7 +45,7 @@ TEST_CASE("declarations") {
   elements["constants"] = constants;
 
   CHECK(glue::getTypescriptDeclarations("elements", elements) == 
-R"(declare namespace elements {
+R"(declare module elements {
   class A {
     add(arg1: elements.A): elements.A;
     static create(this: void, arg0: number): elements.A;
@@ -59,7 +59,7 @@ R"(declare namespace elements {
     name(): string;
     setName(arg1: string): void;
   }
-  namespace constants {
+  module constants {
     let a: elements.A;
     let b: elements.B;
     let x: number;

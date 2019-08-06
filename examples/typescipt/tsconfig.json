@@ -8,14 +8,14 @@
     "outDir": "lib",
     "rootDir":"src",   
     "baseUrl": "src",  
-    "module": "commonjs",
-  }, 
+    "module": "commonjs"
+  },
   
   "include": ["src"],
   "exclude": ["node_modules"],
 
   "tstl": {
     "luaTarget": "5.3",
-    "luaLibImport": "inline",
+    "luaLibImport": "inline"
   }
 }
