@@ -5,6 +5,13 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
       message(FATAL_ERROR "Source and build directories cannot be the same.")
 endif()
 
+# ---- create project ----
+
+project(Glue 
+  VERSION 0.9.2
+  LANGUAGES CXX
+)
+
 # ---- Configuration variables ----
 
 option(GLUE_ENABLE_LUA "build glue for use with lua" OFF)
@@ -22,13 +29,6 @@ if(GLUE_ENABLE_LUA AND NOT GLUE_LUA_LIB AND NOT GLUE_BUILD_LUA)
   message(STATUS "GLUE_ENABLE_LUA without GLUE_LUA_LIB specified: enabling GLUE_BUILD_LUA")
   set(GLUE_BUILD_LUA ON)
 endif()
-
-# ---- create project ----
-
-project(Glue 
-  VERSION 0.9.1
-  LANGUAGES CXX
-)
 
 # ---- Dependencies ----
 
