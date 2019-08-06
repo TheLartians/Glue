@@ -235,6 +235,8 @@ namespace {
       char __mod[] = "__mod";
       char __pow[] = "__pow";
       char __unm[] = "__unm";
+      char __index[] = "__index";
+      char __newindex[] = "__newindex";
     }
     
     std::string class_mt_key(const lars::TypeIndex &idx){
@@ -290,6 +292,8 @@ namespace {
       LARS_GLUE_ADD_FORWARDED_METAMETHOD(__mod);
       LARS_GLUE_ADD_FORWARDED_METAMETHOD(__pow);
       LARS_GLUE_ADD_FORWARDED_METAMETHOD(__unm);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__index);
+      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__newindex);
       
       lua_pushcfunction(L, +[](lua_State *L){
         LUA_GLUE_LOG("calling class destructor");
