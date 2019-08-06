@@ -116,12 +116,7 @@ void TypescriptDeclarations::printClass(std::ostream &stream, const std::string 
     if (key == constructorKey) { // print constructor
       auto f = (*map)[key].get<lars::AnyFunction>(); 
       stream << context.indent() << "constructor(";
-      auto N = f.argumentCount();
-      for (auto i: easy_iterator::range(N)) {
-        stream << "arg" << i << ": ";
-        printType(stream, f.argumentType(i));
-        if (i+1 != N) { stream << ", "; }
-      }
+      printFunctionArguments(stream, f, false, true);
       stream << ")\n";
     } else if (key != extendsKey && key != classKey) {
       printElement(stream,key,(*map)[key], context);
@@ -172,7 +167,7 @@ void TypescriptDeclarations::printFunction(std::ostream &stream, const std::stri
   if (context.hasType()) {
     if (f.argumentCount() > 0 && f.argumentType(0) == context.type) {
       memberFunction = true;
-    } else {
+    } else if (!f.isVariadic()) {
       stream << "static ";
     }
   } else {
@@ -180,21 +175,29 @@ void TypescriptDeclarations::printFunction(std::ostream &stream, const std::stri
   }
   stream << name;
   stream << "(";
-  auto N = f.argumentCount();
-  if (!memberFunction) {
-    stream << "this: void";
-    if (N > 0) { stream << ", "; }
-  }
-  for (auto i: easy_iterator::range(N)) {
-    if (i == 0 && memberFunction) {
-      continue;
-    }
-    stream << "arg" << i << ": ";
-    printType(stream, f.argumentType(i));
-    if (i+1 != N) { stream << ", "; }
-  }
+  printFunctionArguments(stream, f, memberFunction);
   stream << "): ";
   printType(stream, f.returnType());
+}
+
+void TypescriptDeclarations::printFunctionArguments(std::ostream &stream, const lars::AnyFunction &f, bool memberFunction, bool constructor)const {
+  if (f.isVariadic()) {
+   stream << "...args: any[]"; 
+  } else {
+    auto N = f.argumentCount();
+    if (!memberFunction && !constructor) {
+      stream << "this: void";
+      if (N > 0) { stream << ", "; }
+    }
+    for (auto i: easy_iterator::range(N)) {
+      if (i == 0 && memberFunction) {
+        continue;
+      }
+      stream << "arg" << i << ": ";
+      printType(stream, f.argumentType(i));
+      if (i+1 != N) { stream << ", "; }
+    }
+  }
 }
 
 void TypescriptDeclarations::printValue(std::ostream &stream, const std::string &name, const lars::AnyReference &v, const Context &)const {

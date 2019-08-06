@@ -25,6 +25,7 @@ TEST_CASE("declarations") {
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
   .addMethod("custom", [](const A &a){ return a.data+1; })
+  .addMethod("variadic", [](const lars::AnyArguments &){ return 0; })
   ;
 
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
@@ -54,6 +55,7 @@ R"(declare module elements {
     custom(): number;
     data(): number;
     setData(arg1: number): void;
+    variadic(...args: any[]): number;
   }
   /** @customConstructor elements.B.__new */
   class B extends elements.A {
