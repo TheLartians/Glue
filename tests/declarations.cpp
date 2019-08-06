@@ -1,10 +1,10 @@
 #include <glue/class_element.h>
-#include <glue/definitions.h>
+#include <glue/declarations.h>
 #include <sstream>
 #include <iostream>
 #include <catch2/catch.hpp>
 
-TEST_CASE("definitions") {
+TEST_CASE("declarations") {
 
   struct A {
     int data;
@@ -30,7 +30,7 @@ TEST_CASE("definitions") {
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
   .addConstructor<int>("create")
   .addMember("name", &B::name)
-  .addMethod("description", &B::description)
+  .addConstMethod("description", &B::description)
   .setExtends(AElement)
   ;
 
@@ -44,15 +44,8 @@ TEST_CASE("definitions") {
   elements["B"] = BElement;
   elements["constants"] = constants;
 
-  glue::TypeScriptDefinitions definitions;
-  std::vector<std::string> context{"elements"};
-  definitions.addElement(elements, context);
-  
-  std::stringstream stream;
-  definitions.printElement(stream, "elements", elements);
-
-  CHECK(stream.str() == 
-R"(declare namespace elements {
+  CHECK(glue::getTypescriptDeclarations("elements", elements) == 
+R"(declare module elements {
   class A {
     add(arg1: elements.A): elements.A;
     static create(this: void, arg0: number): elements.A;
@@ -66,7 +59,7 @@ R"(declare namespace elements {
     name(): string;
     setName(arg1: string): void;
   }
-  namespace constants {
+  module constants {
     let a: elements.A;
     let b: elements.B;
     let x: number;

@@ -752,7 +752,7 @@ namespace glue {
     luaL_openlibs(L);
   }
   
-  void LuaState::run(const std::string_view &code, const std::string &name)const{
+  lars::Any LuaState::run(const std::string_view &code, const std::string &name)const{
     LUA_GLUE_LOG("running code: " << code);
     
     auto N = lua_gettop(L);
@@ -767,29 +767,29 @@ namespace glue {
       throw Error(L, N);
     }
     
+    lars::Any result;
+    if (lua_gettop(L) > 0) {
+      result = lua_glue::extract_value(L, -1, lars::getTypeIndex<lars::Any>(), lua_glue::pop_and_throw_lua_exception);
+    }
+    
     LUA_GLUE_LOG("finished running code");
     lua_settop(L, N);
-    
+    return result;
   }
   
-  lars::Any LuaState::rawGet(const std::string_view &code) const {
-    LUA_GLUE_LOG("getting value: " << str);
+  lars::Any LuaState::runFile(const std::string &path)const{
+    LUA_GLUE_LOG("running code: " << code);
     
     auto N = lua_gettop(L);
     
-    INCREASE_INDENT;
-    if (luaL_loadbuffer(L, code.data(), code.size(), "LuaGlue get value")){
-      throw Error(L, N);
-    }
-    DECREASE_INDENT;
-    
-    if(lua_pcall(L, 0, 1, 0)) {
+    if(luaL_dofile(L, path.c_str())) {
       throw Error(L, N);
     }
     
     lars::Any result;
-    
-    result = lua_glue::extract_value(L, -1, lars::getTypeIndex<lars::Any>(), lua_glue::pop_and_throw_lua_exception);
+    if (lua_gettop(L) > 0) {
+      result = lua_glue::extract_value(L, -1, lars::getTypeIndex<lars::Any>(), lua_glue::pop_and_throw_lua_exception);
+    }
     
     LUA_GLUE_LOG("finished running code");
     lua_settop(L, N);

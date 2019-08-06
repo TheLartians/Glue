@@ -8,9 +8,9 @@
 
 namespace glue{
 
-  class TypeScriptDefinitions {
+  class TypescriptDeclarations {
   public:
-    TypeScriptDefinitions();
+    TypescriptDeclarations();
     void addMap(const std::shared_ptr<Map> &, std::vector<std::string> &context);
     void addElement(const ElementInterface &, std::vector<std::string> &context);
     void addElement(const ElementInterface &);
@@ -33,5 +33,7 @@ namespace glue{
   private:
     std::unordered_map<lars::TypeIndex, std::string> typenames;
   };
+
+  std::string getTypescriptDeclarations(const std::string &, const ElementInterface &);
 
 }

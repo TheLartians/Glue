@@ -9,27 +9,30 @@ endif()
 
 option(GLUE_ENABLE_LUA "build glue for use with lua" OFF)
 option(GLUE_BUILD_LUA "build lua with glue" OFF)
-option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
-option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
 option(GLUE_ENABLE_TESTS "Enable tests" OFF)
+
+# DUKTAPE support not implemented
+# option(GLUE_ENABLE_DUKTAPE "build glue for use with duktape" OFF)
+# option(GLUE_BUILD_DUKTAPE "build duktape with glue" OFF)
 
 option(GLUE_LUA_LIB "The lua library to link with glue.")
 option(GLUE_DUKTAPE_LIB "The duktape library to link with glue.")
 
+if(GLUE_ENABLE_LUA AND NOT GLUE_LUA_LIB AND NOT GLUE_BUILD_LUA)
+  message(STATUS "GLUE_ENABLE_LUA without GLUE_LUA_LIB specified: enabling GLUE_BUILD_LUA")
+  set(GLUE_BUILD_LUA ON)
+endif()
+
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.9
+  VERSION 0.9.1
   LANGUAGES CXX
 )
 
 # ---- Dependencies ----
 
 include(cmake/CPM.cmake)
-
-if(TARGET Glue)
-  return()
-endif()
 
 if (${GLUE_BUILD_LUA})
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/lua)
@@ -61,7 +64,7 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 1.7.1
+  VERSION 1.7.2
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 
@@ -71,7 +74,7 @@ set(glue_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 set(sources
   ${glue_source_dir}/element.cpp
-  ${glue_source_dir}/definitions.cpp
+  ${glue_source_dir}/declarations.cpp
   ${glue_source_dir}/class_element.cpp
 )
 
@@ -154,9 +157,44 @@ install(
   DESTINATION include
 )
 
-# ---- Test ----
+# ---- Tests ----
 
 if(${GLUE_ENABLE_TESTS})
   ENABLE_TESTING()  
   add_subdirectory(tests)  
 endif()
+
+# ---- Convinience functions ----
+
+function(GlueCreateTypescriptTarget target directory)  
+  ADD_CUSTOM_COMMAND(
+    OUTPUT ${directory}/node_modules
+    DEPENDS ${directory}/package.json
+    COMMAND npm install
+    COMMAND touch node_modules
+    WORKING_DIRECTORY ${directory}
+  )
+
+  ADD_CUSTOM_TARGET(
+    ${target}_init
+    DEPENDS ${directory}/node_modules
+  )
+
+  file(GLOB_RECURSE sources "${directory}/src/*.ts")
+
+  ADD_CUSTOM_COMMAND(
+    OUTPUT ${directory}/lua
+    DEPENDS ${sources} "${directory}/tsconfig.json"
+    COMMAND npm run build
+    COMMAND touch lua
+    WORKING_DIRECTORY ${directory}
+  )
+
+  ADD_CUSTOM_TARGET(
+    ${target} ALL
+    DEPENDS ${directory}/lua ${directory}/node_modules
+  )
+
+  add_dependencies(${target} ${target}_init)
+
+endfunction()

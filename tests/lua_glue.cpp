@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 #include <cmath>
-
+#include <iostream>
 #include <glue/lua.h>
 
 TEST_CASE("LuaState","[lua]"){
@@ -264,6 +264,15 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua.get<int>("f(42)") == 42);
     REQUIRE(lua.get<int>("f({a = 42}).a") == 42);
     REQUIRE((*lua.get<std::shared_ptr<glue::Map>>("f({a = 42})"))["a"].get<int>() == 42);
+  }
+
+  SECTION("run file"){
+    std::string path = __FILE__;
+    std::cout << "test: " << path << std::endl;
+    path.erase(std::find(path.rbegin(), path.rend(), '/').base(), path.end());
+    std::cout << "test: " << path << std::endl;
+    path += "test.lua";
+    CHECK(lua.runFile(path).get<int>() == -1);
   }
 
 }
