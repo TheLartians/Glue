@@ -17,7 +17,7 @@ namespace {
 }
 
 TypescriptDeclarations::TypescriptDeclarations(){
-  typenames[lars::getTypeIndex<bool>()] = "bool";
+  typenames[lars::getTypeIndex<bool>()] = "boolean";
   typenames[lars::getTypeIndex<int>()] = "number";
   typenames[lars::getTypeIndex<unsigned>()] = "number";
   typenames[lars::getTypeIndex<size_t>()] = "number";
