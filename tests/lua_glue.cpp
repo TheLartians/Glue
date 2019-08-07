@@ -155,6 +155,13 @@ TEST_CASE("LuaState","[lua]"){
       REQUIRE(lua.get<int>("b:value()") == 420);
     }
 
+    SECTION("default compare"){
+      lua.run("a = A.create(42)");
+      lua.run("b = A.create(42)");
+      CHECK(lua.get<bool>("a == a"));
+      CHECK(!lua.get<bool>("a == b"));
+    }
+
   }
   
   SECTION("memory"){
@@ -181,6 +188,7 @@ TEST_CASE("LuaState","[lua]"){
     struct A{ int value = 1; };
     Element a;
     setClass<A>(a);
+    a[keys::operators::eq] = [](A&a, A&b){ return a.value == b.value; };
     a[keys::operators::add] = [](A&a, A&b){ return A{a.value + b.value}; };
     a[keys::operators::mul] = [](A&a, A&b){ return A{a.value * b.value}; };
     a[keys::operators::sub] = [](A&a, A&b){ return A{a.value - b.value}; };
@@ -197,6 +205,10 @@ TEST_CASE("LuaState","[lua]"){
 
     lua["A"] = a;
     lua["a"] = A();
+    CHECK(lua.get<bool>("a == a"));
+    CHECK(lua.get<bool>("a == a+a-a"));
+    CHECK(!lua.get<bool>("a == a+a"));
+    CHECK(lua.get<bool>("a ~= a+a"));
     CHECK(lua.get<A&>("(a + a) * (a / a + a) - a").value == 3);
     CHECK(lua.get<bool>("a + a > a"));
     CHECK(!lua.get<bool>("a + a < a"));

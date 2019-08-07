@@ -228,7 +228,6 @@ namespace {
   lua_setfield(L, -2, #name)
 #define LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(name) LARS_GLUE_ADD_FORWARDED_METAMETHOD(name,1,1)
 
-      const char __eq[] = "__eq";
       const char __lt[] = "__lt";
       const char __le[] = "__le";
       const char __gt[] = "__gt";
@@ -272,9 +271,10 @@ namespace {
       luaL_newmetatable(L, key);
       
       lua_pushcfunction(L, +[](lua_State *L){
+        // todo: check if argument count == 1
         auto * data = get_internal_object_ptr<T>(L,1);
         if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
-        if(forwardSubclassCall(L, -1, data->type, "__tostring", 1, 1)){
+        if(forwardSubclassCall(L, 1, data->type, "__tostring", 1, 1)){
           return 1;
         }
         auto type_name = data->type.name();
@@ -283,8 +283,20 @@ namespace {
       });
       lua_setfield(L, -2, "__tostring");
       
+      lua_pushcfunction(L, +[](lua_State *L){
+        // todo: check argument count
+        auto * data = get_internal_object_ptr<T>(L,1);
+        if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
+        if(forwardSubclassCall(L, 1, data->type, "__eq", 2, 1)){
+          return 1;
+        }
+        auto * other = get_internal_object_ptr<T>(L,2);
+        lua_pushboolean(L, data == other);
+        return 1;
+      });
+      lua_setfield(L, -2, "__eq");
+
       if constexpr (!std::is_same<T, std::shared_ptr<glue::Map>>::value) {
-        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__eq);
         LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__lt);
         LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__le);
         LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__gt);
