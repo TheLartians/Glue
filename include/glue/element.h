@@ -115,6 +115,10 @@ namespace glue{
     AnyReference getValue() const final override;
     void setValue(Any&&) final override;
     Map& setToMap() final override;
+
+    /** Node: derived classes should overload this method to retain type */
+    Element &addValue(const std::string &key, Any&&);
+
   };
 
   class Map: public lars::Visitable<Map>, public std::enable_shared_from_this<Map> {
@@ -131,7 +135,7 @@ namespace glue{
     Map(const Map &) = delete;
     
     Entry operator[](const std::string &key);
-    
+
     virtual ~Map(){}
   };
   

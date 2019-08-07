@@ -38,15 +38,13 @@ TEST_CASE("declarations") {
   .setExtends(AElement)
   ;
 
-  glue::Element constants;
-  constants["x"] = 42;
-  constants["a"] = A(1);
-  constants["b"] = B(2);
-
   glue::Element elements;
   elements["A"] = AElement;
   elements["B"] = BElement;
-  elements["constants"] = constants;
+  elements["constants"] = glue::Element()
+  .addValue("x",42)
+  .addValue("a",A(1))
+  .addValue("b",B(2));
 
   CHECK(glue::getTypescriptDeclarations("elements", elements) == 
 R"(declare module elements {
