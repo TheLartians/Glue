@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glue/element.h>
+#include <glue/class_element.h>
 #include <exception>
 
 namespace glue {
@@ -20,7 +20,7 @@ namespace glue {
       }
       return arr[idx];
     })
-    .addMethod("set", [](Node::ChildArray &arr, size_t idx, V v){
+    .addMethod("set", [](T &arr, size_t idx, V v){
       if (idx > arr.size()) {
         throw std::runtime_error("invalid array index");
       } 

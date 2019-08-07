@@ -1,8 +1,6 @@
 #include <glue/class_element.h>
 #include <catch2/catch.hpp>
 
-#include <iostream>
-
 namespace {
 
   struct A {
