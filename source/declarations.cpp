@@ -29,15 +29,19 @@ TypescriptDeclarations::TypescriptDeclarations(){
 
 void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector<std::string> &context) {
   if (context.size() > 0) {
-    if (auto c = (*map)[keys::classKey]) {
-      std::string name;
-      for (auto &str: context) {
-        name += str;
-        name += ".";
+    auto addClassKey = [&](const std::string &key){
+      if (auto c = (*map)[key]) {
+        std::string name;
+        for (auto &str: context) {
+          name += str;
+          name += ".";
+        }
+        name.pop_back();
+        typenames[c.get<lars::TypeIndex>()] = name;
       }
-      name.pop_back();
-      typenames[c.get<lars::TypeIndex>()] = name;
-    }
+    };
+    addClassKey(keys::classKey);
+    addClassKey(keys::sharedClassKey);
   }
   for (auto key: map->keys()) {
     if (key == keys::extendsKey || key == keys::classKey) {

@@ -24,7 +24,9 @@ TEST_CASE("declarations") {
   .addConstructor<int>()
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
-  .addMethod("custom", [](const std::shared_ptr<A> &a){ return a->data+1; })
+  .addMethod("custom", [](const std::shared_ptr<A> &a,const std::shared_ptr<A> &b){ 
+    return a->data+b->data; 
+  })
   .addMethod("variadic", [](const lars::AnyArguments &){ return 0; })
   ;
 
@@ -52,7 +54,7 @@ R"(declare module elements {
   class A {
     constructor(arg0: number)
     add(arg1: elements.A): elements.A;
-    custom(): number;
+    custom(arg1: elements.A): number;
     data(): number;
     setData(arg1: number): void;
     variadic(...args: any[]): number;
