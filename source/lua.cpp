@@ -572,7 +572,8 @@ namespace {
       else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<float>((lua_tonumber(L, idx))); }
       else if(type == lars::getTypeIndex<char>()){ return lars::makeAny<char>((lua_tonumber(L, idx))); }
       else if(type == lars::getTypeIndex<int>()){ return lars::makeAny<int>((lua_tointeger(L, idx))); }
-      else if(type == lars::getTypeIndex<unsigned>()){ return lars::makeAny<int>((lua_tointeger(L, idx))); }
+      else if(type == lars::getTypeIndex<unsigned>()){ return lars::makeAny<unsigned>((lua_tointeger(L, idx))); }
+      else if(type == lars::getTypeIndex<size_t>()){ return lars::makeAny<size_t>((lua_tointeger(L, idx))); }
       else if(type == lars::getTypeIndex<bool>()){ return lars::makeAny<bool>((lua_toboolean(L, idx))); }
       else if(type == lars::getTypeIndex<lars::AnyFunction>()){
         
