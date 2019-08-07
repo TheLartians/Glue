@@ -168,37 +168,42 @@ namespace glue{
   /**
    * Internal keys
    */
-  static const std::string constructorKey = "__new";
-  static const std::string extendsKey = "__glue_extends";
-  static const std::string classKey = "__glue_class";
-  
-  namespace operators{
-    static const std::string eq = "__eq";
-    static const std::string lt = "__lt";
-    static const std::string le = "__le";
-    static const std::string gt = "__gt";
-    static const std::string ge = "__ge";
-    static const std::string mul = "__mul";
-    static const std::string div = "__div";
-    static const std::string idiv = "__idiv";
-    static const std::string add = "__add";
-    static const std::string sub = "__sub";
-    static const std::string mod = "__mod";
-    static const std::string pow = "__pow";
-    static const std::string unm = "__unm";
-    static const std::string tostring = "__tostring";
+  namespace keys {
+    static const std::string constructorKey = "__new";
+    static const std::string extendsKey = "__glue_extends";
+    static const std::string classKey = "__glue_class";
+    static const std::string sharedClassKey = "__glue_shared_class";
+    
+    namespace operators{
+      static const std::string eq = "__eq";
+      static const std::string lt = "__lt";
+      static const std::string le = "__le";
+      static const std::string gt = "__gt";
+      static const std::string ge = "__ge";
+      static const std::string mul = "__mul";
+      static const std::string div = "__div";
+      static const std::string idiv = "__idiv";
+      static const std::string add = "__add";
+      static const std::string sub = "__sub";
+      static const std::string mod = "__mod";
+      static const std::string pow = "__pow";
+      static const std::string unm = "__unm";
+      static const std::string tostring = "__tostring";
+    }
   }
+
   
   inline void setExtends(ElementInterface &extends, const ElementInterface &element){
-    extends[extendsKey] = element;
+    extends[keys::extendsKey] = element;
   }
   
   template <class T> void setClass(ElementInterface &element){
-    element[classKey] = lars::getTypeIndex<T>();
+    element[keys::classKey] = lars::getTypeIndex<T>();
+    element[keys::sharedClassKey] = lars::getTypeIndex<std::shared_ptr<T>>();
   }
   
   inline std::shared_ptr<lars::TypeIndex> getClass(ElementInterface &element){
-    return element[classKey].tryGet<lars::TypeIndex>();
+    return element[keys::classKey].tryGet<lars::TypeIndex>();
   }
 
 }

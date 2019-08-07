@@ -4,7 +4,7 @@
 using namespace glue;
 
 void ClassElementContext::addMap(const std::shared_ptr<glue::Map> &map) {
-  if (auto C = (*map)[classKey]) {
+  if (auto C = (*map)[keys::classKey]) {
     types[C.get<lars::TypeIndex>()] = map;
   }
 

@@ -53,7 +53,7 @@ namespace glue {
       setClass<T>(*this);
     }
 
-    template <typename ... Args> ClassElement &addConstructor(const std::string &name = constructorKey) {
+    template <typename ... Args> ClassElement &addConstructor(const std::string &name = keys::constructorKey) {
       (*this)[name] = [](Args ... args){ return T(args...); };
       return *this;
     }

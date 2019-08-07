@@ -24,7 +24,7 @@ TEST_CASE("declarations") {
   .addConstructor<int>()
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
-  .addMethod("custom", [](const A &a){ return a.data+1; })
+  .addMethod("custom", [](const std::shared_ptr<A> &a){ return a->data+1; })
   .addMethod("variadic", [](const lars::AnyArguments &){ return 0; })
   ;
 

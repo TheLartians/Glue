@@ -8,7 +8,7 @@ using easy_iterator::found;
 AnyReference ElementMap::getValue(const std::string &key) const {
   if (auto v = found(data.find(key), data)) {
     return v->second.getValue();
-  } else if (auto v = found(data.find(extendsKey), data)) {
+  } else if (auto v = found(data.find(keys::extendsKey), data)) {
     if (auto map = v->second.asMap()) {
       return map->getValue(key);
     }
@@ -21,7 +21,7 @@ void ElementMap::setValue(const std::string &key, Any && value){
     eraseIfFound(data.find(key), data);
     eraseIfFound(elementObservers.find(key), elementObservers);
   } else {
-    if (key == classKey) {
+    if (key == keys::classKey) {
       auto & type = value.get<const lars::TypeIndex &>();
       addClass(type, shared_from_this());
     }

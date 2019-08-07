@@ -29,7 +29,7 @@ TypescriptDeclarations::TypescriptDeclarations(){
 
 void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector<std::string> &context) {
   if (context.size() > 0) {
-    if (auto c = (*map)[classKey]) {
+    if (auto c = (*map)[keys::classKey]) {
       std::string name;
       for (auto &str: context) {
         name += str;
@@ -40,7 +40,7 @@ void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector
     }
   }
   for (auto key: map->keys()) {
-    if (key == extendsKey || key == classKey) {
+    if (key == keys::extendsKey || key == keys::classKey) {
       continue;
     }
 
@@ -76,28 +76,28 @@ void TypescriptDeclarations::printNamespace(std::ostream &stream, const std::str
 void TypescriptDeclarations::printClass(std::ostream &stream, const std::string &name, const std::shared_ptr<Map> &map, Context & context)const{  
   assert(context.hasType());
   
-  if (auto et = (*map)[constructorKey]) {
+  if (auto et = (*map)[keys::constructorKey]) {
     stream << context.indent() << "/** @customConstructor ";
     printType(stream,context.type);
-    stream << "." << constructorKey << " */\n";
+    stream << "." << keys::constructorKey << " */\n";
   }
 
   stream << context.indent() << "class " << name;
 
-  if (auto et = (*map)[extendsKey]) {
+  if (auto et = (*map)[keys::extendsKey]) {
     stream << " extends ";
-    printType(stream, et[classKey].get<lars::TypeIndex>());
+    printType(stream, et[keys::classKey].get<lars::TypeIndex>());
   }
   stream << " {\n";
   ++context.depth;
 
   for (auto key: sorted(map->keys())) {
-    if (key == constructorKey) { // print constructor
+    if (key == keys::constructorKey) { // print constructor
       auto f = (*map)[key].get<lars::AnyFunction>(); 
       stream << context.indent() << "constructor(";
       printFunctionArguments(stream, f, false, true);
       stream << ")\n";
-    } else if (key != extendsKey && key != classKey) {
+    } else if (key != keys::extendsKey && key != keys::classKey && key != keys::sharedClassKey) {
       printElement(stream,key,(*map)[key], context);
     }
   }
@@ -112,8 +112,11 @@ std::ostream &TypescriptDeclarations::printElement(std::ostream &stream, const s
 
   if (auto map = element.asMap()) {
     Context innerContext = context;
-    if (auto c = (*map)[classKey]) {
+    if (auto c = (*map)[keys::classKey]) {
       innerContext.type = c.get<lars::TypeIndex>();
+      if (auto sc = (*map)[keys::sharedClassKey]) {
+        innerContext.sharedType = sc.get<lars::TypeIndex>();
+      }
       printClass(stream, name, map, innerContext);
     } else {
       printNamespace(stream, name, map, innerContext);
@@ -144,7 +147,7 @@ void TypescriptDeclarations::printType(std::ostream &stream, const lars::TypeInd
 void TypescriptDeclarations::printFunction(std::ostream &stream, const std::string &name, const lars::AnyFunction &f, const Context & context)const {
   bool memberFunction = false;
   if (context.hasType()) {
-    if (f.argumentCount() > 0 && f.argumentType(0) == context.type) {
+    if (f.argumentCount() > 0 && (f.argumentType(0) == context.type || f.argumentType(0) == context.sharedType)) {
       memberFunction = true;
     } else if (!f.isVariadic()) {
       stream << "static ";

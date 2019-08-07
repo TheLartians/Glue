@@ -80,6 +80,8 @@ set(sources
 
 set(headers
   ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/element.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/class_element.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/declarations.h
 )
 
 if(${GLUE_ENABLE_DUKTAPE})

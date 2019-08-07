@@ -18,6 +18,7 @@ namespace glue{
     struct Context {
       unsigned depth = 0;
       lars::TypeIndex type = lars::getTypeIndex<void>();
+      lars::TypeIndex sharedType = lars::getTypeIndex<void>();
       Context(){}
       std::string indent()const{ return std::string(depth*2,' '); }
       bool hasType() const { return type != lars::getTypeIndex<void>(); }
