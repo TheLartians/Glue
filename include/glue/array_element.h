@@ -15,13 +15,13 @@ namespace glue {
       arr.pop_back(); 
     })
     .addMethod("get", [](const T &arr, size_t idx){ 
-      if (idx > arr.size()) {
+      if (idx >= arr.size()) {
         throw std::runtime_error("invalid array index");
       }
       return arr[idx];
     })
     .addMethod("set", [](T &arr, size_t idx, V v){
-      if (idx > arr.size()) {
+      if (idx >= arr.size()) {
         throw std::runtime_error("invalid array index");
       } 
       arr[idx] = v;
