@@ -472,6 +472,7 @@ namespace {
       
       struct PushVisitor:public lars::RecursiveVisitor<
       bool,
+      short,
       const char &,
       const int &,
       double,
@@ -485,7 +486,8 @@ namespace {
         bool visit(bool data)override{ LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data); return true; }
         bool visit(const int &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
         bool visit(const char &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
-        bool visit(double data)override{ LUA_GLUE_LOG("push char"); lua_pushnumber(L, data); return true; }
+        bool visit(double data)override{ LUA_GLUE_LOG("push double"); lua_pushnumber(L, data); return true; }
+        bool visit(short data)override{ LUA_GLUE_LOG("push short"); lua_pushinteger(L, data); return true; }
         bool visit(const std::string &data)override{ LUA_GLUE_LOG("push string"); lua_pushstring(L, data.c_str()); return true; }
         bool visit(const lars::AnyFunction &data)override{ LUA_GLUE_LOG("push function"); push_function(L,data); return true; }
         bool visit(const RegistryObject &data)override{
