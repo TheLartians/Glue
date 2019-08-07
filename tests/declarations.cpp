@@ -36,6 +36,7 @@ TEST_CASE("declarations") {
   .addMethod("add", &A::add)
   .addConstMethod("description", &B::description)
   .setExtends(AElement)
+  .addValue("b",B(2));
   ;
 
   glue::Element elements;
@@ -61,6 +62,7 @@ R"(declare module elements {
   class B extends elements.A {
     constructor(arg0: number)
     add(arg1: elements.A): elements.A;
+    static b: elements.B;
     description(): string;
     name(): string;
     setName(arg1: string): void;

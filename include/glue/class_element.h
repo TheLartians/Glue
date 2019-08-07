@@ -110,6 +110,11 @@ namespace glue {
       return *this;
     }
 
+    ClassElement &addValue(const std::string &key, Any&&value) {
+      Element::addValue(key, std::move(value));
+      return *this;
+    }
+
   };
 
 

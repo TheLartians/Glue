@@ -186,8 +186,12 @@ void TypescriptDeclarations::printFunctionArguments(std::ostream &stream, const 
   }
 }
 
-void TypescriptDeclarations::printValue(std::ostream &stream, const std::string &name, const lars::AnyReference &v, const Context &)const {
-  stream << "let " << name << ": ";
+void TypescriptDeclarations::printValue(std::ostream &stream, const std::string &name, const lars::AnyReference &v, const Context &context)const {
+  if (context.hasType()) {
+    stream << "static " << name << ": ";  
+  } else {
+    stream << "let " << name << ": ";
+  }
   printType(stream, v.type());
 }
 
