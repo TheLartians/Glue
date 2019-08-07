@@ -65,7 +65,7 @@ CPMAddPackage(
 CPMAddPackage(
   NAME LarsVisitor
   VERSION 1.7.4.1
-  GIT_TAG 3c28c211d95d0bc889b6971b07348fc2d0d6eb01 # quickfix
+  GIT_TAG e809142fde10ce77eefa0b5aa327267d66973465 # quickfix
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 message("TODO: use released visitor version once available")
