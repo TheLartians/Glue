@@ -9,7 +9,7 @@ namespace glue {
     return glue::ClassElement<T>()
     .addConstructor()
     .addMethod("push", [](T &arr, V v){ arr.emplace_back(v); })
-    .addMethod("size", [](T &arr){ return arr.size(); })
+    .addMethod("size", [](const T &arr){ return arr.size(); })
     .addMethod("pop", [](T &arr){ 
       if (arr.size() == 0) throw std::runtime_error("cannot pop empty array"); 
       arr.pop_back(); 
