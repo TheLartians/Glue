@@ -186,8 +186,7 @@ namespace glue{
     static const std::string mod = "__mod";
     static const std::string pow = "__pow";
     static const std::string unm = "__unm";
-    static const std::string index = "__index";
-    static const std::string newIndex = "__newIndex";
+    static const std::string tostring = "__tostring";
   }
   
   inline void setExtends(ElementInterface &extends, const ElementInterface &element){
