@@ -155,6 +155,13 @@ TEST_CASE("LuaState","[lua]"){
       REQUIRE(lua.get<int>("b:value()") == 420);
     }
 
+    SECTION("default compare"){
+      lua.run("a = A.create(42)");
+      lua.run("b = A.create(42)");
+      CHECK(lua.get<bool>("a == a"));
+      CHECK(!lua.get<bool>("a == b"));
+    }
+
   }
   
   SECTION("memory"){
@@ -181,30 +188,38 @@ TEST_CASE("LuaState","[lua]"){
     struct A{ int value = 1; };
     Element a;
     setClass<A>(a);
-    a[operators::add] = [](A&a, A&b){ return A{a.value + b.value}; };
-    a[operators::mul] = [](A&a, A&b){ return A{a.value * b.value}; };
-    a[operators::sub] = [](A&a, A&b){ return A{a.value - b.value}; };
-    a[operators::div] = [](A&a, A&b){ return A{a.value / b.value}; };
-    a[operators::lt ] = [](A&a, A&b){ return a.value < b.value; };
-    a[operators::gt ] = [](A&a, A&b){ return a.value > b.value; };
-    a[operators::le ] = [](A&a, A&b){ return a.value <= b.value; };
-    a[operators::ge ] = [](A&a, A&b){ return a.value >= b.value; };
-    a[operators::unm] = [](A&a){ return -a.value; };
-    a[operators::pow] = [](A&a, A&b){ return pow(a.value,b.value); };
-    a[operators::mod] = [](A&a, A&b){ return a.value % b.value; };
-    a[operators::idiv] = [](A&a, A&b){ return a.value / b.value; };
+    a[keys::operators::eq] = [](A&a, A&b){ return a.value == b.value; };
+    a[keys::operators::add] = [](A&a, A&b){ return A{a.value + b.value}; };
+    a[keys::operators::mul] = [](A&a, A&b){ return A{a.value * b.value}; };
+    a[keys::operators::sub] = [](A&a, A&b){ return A{a.value - b.value}; };
+    a[keys::operators::div] = [](A&a, A&b){ return A{a.value / b.value}; };
+    a[keys::operators::lt ] = [](A&a, A&b){ return a.value < b.value; };
+    a[keys::operators::gt ] = [](A&a, A&b){ return a.value > b.value; };
+    a[keys::operators::le ] = [](A&a, A&b){ return a.value <= b.value; };
+    a[keys::operators::ge ] = [](A&a, A&b){ return a.value >= b.value; };
+    a[keys::operators::unm] = [](A&a){ return -a.value; };
+    a[keys::operators::pow] = [](A&a, A&b){ return pow(a.value,b.value); };
+    a[keys::operators::mod] = [](A&a, A&b){ return a.value % b.value; };
+    a[keys::operators::idiv] = [](A&a, A&b){ return a.value / b.value; };
+    a[keys::operators::tostring] = [](A&a){ return "A:" + std::to_string(a.value); };
 
     lua["A"] = a;
     lua["a"] = A();
-    REQUIRE(lua.get<A&>("(a + a) * (a / a + a) - a").value == 3);
-    REQUIRE(lua.get<bool>("a + a > a"));
-    REQUIRE(!lua.get<bool>("a + a < a"));
-    REQUIRE(lua.get<bool>("a <= a"));
-    REQUIRE(lua.get<bool>("a >= a"));
-    REQUIRE(lua.get<int>("-a") == -1);
-    REQUIRE(lua.get<int>("(a+a)^(a+a)") == 4);
-    REQUIRE(lua.get<int>("a % (a+a)") == 1);
-    REQUIRE(lua.get<int>("a // a") == 1);
+    CHECK(lua.get<bool>("a == a"));
+    CHECK(lua.get<bool>("a == a+a-a"));
+    CHECK(!lua.get<bool>("a == a+a"));
+    CHECK(lua.get<bool>("a ~= a+a"));
+    CHECK(lua.get<A&>("(a + a) * (a / a + a) - a").value == 3);
+    CHECK(lua.get<bool>("a + a > a"));
+    CHECK(!lua.get<bool>("a + a < a"));
+    CHECK(lua.get<bool>("a <= a"));
+    CHECK(lua.get<bool>("a >= a"));
+    CHECK(lua.get<int>("-a") == -1);
+    CHECK(lua.get<int>("(a+a)^(a+a)") == 4);
+    CHECK(lua.get<int>("a % (a+a)") == 1);
+    CHECK(lua.get<int>("a // a") == 1);
+    CHECK(lua.get<std::string>("tostring(a)") == "A:1");
+    CHECK(lua.get<A &>("a").value == 1);
   }
 
   SECTION("errors"){

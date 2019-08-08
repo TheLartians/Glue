@@ -9,7 +9,6 @@ extern "C" {
 }
 
 //#define LARS_LUA_GLUE_DEBUG
-//#include <lars/log.h>
 
 #ifdef LARS_LUA_GLUE_DEBUG
 #include <lars/log.h>
@@ -168,6 +167,9 @@ namespace {
     bool getSubclassTable(lua_State * L, int idx, const lars::TypeIndex &type){
       //AUTO_INDENT;
       //LUA_GLUE_LOG("getSubclassTable");
+      if(lua_type(L, idx) != LUA_TUSERDATA) {
+        return false;
+      }
       lua_getmetatable(L, idx); // push metatable
       auto t = lua_rawgeti(L, -1, type.hash() ); // push subclass table
       if(t == LUA_TNIL){
@@ -201,7 +203,7 @@ namespace {
       //AUTO_INDENT;
       //LUA_GLUE_LOG("forwardSubclassCall " << name);
       if(!getSubclassField(L, idx, type, name)){ // push the method
-                                                 //LUA_GLUE_LOG("unavailable");
+       //LUA_GLUE_LOG("unavailable");
         return false;
       }
       //LUA_GLUE_LOG("will call " << as_string(L));
@@ -213,28 +215,31 @@ namespace {
     }
     
     template <class T,const char *f, unsigned argc, unsigned resc> int forwardedClassMetamethod(lua_State * L){
-      LUA_GLUE_LOG("calling forwarded metamethod");
+      LUA_GLUE_LOG("calling forwarded metamethod: " << f);
       auto * data = get_internal_object_ptr<T>(L,1);
       if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
-      if(forwardSubclassCall(L, -1, data->type, f, argc, resc)) return resc;
+      if(forwardSubclassCall(L, 1, data->type, f, argc+1, resc)) return resc;
       throw_lua_error(L, "glue error: call undefined method " + std::string(f) + " on class object.");
     }
     
     namespace metamethd_names {
-#define LARS_GLUE_ADD_FORWARDED_METAMETHOD(name) lua_pushcfunction(L, (forwardedClassMetamethod<T, metamethd_names::name, 2, 1>)); lua_setfield(L, -2, #name)
-      char __eq[] = "__eq";
-      char __lt[] = "__lt";
-      char __le[] = "__le";
-      char __gt[] = "__gt";
-      char __ge[] = "__ge";
-      char __mul[] = "__mul";
-      char __div[] = "__div";
-      char __idiv[] = "__idiv";
-      char __add[] = "__add";
-      char __sub[] = "__sub";
-      char __mod[] = "__mod";
-      char __pow[] = "__pow";
-      char __unm[] = "__unm";
+#define LARS_GLUE_ADD_FORWARDED_METAMETHOD(name,argc,retc) \
+  lua_pushcfunction(L, (forwardedClassMetamethod<T, metamethd_names::name, argc, retc>)); \
+  lua_setfield(L, -2, #name)
+#define LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(name) LARS_GLUE_ADD_FORWARDED_METAMETHOD(name,1,1)
+
+      const char __lt[] = "__lt";
+      const char __le[] = "__le";
+      const char __gt[] = "__gt";
+      const char __ge[] = "__ge";
+      const char __mul[] = "__mul";
+      const char __div[] = "__div";
+      const char __idiv[] = "__idiv";
+      const char __add[] = "__add";
+      const char __sub[] = "__sub";
+      const char __mod[] = "__mod";
+      const char __pow[] = "__pow";
+      const char __unm[] = "__unm";
     }
     
     std::string class_mt_key(const lars::TypeIndex &idx){
@@ -266,9 +271,10 @@ namespace {
       luaL_newmetatable(L, key);
       
       lua_pushcfunction(L, +[](lua_State *L){
+        // todo: check if argument count == 1
         auto * data = get_internal_object_ptr<T>(L,1);
         if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
-        if(forwardSubclassCall(L, -1, data->type, "__tostring", 1, 1)){
+        if(forwardSubclassCall(L, 1, data->type, "__tostring", 1, 1)){
           return 1;
         }
         auto type_name = data->type.name();
@@ -277,20 +283,34 @@ namespace {
       });
       lua_setfield(L, -2, "__tostring");
       
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__eq);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__lt);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__le);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__gt);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__ge);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__mul);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__div);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__idiv);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__add);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__sub);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__mod);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__pow);
-      LARS_GLUE_ADD_FORWARDED_METAMETHOD(__unm);
-      
+      lua_pushcfunction(L, +[](lua_State *L){
+        // todo: check argument count
+        auto * data = get_internal_object_ptr<T>(L,1);
+        if(!data) throw_lua_error(L, "glue error: corrupted internal pointer");
+        if(forwardSubclassCall(L, 1, data->type, "__eq", 2, 1)){
+          return 1;
+        }
+        auto * other = get_internal_object_ptr<T>(L,2);
+        lua_pushboolean(L, data == other);
+        return 1;
+      });
+      lua_setfield(L, -2, "__eq");
+
+      if constexpr (!std::is_same<T, std::shared_ptr<glue::Map>>::value) {
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__lt);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__le);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__gt);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__ge);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__mul);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__div);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__idiv);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__add);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__sub);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__mod);
+        LARS_GLUE_ADD_FORWARDED_BINARY_METAMETHOD(__pow);
+        LARS_GLUE_ADD_FORWARDED_METAMETHOD(__unm,0,1);
+      }
+        
       lua_pushcfunction(L, +[](lua_State *L){
         LUA_GLUE_LOG("calling class destructor");
         auto * data = get_object_ptr<T>(L,1);
@@ -340,10 +360,11 @@ namespace {
       if constexpr (std::is_same<T, std::shared_ptr<glue::Map>>::value) {
         lua_pushcfunction(L, +[](lua_State *L){
           std::string key = as_string(L,2);
-          LUA_GLUE_LOG("indexing glue::Map." << key);
+          LUA_GLUE_LOG("indexing glue::Map [" << key << "]");
           auto ptr = get_internal_object_ptr<std::shared_ptr<glue::Map>>(L,1);
           if (!ptr) throw_lua_error(L, "glue error: corrupted internal pointer");
-          push_value(L, ptr->data->getValue(key));
+          auto result = ptr->data->getValue(key);
+          push_value(L, result);
           return 1;
         });
         lua_setfield(L, -2, "__index");
@@ -360,7 +381,7 @@ namespace {
         
       } else {
         lua_pushcfunction(L, +[](lua_State *L){
-          LUA_GLUE_LOG("indexing: " << as_string(L,1) << "." << as_string(L,2));
+          LUA_GLUE_LOG("indexing: object [" << as_string(L,2) << "]");
           lua_getmetatable(L,1);
           auto ptr = get_internal_object_ptr<T>(L,1);
           if (!ptr) throw_lua_error(L, "glue error: corrupted internal pointer");
@@ -451,6 +472,7 @@ namespace {
       
       struct PushVisitor:public lars::RecursiveVisitor<
       bool,
+      short,
       const char &,
       const int &,
       double,
@@ -464,7 +486,8 @@ namespace {
         bool visit(bool data)override{ LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data); return true; }
         bool visit(const int &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
         bool visit(const char &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
-        bool visit(double data)override{ LUA_GLUE_LOG("push char"); lua_pushnumber(L, data); return true; }
+        bool visit(double data)override{ LUA_GLUE_LOG("push double"); lua_pushnumber(L, data); return true; }
+        bool visit(short data)override{ LUA_GLUE_LOG("push short"); lua_pushinteger(L, data); return true; }
         bool visit(const std::string &data)override{ LUA_GLUE_LOG("push string"); lua_pushstring(L, data.c_str()); return true; }
         bool visit(const lars::AnyFunction &data)override{ LUA_GLUE_LOG("push function"); push_function(L,data); return true; }
         bool visit(const RegistryObject &data)override{
@@ -511,7 +534,7 @@ namespace {
                             lars::TypeIndex type,
                             __attribute__ ((noreturn)) void (*error_handler)(lua_State *, const std::string_view &)
                             ){
-      LUA_GLUE_LOG("extract " << type.name() << " from " << as_string(L,idx));
+      LUA_GLUE_LOG("extract " << type.name());
       
       auto assert_value_exists = [&](auto && v){
         if(!v){
@@ -560,10 +583,12 @@ namespace {
       
       if(type == lars::getTypeIndex<std::string>()){ return lars::makeAny<std::string>(assert_value_exists(lua_tostring(L, idx))); }
       else if(type == lars::getTypeIndex<double>()){ return lars::makeAny<double>((lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<short>()){ return lars::makeAny<short>((lua_tonumber(L, idx))); }
       else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<float>((lua_tonumber(L, idx))); }
       else if(type == lars::getTypeIndex<char>()){ return lars::makeAny<char>((lua_tonumber(L, idx))); }
       else if(type == lars::getTypeIndex<int>()){ return lars::makeAny<int>((lua_tointeger(L, idx))); }
-      else if(type == lars::getTypeIndex<unsigned>()){ return lars::makeAny<int>((lua_tointeger(L, idx))); }
+      else if(type == lars::getTypeIndex<unsigned>()){ return lars::makeAny<unsigned>((lua_tointeger(L, idx))); }
+      else if(type == lars::getTypeIndex<size_t>()){ return lars::makeAny<size_t>((lua_tointeger(L, idx))); }
       else if(type == lars::getTypeIndex<bool>()){ return lars::makeAny<bool>((lua_toboolean(L, idx))); }
       else if(type == lars::getTypeIndex<lars::AnyFunction>()){
         
@@ -778,7 +803,7 @@ namespace glue {
   }
   
   lars::Any LuaState::runFile(const std::string &path)const{
-    LUA_GLUE_LOG("running code: " << code);
+    LUA_GLUE_LOG("running code from: " << path);
     
     auto N = lua_gettop(L);
     

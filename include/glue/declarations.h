@@ -18,6 +18,7 @@ namespace glue{
     struct Context {
       unsigned depth = 0;
       lars::TypeIndex type = lars::getTypeIndex<void>();
+      lars::TypeIndex sharedType = lars::getTypeIndex<void>();
       Context(){}
       std::string indent()const{ return std::string(depth*2,' '); }
       bool hasType() const { return type != lars::getTypeIndex<void>(); }
@@ -27,6 +28,7 @@ namespace glue{
     void printNamespace(std::ostream &, const std::string &, const std::shared_ptr<Map> &, Context &)const;
     void printClass(std::ostream &, const std::string &, const std::shared_ptr<Map> &, Context &)const;
     void printFunction(std::ostream &, const std::string &name, const lars::AnyFunction &f, const Context & context)const;
+    void printFunctionArguments(std::ostream &, const lars::AnyFunction &f, bool memberFunction = false, bool constructor = false)const;
     void printValue(std::ostream &, const std::string &name, const lars::AnyReference &v, const Context & context)const;
     void printType(std::ostream &, const lars::TypeIndex &type)const;
 

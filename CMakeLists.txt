@@ -8,7 +8,7 @@ endif()
 # ---- create project ----
 
 project(Glue 
-  VERSION 0.9.4
+  VERSION 0.9.5
   LANGUAGES CXX
 )
 
@@ -64,9 +64,11 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 1.7.4
+  VERSION 1.7.5-a
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
+message("TODO: use released visitor version once available")
+
 
 # ---- create module ----
 
@@ -80,6 +82,8 @@ set(sources
 
 set(headers
   ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/element.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/class_element.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/glue/declarations.h
 )
 
 if(${GLUE_ENABLE_DUKTAPE})

@@ -21,40 +21,48 @@ TEST_CASE("declarations") {
   };
 
   glue::ClassElement<A> AElement = glue::ClassElement<A>()
-  .addConstructor<int>("create")
+  .addConstructor<int>()
   .addMember("data", &A::data)
   .addMethod("add", &A::add)
-  .addMethod("custom", [](const A &a){ return a.data+1; })
+  .addMethod("custom", [](const std::shared_ptr<A> &a,const std::shared_ptr<A> &b){ 
+    return a->data+b->data; 
+  })
+  .addMethod("variadic", [](const lars::AnyArguments &){ return 0; })
   ;
 
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
-  .addConstructor<int>("create")
+  .addConstructor<int>()
   .addMember("name", &B::name)
+  .addMethod("add", &A::add)
   .addConstMethod("description", &B::description)
   .setExtends(AElement)
+  .addValue("b",B(2));
   ;
-
-  glue::Element constants;
-  constants["x"] = 42;
-  constants["a"] = A(1);
-  constants["b"] = B(2);
 
   glue::Element elements;
   elements["A"] = AElement;
   elements["B"] = BElement;
-  elements["constants"] = constants;
+  elements["constants"] = glue::Element()
+  .addValue("x",42)
+  .addValue("a",A(1))
+  .addValue("b",B(2));
 
   CHECK(glue::getTypescriptDeclarations("elements", elements) == 
 R"(declare module elements {
+  /** @customConstructor elements.A.__new */
   class A {
+    constructor(arg0: number)
     add(arg1: elements.A): elements.A;
-    static create(this: void, arg0: number): elements.A;
-    custom(): number;
+    custom(arg1: elements.A): number;
     data(): number;
     setData(arg1: number): void;
+    variadic(...args: any[]): number;
   }
+  /** @customConstructor elements.B.__new */
   class B extends elements.A {
-    static create(this: void, arg0: number): elements.B;
+    constructor(arg0: number)
+    add(arg1: elements.A): elements.A;
+    static b: elements.B;
     description(): string;
     name(): string;
     setName(arg1: string): void;
