@@ -30,7 +30,7 @@ TypescriptDeclarations::TypescriptDeclarations(){
 }
 
 void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector<std::string> &context) {
-  if (context.size() > 0) {
+  if (context.size() > 0 && (*map)[keys::classKey]) {
     auto addClassKey = [&](const std::string &key){
       if (auto c = (*map)[key]) {
         std::string name;
@@ -46,12 +46,13 @@ void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector
     addClassKey(keys::sharedClassKey);
     addClassKey(keys::constClassKey);
     addClassKey(keys::sharedConstClassKey);
-  }
-  for (auto key: map->keys()) {
-    if (auto m = (*map)[key].asMap()) {
-      context.push_back(key);
-      addMap(m, context);
-      context.pop_back();
+  } else {
+    for (auto key: map->keys()) {
+      if (auto m = (*map)[key].asMap()) {
+        context.push_back(key);
+        addMap(m, context);
+        context.pop_back();
+      }
     }
   }
 }
