@@ -44,12 +44,10 @@ void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector
     };
     addClassKey(keys::classKey);
     addClassKey(keys::sharedClassKey);
+    addClassKey(keys::constClassKey);
+    addClassKey(keys::sharedConstClassKey);
   }
   for (auto key: map->keys()) {
-    if (key == keys::extendsKey || key == keys::classKey) {
-      continue;
-    }
-
     if (auto m = (*map)[key].asMap()) {
       context.push_back(key);
       addMap(m, context);
@@ -98,12 +96,16 @@ void TypescriptDeclarations::printClass(std::ostream &stream, const std::string 
   ++context.depth;
 
   for (auto key: sorted(map->keys())) {
+    if (key == keys::extendsKey || key == keys::classKey || key == keys::constClassKey || key == keys::sharedConstClassKey || key == keys::sharedClassKey) {
+      continue;
+    }
+
     if (key == keys::constructorKey) { // print constructor
       auto f = (*map)[key].get<lars::AnyFunction>(); 
       stream << context.indent() << "constructor(";
       printFunctionArguments(stream, f, false, true);
       stream << ")\n";
-    } else if (key != keys::extendsKey && key != keys::classKey && key != keys::sharedClassKey) {
+    } else {
       printElement(stream,key,(*map)[key], context);
     }
   }
@@ -122,6 +124,12 @@ std::ostream &TypescriptDeclarations::printElement(std::ostream &stream, const s
       innerContext.type = c.get<lars::TypeIndex>();
       if (auto sc = (*map)[keys::sharedClassKey]) {
         innerContext.sharedType = sc.get<lars::TypeIndex>();
+      }
+      if (auto sc = (*map)[keys::constClassKey]) {
+        innerContext.constType = sc.get<lars::TypeIndex>();
+      }
+      if (auto sc = (*map)[keys::sharedConstClassKey]) {
+        innerContext.sharedConstType = sc.get<lars::TypeIndex>();
       }
       printClass(stream, name, map, innerContext);
     } else {
@@ -153,7 +161,15 @@ void TypescriptDeclarations::printType(std::ostream &stream, const lars::TypeInd
 void TypescriptDeclarations::printFunction(std::ostream &stream, const std::string &name, const lars::AnyFunction &f, const Context & context)const {
   bool memberFunction = false;
   if (context.hasType()) {
-    if (f.argumentCount() > 0 && (f.argumentType(0) == context.type || f.argumentType(0) == context.sharedType)) {
+    if (
+      f.argumentCount() > 0 
+      && (
+        f.argumentType(0) == context.type 
+        || f.argumentType(0) == context.sharedType 
+        || f.argumentType(0) == context.constType 
+        || f.argumentType(0) == context.sharedConstType
+      )
+    ) {
       memberFunction = true;
     } else if (!f.isVariadic()) {
       stream << "static ";
