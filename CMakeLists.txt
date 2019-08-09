@@ -67,8 +67,6 @@ CPMAddPackage(
   VERSION 1.7.5-a
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
-message("TODO: use released visitor version once available")
-
 
 # ---- create module ----
 
