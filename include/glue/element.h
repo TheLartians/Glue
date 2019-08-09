@@ -173,10 +173,15 @@ namespace glue{
    * Internal keys
    */
   namespace keys {
+
     static const std::string constructorKey = "__new";
     static const std::string extendsKey = "__glue_extends";
+    
+    // TODO: unify class keys in a single classPropertyKey
     static const std::string classKey = "__glue_class";
+    static const std::string constClassKey = "__glue_const_class";
     static const std::string sharedClassKey = "__glue_shared_class";
+    static const std::string sharedConstClassKey = "__glue_const_shared_class";
     
     namespace operators{
       static const std::string eq = "__eq";
@@ -203,7 +208,9 @@ namespace glue{
   
   template <class T> void setClass(ElementInterface &element){
     element[keys::classKey] = lars::getTypeIndex<T>();
-    element[keys::sharedClassKey] = lars::getTypeIndex<std::shared_ptr<T>>();
+    element[keys::constClassKey] = lars::getTypeIndex<T>();
+    element[keys::sharedClassKey] = lars::getTypeIndex<const std::shared_ptr<T>>();
+    element[keys::sharedConstClassKey] = lars::getTypeIndex<std::shared_ptr<const T>>();
   }
   
   inline std::shared_ptr<lars::TypeIndex> getClass(ElementInterface &element){
