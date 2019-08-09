@@ -26,6 +26,7 @@ TypescriptDeclarations::TypescriptDeclarations(){
   typenames[lars::getTypeIndex<double>()] = "number";
   typenames[lars::getTypeIndex<void>()] = "void";
   typenames[lars::getTypeIndex<std::string>()] = "string";
+  typenames[lars::getTypeIndex<lars::AnyFunction>()] = "(this: void, ...args: any[]) => any";
 }
 
 void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector<std::string> &context) {

@@ -45,7 +45,9 @@ TEST_CASE("declarations") {
   elements["constants"] = glue::Element()
   .addValue("x",42)
   .addValue("a",A(1))
-  .addValue("b",B(2));
+  .addValue("b",B(2))
+  .addValue("c",lars::AnyFunction([](lars::AnyFunction){ }))
+  ;
 
   CHECK(glue::getTypescriptDeclarations("elements", elements) == 
 R"(declare module elements {
@@ -70,6 +72,7 @@ R"(declare module elements {
   module constants {
     let a: elements.A;
     let b: elements.B;
+    function c(this: void, arg0: (this: void, ...args: any[]) => any): void;
     let x: number;
   }
 }
