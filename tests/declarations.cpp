@@ -20,6 +20,10 @@ TEST_CASE("declarations") {
     }
   };
 
+  struct C {
+    void f(){}
+  };
+
   glue::ClassElement<A> AElement = glue::ClassElement<A>()
   .addConstructor<int>()
   .addMember("data", &A::data)
@@ -47,6 +51,7 @@ TEST_CASE("declarations") {
   .addValue("a",A(1))
   .addValue("b",B(2))
   .addValue("c",lars::AnyFunction([](lars::AnyFunction){ }))
+  .addValue("C",glue::ClassElement<C>().addMethod("f", &C::f))
   ;
 
   CHECK(glue::getTypescriptDeclarations("elements", elements) == 
@@ -70,6 +75,9 @@ R"(declare module elements {
     setName(arg1: string): void;
   }
   module constants {
+    class C {
+      f(): void;
+    }
     let a: elements.A;
     let b: elements.B;
     function c(this: void, arg0: (this: void, ...args: any[]) => any): void;

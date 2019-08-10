@@ -96,8 +96,3 @@ AnyReference Element::getValue() const {
 Map& Element::setToMap() {
   return set<ElementMap>();
 }
-
-Element &Element::addValue(const std::string &key, Any&&value) {
-  (*this)[key] = std::move(value);
-  return *this;
-}
