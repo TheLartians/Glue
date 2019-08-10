@@ -105,7 +105,7 @@ void TypescriptDeclarations::printClass(std::ostream &stream, const std::string 
       auto f = (*map)[key].get<lars::AnyFunction>(); 
       stream << context.indent() << "constructor(";
       printFunctionArguments(stream, f, false, true);
-      stream << ")\n";
+      stream << ");\n";
     } else {
       printElement(stream,key,(*map)[key], context);
     }

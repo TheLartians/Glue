@@ -26,6 +26,7 @@ namespace glue {
       } 
       arr[idx] = v;
     })
+    .addMethod("clear", [](T &arr){ arr.clear(); })
     ;
   };
 

@@ -18,6 +18,15 @@ TEST_CASE("array element") {
   CHECK(array["get"](1)->get<int>() == 3);
   CHECK_NOTHROW(array["set"](0,-3));
   CHECK(array["get"](0)->get<int>() == -3);
-  CHECK_NOTHROW(array["pop"]());
-  REQUIRE(array["size"]()->get<int>() == 1);
+
+  SECTION("pop"){
+    CHECK_NOTHROW(array["pop"]());
+    REQUIRE(array["size"]()->get<int>() == 1);
+  }
+
+  SECTION("clear"){
+    CHECK_NOTHROW(array["clear"]());
+    REQUIRE(array["size"]()->get<int>() == 0);
+  }
+
 }

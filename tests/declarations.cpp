@@ -81,7 +81,7 @@ TEST_CASE("declarations") {
 R"(declare module elements {
   /** @customConstructor elements.A.__new */
   class A {
-    constructor(arg0: number)
+    constructor(arg0: number);
     add(arg1: elements.A): elements.A;
     custom(arg1: elements.A /* const */ | undefined): number;
     data(): number;
@@ -90,7 +90,7 @@ R"(declare module elements {
   }
   /** @customConstructor elements.B.__new */
   class B extends elements.A {
-    constructor(arg0: number)
+    constructor(arg0: number);
     add(arg1: elements.A): elements.A;
     static b: elements.B;
     static custom(this: void, arg0: elements.A /* const */ | undefined, arg1: elements.A /* const */ | undefined): number;
