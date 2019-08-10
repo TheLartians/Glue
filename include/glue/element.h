@@ -211,8 +211,8 @@ namespace glue{
   
   template <class T> void setClass(ElementInterface &element){
     element[keys::classKey] = lars::getTypeIndex<T>();
-    element[keys::constClassKey] = lars::getTypeIndex<T>();
-    element[keys::sharedClassKey] = lars::getTypeIndex<const std::shared_ptr<T>>();
+    element[keys::constClassKey] = lars::getTypeIndex<const T>();
+    element[keys::sharedClassKey] = lars::getTypeIndex<std::shared_ptr<T>>();
     element[keys::sharedConstClassKey] = lars::getTypeIndex<std::shared_ptr<const T>>();
   }
   
