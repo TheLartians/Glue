@@ -105,13 +105,13 @@ namespace glue {
       return *this;
     }
 
-    ClassElement setExtends(const ElementInterface &e){
+    ClassElement &setExtends(const ElementInterface &e){
       glue::setExtends(*this,e);
       return *this;
     }
 
-    ClassElement &addValue(const std::string &key, Any&&value) {
-      Element::addValue(key, std::move(value));
+    template <class O> ClassElement & addValue(const std::string &key, O && value) {
+      (*this)[key] = std::forward<O>(value);
       return *this;
     }
 

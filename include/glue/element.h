@@ -116,8 +116,11 @@ namespace glue{
     void setValue(Any&&) final override;
     Map& setToMap() final override;
 
-    /** Node: derived classes should overload this method to retain type */
-    Element &addValue(const std::string &key, Any&&);
+    /**
+     * Add values ky call chaining 
+     * Note: overrided classes should implement this method
+     */
+    template <class T> Element & addValue(const std::string &key, T && value);
 
   };
 
@@ -208,13 +211,18 @@ namespace glue{
   
   template <class T> void setClass(ElementInterface &element){
     element[keys::classKey] = lars::getTypeIndex<T>();
-    element[keys::constClassKey] = lars::getTypeIndex<T>();
-    element[keys::sharedClassKey] = lars::getTypeIndex<const std::shared_ptr<T>>();
+    element[keys::constClassKey] = lars::getTypeIndex<const T>();
+    element[keys::sharedClassKey] = lars::getTypeIndex<std::shared_ptr<T>>();
     element[keys::sharedConstClassKey] = lars::getTypeIndex<std::shared_ptr<const T>>();
   }
   
   inline std::shared_ptr<lars::TypeIndex> getClass(ElementInterface &element){
     return element[keys::classKey].tryGet<lars::TypeIndex>();
+  }
+
+  template <class T> Element & Element::addValue(const std::string &key, T && value) {
+    (*this)[key] = std::forward<T>(value);
+    return *this;
   }
 
 }

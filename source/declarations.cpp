@@ -31,7 +31,7 @@ TypescriptDeclarations::TypescriptDeclarations(){
 
 void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector<std::string> &context) {
   if (context.size() > 0 && (*map)[keys::classKey]) {
-    auto addClassKey = [&](const std::string &key){
+    auto addClassKey = [&](const std::string &key, const std::string &decoration = ""){
       if (auto c = (*map)[key]) {
         std::string name;
         for (auto &str: context) {
@@ -39,13 +39,13 @@ void TypescriptDeclarations::addMap(const std::shared_ptr<Map> &map, std::vector
           name += ".";
         }
         name.pop_back();
-        typenames[c.get<lars::TypeIndex>()] = name;
+        typenames[c.get<lars::TypeIndex>()] = name + decoration;
       }
     };
     addClassKey(keys::classKey);
-    addClassKey(keys::sharedClassKey);
-    addClassKey(keys::constClassKey);
-    addClassKey(keys::sharedConstClassKey);
+    addClassKey(keys::sharedClassKey, " | undefined");
+    addClassKey(keys::constClassKey, " /* const */");
+    addClassKey(keys::sharedConstClassKey, " /* const */ | undefined");
   } else {
     for (auto key: map->keys()) {
       if (auto m = (*map)[key].asMap()) {
