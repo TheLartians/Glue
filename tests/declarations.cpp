@@ -83,7 +83,7 @@ R"(declare module elements {
   class A {
     constructor(arg0: number)
     add(arg1: elements.A): elements.A;
-    custom(arg1: elements.A): number;
+    custom(arg1: elements.A /* const */ | undefined): number;
     data(): number;
     setData(arg1: number): void;
     variadic(...args: any[]): number;
@@ -93,7 +93,7 @@ R"(declare module elements {
     constructor(arg0: number)
     add(arg1: elements.A): elements.A;
     static b: elements.B;
-    static custom(this: void, arg0: elements.A, arg1: elements.A): number;
+    static custom(this: void, arg0: elements.A /* const */ | undefined, arg1: elements.A /* const */ | undefined): number;
     description(): string;
     name(): string;
     setName(arg1: string): void;
