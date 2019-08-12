@@ -32,7 +32,7 @@ namespace glue {
     })
     .addMethod("insert", [](T &arr, size_t idx, V v){ 
       if (arr.size() < idx) throw std::runtime_error("invalid array insert index"); 
-      arr.insert(arr.begin() + idx, v); 
+      arr.insert(arr.begin() + idx, std::move(v)); 
     })
     .addMethod("clear", [](T &arr){ arr.clear(); })
     ;
