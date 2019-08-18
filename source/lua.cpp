@@ -30,6 +30,8 @@ namespace {
 #define AUTO_INDENT
 #endif
 
+using glue_lua_int = int;
+
 namespace {
   namespace lua_glue{
     
@@ -327,8 +329,8 @@ namespace {
             INCREASE_INDENT;
             auto & f = get_object<lars::AnyFunction>(L,1);
             lars::AnyArguments args;
-            auto argc = f.isVariadic() ? lua_gettop(L)-1 : f.argumentCount();
-            for(size_t i=0;i<argc;++i) args.emplace_back(extract_value(L, i+2, f.argumentType(i)));
+            int argc = f.isVariadic() ? lua_gettop(L)-1 : int(f.argumentCount());
+            for(int i=0;i<argc;++i) args.emplace_back(extract_value(L, i+2, f.argumentType(i)));
             INCREASE_INDENT;
             try{
               DECREASE_INDENT;
@@ -530,7 +532,7 @@ namespace {
     
     lars::Any extract_value(
                             lua_State * L,
-                            int idx = -1,
+                            glue_lua_int idx = -1,
                             lars::TypeIndex type,
                             __attribute__ ((noreturn)) void (*error_handler)(lua_State *, const std::string_view &)
                             ){
@@ -582,14 +584,14 @@ namespace {
       }
       
       if(type == lars::getTypeIndex<std::string>()){ return lars::makeAny<std::string>(assert_value_exists(lua_tostring(L, idx))); }
-      else if(type == lars::getTypeIndex<double>()){ return lars::makeAny<double>((lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<short>()){ return lars::makeAny<short>((lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<float>((lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<char>()){ return lars::makeAny<char>((lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<int>()){ return lars::makeAny<int>((lua_tointeger(L, idx))); }
-      else if(type == lars::getTypeIndex<unsigned>()){ return lars::makeAny<unsigned>((lua_tointeger(L, idx))); }
-      else if(type == lars::getTypeIndex<size_t>()){ return lars::makeAny<size_t>((lua_tointeger(L, idx))); }
-      else if(type == lars::getTypeIndex<bool>()){ return lars::makeAny<bool>((lua_toboolean(L, idx))); }
+      else if(type == lars::getTypeIndex<double>()){ return lars::makeAny<double>(double(lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<short>()){ return lars::makeAny<short>(short(lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<float>(float(lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<char>()){ return lars::makeAny<char>(char(lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<int>()){ return lars::makeAny<int>(int(lua_tointeger(L, idx))); }
+      else if(type == lars::getTypeIndex<unsigned>()){ return lars::makeAny<unsigned>(unsigned(lua_tointeger(L, idx))); }
+      else if(type == lars::getTypeIndex<size_t>()){ return lars::makeAny<size_t>(size_t(lua_tointeger(L, idx))); }
+      else if(type == lars::getTypeIndex<bool>()){ return lars::makeAny<bool>(bool(lua_toboolean(L, idx))); }
       else if(type == lars::getTypeIndex<lars::AnyFunction>()){
         
         if(auto ptr = get_object_ptr<lars::AnyFunction>(L,idx)){
