@@ -166,7 +166,7 @@ if(${GLUE_ENABLE_TESTS})
   add_subdirectory(tests)  
 endif()
 
-# ---- Convinience functions ----
+# ---- Convenience functions ----
 
 function(GlueCreateTypescriptTarget target directory result)  
   ADD_CUSTOM_COMMAND(
@@ -186,7 +186,7 @@ function(GlueCreateTypescriptTarget target directory result)
 
   ADD_CUSTOM_COMMAND(
     OUTPUT ${result}
-    DEPENDS ${sources} "${directory}/tsconfig.json"
+    DEPENDS ${sources} "${directory}/tsconfig.json" ${directory}/node_modules
     COMMAND npm run build
     COMMAND touch ${result}
     WORKING_DIRECTORY ${directory}
@@ -194,7 +194,7 @@ function(GlueCreateTypescriptTarget target directory result)
 
   ADD_CUSTOM_TARGET(
     ${target} ALL
-    DEPENDS ${result} ${directory}/node_modules
+    DEPENDS ${result}
   )
 
   add_dependencies(${target} ${target}_init)
