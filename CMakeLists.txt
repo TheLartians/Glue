@@ -166,37 +166,39 @@ if(${GLUE_ENABLE_TESTS})
   add_subdirectory(tests)  
 endif()
 
-# ---- Convinience functions ----
+# ---- Convenience functions ----
 
-function(GlueCreateTypescriptTarget target directory result)  
+function(GlueBuildTypescript) 
+
+  set(oneValueArgs
+    NAME
+    DIRECTORY
+    RESULT
+    COMMAND
+  )
+
+  set(multiValueArgs
+    DEPENDS
+  )
+
+  cmake_parse_arguments(TS_ARGS "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
   ADD_CUSTOM_COMMAND(
-    OUTPUT ${directory}/node_modules
-    DEPENDS ${directory}/package.json
+    OUTPUT ${TS_ARGS_DIRECTORY}/node_modules
+    DEPENDS ${TS_ARGS_DIRECTORY}/package.json
     COMMAND npm install
     COMMAND touch node_modules
-    WORKING_DIRECTORY ${directory}
+    WORKING_DIRECTORY ${TS_ARGS_DIRECTORY}
   )
 
-  ADD_CUSTOM_TARGET(
-    ${target}_init
-    DEPENDS ${directory}/node_modules
-  )
-
-  file(GLOB_RECURSE sources "${directory}/*.ts")
+  file(GLOB_RECURSE sources "${TS_ARGS_DIRECTORY}/*.ts")
 
   ADD_CUSTOM_COMMAND(
-    OUTPUT ${result}
-    DEPENDS ${sources} "${directory}/tsconfig.json"
-    COMMAND npm run build
-    COMMAND touch ${result}
-    WORKING_DIRECTORY ${directory}
+    OUTPUT ${TS_ARGS_RESULT}
+    DEPENDS ${TS_ARGS_DIRECTORY} "${TS_ARGS_DIRECTORY}/tsconfig.json" ${TS_ARGS_DIRECTORY}/node_modules ${TS_ARGS_DEPENDS}
+    COMMAND npm run ${TS_ARGS_COMMAND}
+    COMMAND touch ${TS_ARGS_RESULT}
+    WORKING_DIRECTORY ${TS_ARGS_DIRECTORY}
   )
-
-  ADD_CUSTOM_TARGET(
-    ${target} ALL
-    DEPENDS ${result} ${directory}/node_modules
-  )
-
-  add_dependencies(${target} ${target}_init)
 
 endfunction()
