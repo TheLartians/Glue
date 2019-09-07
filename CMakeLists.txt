@@ -201,4 +201,4 @@ function(GlueCreateTypescriptTarget)
     WORKING_DIRECTORY ${TS_ARGS_DIRECTORY}
   )
 
-  endfunction()
+endfunction()
