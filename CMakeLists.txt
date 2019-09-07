@@ -168,7 +168,7 @@ endif()
 
 # ---- Convenience functions ----
 
-function(GlueCreateTypescriptTarget) 
+function(GlueBuildTypescript) 
 
   set(oneValueArgs
     NAME
