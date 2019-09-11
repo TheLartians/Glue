@@ -26,6 +26,14 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua.get<float>("x+2") == 42);
     REQUIRE(lua.get<double>("(x/16-0.4)*2") == Approx(4.2));
   }
+
+  SECTION("set number"){
+    REQUIRE(lua["tostring"](int(42)).get<std::string>() == "42");
+    REQUIRE(lua["tostring"](unsigned(42)).get<std::string>() == "42");
+    REQUIRE(lua["tostring"](size_t(42)).get<std::string>() == "42");
+    REQUIRE(lua["tostring"](char(42)).get<std::string>() == "42");
+    REQUIRE(lua["tostring"](42.0).get<std::string>() == "42.0");
+  }
   
   SECTION("get boolean"){
     REQUIRE(lua.get<bool>("true") == true);

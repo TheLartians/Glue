@@ -473,20 +473,24 @@ namespace {
       }
       
       struct PushVisitor:public lars::RecursiveVisitor<
-      bool,
-      short,
-      const char &,
-      const int &,
-      double,
-      const std::string &,
-      const lars::AnyFunction &,
-      const RegistryObject &,
-      const glue::Map &,
-      const glue::ElementMap &
+        bool,
+        short,
+        const char &,
+        const int &,
+        const unsigned &,
+        const size_t &,
+        double,
+        const std::string &,
+        const lars::AnyFunction &,
+        const RegistryObject &,
+        const glue::Map &,
+        const glue::ElementMap &
       >{
         lua_State * L;
         bool visit(bool data)override{ LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data); return true; }
         bool visit(const int &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
+        bool visit(const unsigned &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
+        bool visit(const size_t &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
         bool visit(const char &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
         bool visit(double data)override{ LUA_GLUE_LOG("push double"); lua_pushnumber(L, data); return true; }
         bool visit(short data)override{ LUA_GLUE_LOG("push short"); lua_pushinteger(L, data); return true; }
