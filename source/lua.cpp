@@ -605,7 +605,7 @@ namespace {
 
       if(type == lars::getTypeIndex<std::string>()){ return lars::makeAny<std::string>(assert_value_exists(lua_tostring(L, idx))); }
       else if(type == lars::getTypeIndex<bool>()){ return lars::makeAny<bool>(bool(lua_toboolean(L, idx))); }
-      else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<double>(double(lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<float>(float(lua_tonumber(L, idx))); }
       else if(type == lars::getTypeIndex<double>()){ return lars::makeAny<double>(double(lua_tonumber(L, idx))); }
       else if(type == lars::getTypeIndex<long double>()){ return lars::makeAny<long double>((long double)(lua_tonumber(L, idx))); }
       else_extract_if_is_integer(short int)
