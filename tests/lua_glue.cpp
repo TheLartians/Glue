@@ -31,7 +31,7 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua["tostring"](int(42)).get<std::string>() == "42");
     REQUIRE(lua["tostring"](unsigned(42)).get<std::string>() == "42");
     REQUIRE(lua["tostring"](size_t(42)).get<std::string>() == "42");
-    REQUIRE(lua["tostring"](char(42)).get<std::string>() == "42");
+    REQUIRE(lua["tostring"]('x').get<std::string>() == "x");
     REQUIRE(lua["tostring"](42.0).get<std::string>() == "42.0");
   }
   

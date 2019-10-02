@@ -472,29 +472,43 @@ namespace {
         return lua_pushnil(L);
       }
       
+#define else_extract_if_is_integer(T) else if(type == lars::getTypeIndex<T>()){ return lars::makeAny<T>((T)(lua_tointeger(L, idx))); } 
+
       struct PushVisitor:public lars::RecursiveVisitor<
-        bool,
-        short,
-        const char &,
-        const int &,
-        const unsigned &,
-        const size_t &,
-        double,
         const std::string &,
         const lars::AnyFunction &,
         const RegistryObject &,
         const glue::Map &,
-        const glue::ElementMap &
+        const glue::ElementMap &,
+        const char &,
+        const bool &,
+        const float &,
+        double,
+        const long double &,
+        const short int &,
+        const int &,
+        const long int &,
+        const long long int &,
+        const unsigned short int &,
+        const unsigned int &,
+        const unsigned long int &,
+        const unsigned long long int &
       >{
         lua_State * L;
-        bool visit(bool data)override{ LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data); return true; }
-        bool visit(const int &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
-        bool visit(const unsigned &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
-        bool visit(const size_t &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
-        bool visit(const char &data)override{ LUA_GLUE_LOG("push int"); lua_pushinteger(L, data); return true; }
-        bool visit(double data)override{ LUA_GLUE_LOG("push double"); lua_pushnumber(L, data); return true; }
-        bool visit(short data)override{ LUA_GLUE_LOG("push short"); lua_pushinteger(L, data); return true; }
         bool visit(const std::string &data)override{ LUA_GLUE_LOG("push string"); lua_pushstring(L, data.c_str()); return true; }
+        bool visit(const char &c)override{ LUA_GLUE_LOG("push character"); lua_pushstring(L, std::string(1,c).c_str()); return true; }
+        bool visit(const bool &data)override{ LUA_GLUE_LOG("push bool"); lua_pushboolean(L, data); return true; }
+        bool visit(const float &v)override{ LUA_GLUE_LOG("push float"); lua_pushnumber(L, v); return true; }
+        bool visit(double v)override{ LUA_GLUE_LOG("push double"); lua_pushnumber(L, v); return true; }
+        bool visit(const long double &v)override{ LUA_GLUE_LOG("push long double"); lua_pushnumber(L, v); return true; }
+        bool visit(const short int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
+        bool visit(const int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
+        bool visit(const long int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
+        bool visit(const long long int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
+        bool visit(const unsigned short int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
+        bool visit(const unsigned int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
+        bool visit(const unsigned long int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
+        bool visit(const unsigned long long int &v)override{ LUA_GLUE_LOG("push integer"); lua_pushinteger(L, v); return true; }
         bool visit(const lars::AnyFunction &data)override{ LUA_GLUE_LOG("push function"); push_function(L,data); return true; }
         bool visit(const RegistryObject &data)override{
           LUA_GLUE_LOG("push registry from " << data.L << " into " << L);
@@ -587,15 +601,21 @@ namespace {
         }
       }
       
+#define else_extract_if_is_integer(T) else if(type == lars::getTypeIndex<T>()){ return lars::makeAny<T>((T)(lua_tointeger(L, idx))); } 
+
       if(type == lars::getTypeIndex<std::string>()){ return lars::makeAny<std::string>(assert_value_exists(lua_tostring(L, idx))); }
-      else if(type == lars::getTypeIndex<double>()){ return lars::makeAny<double>(double(lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<short>()){ return lars::makeAny<short>(short(lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<float>(float(lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<char>()){ return lars::makeAny<char>(char(lua_tonumber(L, idx))); }
-      else if(type == lars::getTypeIndex<int>()){ return lars::makeAny<int>(int(lua_tointeger(L, idx))); }
-      else if(type == lars::getTypeIndex<unsigned>()){ return lars::makeAny<unsigned>(unsigned(lua_tointeger(L, idx))); }
-      else if(type == lars::getTypeIndex<size_t>()){ return lars::makeAny<size_t>(size_t(lua_tointeger(L, idx))); }
       else if(type == lars::getTypeIndex<bool>()){ return lars::makeAny<bool>(bool(lua_toboolean(L, idx))); }
+      else if(type == lars::getTypeIndex<float>()){ return lars::makeAny<double>(double(lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<double>()){ return lars::makeAny<double>(double(lua_tonumber(L, idx))); }
+      else if(type == lars::getTypeIndex<long double>()){ return lars::makeAny<long double>((long double)(lua_tonumber(L, idx))); }
+      else_extract_if_is_integer(short int)
+      else_extract_if_is_integer(int)
+      else_extract_if_is_integer(long int)
+      else_extract_if_is_integer(long long int)
+      else_extract_if_is_integer(unsigned short int)
+      else_extract_if_is_integer(unsigned int)
+      else_extract_if_is_integer(unsigned long int)
+      else_extract_if_is_integer(unsigned long long int)
       else if(type == lars::getTypeIndex<lars::AnyFunction>()){
         
         if(auto ptr = get_object_ptr<lars::AnyFunction>(L,idx)){
