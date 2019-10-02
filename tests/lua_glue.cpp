@@ -33,6 +33,20 @@ TEST_CASE("LuaState","[lua]"){
     REQUIRE(lua["tostring"](size_t(42)).get<std::string>() == "42");
     REQUIRE(lua["tostring"]('x').get<std::string>() == "x");
     REQUIRE(lua["tostring"](42.0).get<std::string>() == "42.0");
+  
+    REQUIRE(lua["tostring"](float(42.24)).get<float>() == 42.24);
+    REQUIRE(lua["tostring"]((long double)(42.24)).get<long double>() == 42.24);
+
+    REQUIRE(lua["tostring"]((short)(42)).get<short>() == 42);
+    REQUIRE(lua["tostring"]((int)(42)).get<int>() == 42);
+    REQUIRE(lua["tostring"]((long)(42)).get<long>() == 42);
+    REQUIRE(lua["tostring"]((long long)(42)).get<long long>() == 42);
+
+    REQUIRE(lua["tostring"]((unsigned short)(42)).get<unsigned short>() == 42);
+    REQUIRE(lua["tostring"]((unsigned int)(42)).get<unsigned int>() == 42);
+    REQUIRE(lua["tostring"]((unsigned long)(42)).get<unsigned long>() == 42);
+    REQUIRE(lua["tostring"]((unsigned long long)(42)).get<unsigned long long>() == 42);
+
   }
   
   SECTION("get boolean"){
