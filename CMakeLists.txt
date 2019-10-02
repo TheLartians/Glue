@@ -64,7 +64,8 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME LarsVisitor
-  VERSION 1.7.5-a
+  VERSION 1.7.6
+  GIT_TAG a108276cfb4c8b8b1b193d64ede783253d335d6d
   GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
 )
 
