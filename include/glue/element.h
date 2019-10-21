@@ -166,8 +166,9 @@ namespace glue{
     Element &getOrCreateElement();
     
   public:
-    ElementMapEntry(const std::shared_ptr<Map> &p, const std::string &k):parent(p), key(k){
-    }
+    ElementMapEntry(const std::shared_ptr<Map> &p, const std::string &k):parent(p), key(k){ }
+    ElementMapEntry(const ElementMapEntry &) = default;
+    ElementMapEntry(ElementMapEntry &&) = default;
 
     using ElementInterface::operator=;
 
