@@ -36,6 +36,6 @@ namespace glue {
     })
     .addMethod("clear", [](T &arr){ arr.clear(); })
     ;
-  };
+  }
 
 }
