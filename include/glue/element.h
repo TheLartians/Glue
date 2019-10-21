@@ -63,6 +63,10 @@ namespace glue{
       }
       return *this;
     }
+
+    ElementInterface() = default;
+    ElementInterface(const ElementInterface &) = default;
+    ElementInterface(ElementInterface &&) = default;
     
     ElementInterface &operator=(const ElementInterface &e){
       setValue(e.getValue());
