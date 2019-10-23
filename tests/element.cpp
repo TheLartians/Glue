@@ -105,3 +105,22 @@ TEST_CASE("element for class", "[element]"){
   auto av = a["create"](42);
   REQUIRE(a["value"](av).get<int>() == 42);
 }
+
+TEST_CASE("copy assignments", "[element]"){
+  Element a;
+
+  SECTION("copy element"){
+    Element b = a;
+  }
+
+  SECTION("copy assignment"){
+    Element b;
+    b = a;
+  }
+
+  SECTION("copy element entry"){
+    a["x"] = 42;
+    Element b;
+    b["x"] = a["x"];
+  }
+}
