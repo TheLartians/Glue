@@ -67,7 +67,7 @@ namespace glue{
     ElementInterface() = default;
     ElementInterface(const ElementInterface &) = default;
     ElementInterface(ElementInterface &&) = default;
-    
+
     ElementInterface &operator=(const ElementInterface &e){
       setValue(e.getValue());
       return *this;
@@ -102,7 +102,11 @@ namespace glue{
     
   public:
     Element() = default;
+    Element(const Element &) = default;
+    Element(Element &&) = default;
     Element(const ElementInterface &e):data(e.getValue()){ }
+    Element &operator=(const Element &) = default;
+    Element &operator=(Element &&) = default;
 
     template <
       class T,
@@ -171,6 +175,7 @@ namespace glue{
     ElementMapEntry(ElementMapEntry &&) = default;
 
     using ElementInterface::operator=;
+    ElementMapEntry& operator=(const ElementMapEntry &other);
 
     AnyReference getValue() const final override;
     void setValue(Any&&) final override;

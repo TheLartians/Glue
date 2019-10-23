@@ -60,6 +60,11 @@ ElementMapEntry Map::operator[](const std::string &key){
   return Entry(shared_from_this(), key);
 }
 
+ElementMapEntry& ElementMapEntry::operator=(const ElementMapEntry &other){ 
+  ElementInterface::operator=(other); 
+  return *this;
+}
+
 std::shared_ptr<Map> ElementInterface::asMap() const {
   return tryGet<Map>();
 }
