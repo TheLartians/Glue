@@ -200,11 +200,11 @@ function(GlueBuildTypescript)
     WORKING_DIRECTORY ${TS_ARGS_DIRECTORY}
   )
 
-  file(GLOB_RECURSE sources "${TS_ARGS_DIRECTORY}/*.ts")
+  file(GLOB_RECURSE typescript_sources "${TS_ARGS_DIRECTORY}/*.ts")
 
   ADD_CUSTOM_COMMAND(
     OUTPUT ${TS_ARGS_RESULT}
-    DEPENDS ${TS_ARGS_DIRECTORY} "${TS_ARGS_DIRECTORY}/tsconfig.json" ${TS_ARGS_DIRECTORY}/node_modules ${TS_ARGS_DEPENDS}
+    DEPENDS ${TS_ARGS_DIRECTORY} "${TS_ARGS_DIRECTORY}/tsconfig.json" ${TS_ARGS_DIRECTORY}/node_modules ${TS_ARGS_DEPENDS} ${typescript_sources}
     COMMAND npm run ${TS_ARGS_COMMAND}
     COMMAND touch ${TS_ARGS_RESULT}
     WORKING_DIRECTORY ${TS_ARGS_DIRECTORY}
