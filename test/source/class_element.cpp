@@ -1,5 +1,5 @@
 #include <glue/class_element.h>
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 namespace {
 
@@ -42,7 +42,7 @@ TEST_CASE("class element") {
   .setExtends(AElement)
   ;
 
-  SECTION("single element"){
+  SUBCASE("single element"){
     glue::ClassElementContext context;
     context.addElement(AElement);
 
@@ -58,7 +58,7 @@ TEST_CASE("class element") {
     CHECK(a["add"](*b)["data"]()->get<int>() == 8);
   }
 
-  SECTION("multiple elements"){
+  SUBCASE("multiple elements"){
     glue::Element elements;
     elements["A"] = AElement;
     elements["B"] = BElement;

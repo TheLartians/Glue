@@ -1,7 +1,7 @@
 #include <glue/array_element.h>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 TEST_CASE("array element") {
   auto Array = glue::ArrayElement<std::vector<int>>();
@@ -26,12 +26,12 @@ TEST_CASE("array element") {
   CHECK(array["get"](0)->get<int>() == 5);
   CHECK(array["get"](1)->get<int>() == 3);
 
-  SECTION("pop"){
+  SUBCASE("pop"){
     CHECK_NOTHROW(array["pop"]());
     REQUIRE(array["size"]()->get<int>() == 1);
   }
 
-  SECTION("clear"){
+  SUBCASE("clear"){
     CHECK_NOTHROW(array["clear"]());
     REQUIRE(array["size"]()->get<int>() == 0);
   }

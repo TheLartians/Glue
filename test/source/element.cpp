@@ -1,19 +1,19 @@
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 #include <set>
 
 #include <glue/element.h>
 
 using namespace glue;
 
-TEST_CASE("Element", "[element]"){
+TEST_CASE("Element"){
   Element element;
   
-  SECTION("empty element"){
+  SUBCASE("empty element"){
     REQUIRE(!element);
     REQUIRE(element.asMap() == nullptr);
   }
   
-  SECTION("set and get value"){
+  SUBCASE("set and get value"){
     REQUIRE_NOTHROW(element = 42);
     REQUIRE(element);
     REQUIRE(element.get<int>() == 42);
@@ -22,7 +22,7 @@ TEST_CASE("Element", "[element]"){
     REQUIRE(element.asMap() == nullptr);
   }
   
-  SECTION("set and get keys"){
+  SUBCASE("set and get keys"){
     REQUIRE_NOTHROW(element["a"] = 4);
     REQUIRE_NOTHROW(element["b"] = 2);
     REQUIRE_NOTHROW(element["c"]["d"]["e"] = 3);
@@ -38,19 +38,19 @@ TEST_CASE("Element", "[element]"){
     REQUIRE(element["c"]["d"]["e"].get<float>() == 3);
   }
   
-  SECTION("set and call function"){
+  SUBCASE("set and call function"){
     REQUIRE_NOTHROW(element = [](int x){ return x*2; });
     REQUIRE(element(21).get<int>() == 42);
   }
 
-  SECTION("set and call mapped functions"){
+  SUBCASE("set and call mapped functions"){
     REQUIRE_NOTHROW(element["a"] = [](int x){ return x+2; });
     REQUIRE_NOTHROW(element["b"] = [](int x){ return x*2; });
     REQUIRE(element["a"](40).get<int>() == 42);
     REQUIRE(element["b"](21).get<int>() == 42);
   }
  
-  SECTION("events"){
+  SUBCASE("events"){
     unsigned changes = 0;
     std::set<std::string> changedItems;
     element.setToMap().onValueChanged.connect([&](auto &key, auto &){
@@ -63,7 +63,7 @@ TEST_CASE("Element", "[element]"){
     REQUIRE(changes == 3);
   }
   
-  SECTION("extends"){
+  SUBCASE("extends"){
     element["a"] = 5;
     Element inner;
     setExtends(inner, element);
@@ -77,7 +77,7 @@ TEST_CASE("Element", "[element]"){
 
 }
 
-TEST_CASE("element for class", "[element]"){
+TEST_CASE("element for class"){
   struct Base {
     int value;
     Base() = default;
@@ -106,19 +106,19 @@ TEST_CASE("element for class", "[element]"){
   REQUIRE(a["value"](av).get<int>() == 42);
 }
 
-TEST_CASE("copy assignments", "[element]"){
+TEST_CASE("copy assignments"){
   Element a;
 
-  SECTION("copy element"){
+  SUBCASE("copy element"){
     Element b = a;
   }
 
-  SECTION("copy assignment"){
+  SUBCASE("copy assignment"){
     Element b;
     b = a;
   }
 
-  SECTION("copy element entry"){
+  SUBCASE("copy element entry"){
     a["x"] = 42;
     Element b;
     b["x"] = a["x"];
