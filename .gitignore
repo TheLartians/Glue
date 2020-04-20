@@ -19,3 +19,4 @@ CPackConfig.cmake
 env
 build*
 .vscode
+/old
