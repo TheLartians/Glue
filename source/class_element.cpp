@@ -1,14 +1,15 @@
 #include <glue/class_element.h>
+
 #include <iostream>
 
 using namespace glue;
 
 void ClassElementContext::addMap(const std::shared_ptr<glue::Map> &map) {
   if (auto C = (*map)[keys::classKey]) {
-    types[C.get<lars::TypeIndex>()] = map;
+    types[C.get<revisited::TypeIndex>()] = map;
   }
 
-  for (auto &key: map->keys()) {
+  for (auto &key : map->keys()) {
     if (auto m = (*map)[key].asMap()) {
       addMap(m);
     }
@@ -21,7 +22,8 @@ void ClassElementContext::addElement(const ElementInterface &e) {
   }
 }
 
-std::shared_ptr<glue::Map> ClassElementContext::getMapForType(const lars::TypeIndex &idx)const {
+std::shared_ptr<glue::Map> ClassElementContext::getMapForType(
+    const revisited::TypeIndex &idx) const {
   auto it = types.find(idx);
   if (it != types.end()) {
     return it->second;
@@ -30,6 +32,6 @@ std::shared_ptr<glue::Map> ClassElementContext::getMapForType(const lars::TypeIn
   }
 }
 
-BoundAny ClassElementContext::bind(lars::Any && v)const {
+BoundAny ClassElementContext::bind(revisited::Any &&v) const {
   return BoundAny(*this, std::move(v));
 }

@@ -1,48 +1,42 @@
+#include <doctest/doctest.h>
 #include <glue/class_element.h>
-#include <catch2/catch.hpp>
 
 namespace {
 
   struct A {
     int data;
-    explicit A(int x):data(x){}
-    A add(const A &other){ return A(other.data + data); }
+    explicit A(int x) : data(x) {}
+    A add(const A &other) { return A(other.data + data); }
   };
 
-  struct B: public A {
+  struct B : public A {
     std::string name;
     using A::A;
-    std::string description() const {
-      return name + ": " + std::to_string(data);
-    }
-    std::string description() {
-      return "non const " + name + ": " + std::to_string(data);
-    }
+    std::string description() const { return name + ": " + std::to_string(data); }
+    std::string description() { return "non const " + name + ": " + std::to_string(data); }
   };
 
-}
+}  // namespace
 
-template <> struct lars::AnyVisitable<B> {
-  using type = lars::DataVisitableWithBases<B,A>;
+template <> struct revisited::AnyVisitable<B> {
+  using type = revisited::DataVisitableWithBases<B, A>;
 };
 
 TEST_CASE("class element") {
-
-  glue::ClassElement<A> AElement = glue::ClassElement<A>()
-  .addConstructor<int>("create")
-  .addMember("data", &A::data)
-  .addMethod("add", &A::add)
-  .addFunction("custom", [](const A &a){ return a.data+1; })
-  ;
+  glue::ClassElement<A> AElement
+      = glue::ClassElement<A>()
+            .addConstructor<int>("create")
+            .addMember("data", &A::data)
+            .addMethod("add", &A::add)
+            .addFunction("custom", [](const A &a) { return a.data + 1; });
 
   glue::ClassElement<B> BElement = glue::ClassElement<B>()
-  .addConstructor<int>("create")
-  .addMember("name", &B::name)
-  .addConstMethod("description", &B::description)
-  .setExtends(AElement)
-  ;
+                                       .addConstructor<int>("create")
+                                       .addMember("name", &B::name)
+                                       .addConstMethod("description", &B::description)
+                                       .setExtends(AElement);
 
-  SECTION("single element"){
+  SUBCASE("single element") {
     glue::ClassElementContext context;
     context.addElement(AElement);
 
@@ -58,11 +52,11 @@ TEST_CASE("class element") {
     CHECK(a["add"](*b)["data"]()->get<int>() == 8);
   }
 
-  SECTION("multiple elements"){
+  SUBCASE("multiple elements") {
     glue::Element elements;
     elements["A"] = AElement;
     elements["B"] = BElement;
- 
+
     glue::ClassElementContext context;
     context.addElement(elements);
 
@@ -72,5 +66,4 @@ TEST_CASE("class element") {
     CHECK(b["data"]()->get<int>() == 42);
     CHECK(b["add"](*b)["data"]()->get<int>() == 84);
   }
-
 }
