@@ -14,16 +14,16 @@ namespace glue {
   public:
     void addMap(const std::shared_ptr<glue::Map> &);
     void addElement(const ElementInterface &);
-    std::shared_ptr<glue::Map> getMapForType(const lars::TypeIndex &) const;
-    BoundAny bind(lars::Any &&v) const;
+    std::shared_ptr<glue::Map> getMapForType(const revisited::TypeIndex &) const;
+    BoundAny bind(revisited::Any &&v) const;
 
   private:
-    std::unordered_map<lars::TypeIndex, std::shared_ptr<glue::Map>> types;
+    std::unordered_map<revisited::TypeIndex, std::shared_ptr<glue::Map>> types;
   };
 
   class BoundAny {
   public:
-    BoundAny(const ClassElementContext &c, lars::Any &&v)
+    BoundAny(const ClassElementContext &c, revisited::Any &&v)
         : data(std::move(v)), context(c), map(context.getMapForType(data.type())) {}
 
     auto operator[](const std::string &name) {
@@ -36,11 +36,11 @@ namespace glue {
       };
     }
 
-    const lars::Any &operator*() const { return data; }
-    const lars::Any *operator->() const { return &data; }
+    const revisited::Any &operator*() const { return data; }
+    const revisited::Any *operator->() const { return &data; }
 
   private:
-    lars::Any data;
+    revisited::Any data;
     const ClassElementContext &context;
     std::shared_ptr<glue::Map> map;
   };
@@ -80,11 +80,11 @@ namespace glue {
       return addConstMethod(name, f);
     }
 
-    ClassElement &addMethod(const std::string &name, lars::AnyFunction f) {
+    ClassElement &addMethod(const std::string &name, revisited::AnyFunction f) {
       return addFunction(name, f);
     }
 
-    ClassElement &addFunction(const std::string &name, lars::AnyFunction f) {
+    ClassElement &addFunction(const std::string &name, revisited::AnyFunction f) {
       (*this)[name] = f;
       return *this;
     }

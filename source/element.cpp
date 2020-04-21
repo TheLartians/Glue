@@ -22,7 +22,7 @@ void ElementMap::setValue(const std::string &key, Any &&value) {
     eraseIfFound(elementObservers.find(key), elementObservers);
   } else {
     if (key == keys::classKey) {
-      auto &type = value.get<const lars::TypeIndex &>();
+      auto &type = value.get<const revisited::TypeIndex &>();
       addClass(type, shared_from_this());
     }
     if (auto *map = value.tryGet<ElementMap>()) {
@@ -38,7 +38,7 @@ void ElementMap::setValue(const std::string &key, Any &&value) {
   onValueChanged.emit(key, value);
 }
 
-void ElementMap::addClass(const lars::TypeIndex &type, const std::shared_ptr<Map> &map) {
+void ElementMap::addClass(const revisited::TypeIndex &type, const std::shared_ptr<Map> &map) {
   auto alreadyAdded = found(classes.find(type), classes);
   classes.emplace(type, map);
   if (!alreadyAdded) {

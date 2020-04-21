@@ -18,7 +18,9 @@ namespace {
 
 }  // namespace
 
-template <> struct lars::AnyVisitable<B> { using type = lars::DataVisitableWithBases<B, A>; };
+template <> struct revisited::AnyVisitable<B> {
+  using type = revisited::DataVisitableWithBases<B, A>;
+};
 
 TEST_CASE("class element") {
   glue::ClassElement<A> AElement

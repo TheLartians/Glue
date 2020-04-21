@@ -1,8 +1,8 @@
 #pragma once
 
-#include <lars/any.h>
-#include <lars/any_function.h>
 #include <lars/event.h>
+#include <revisited/any.h>
+#include <revisited/any_function.h>
 
 #include <initializer_list>
 #include <string>
@@ -12,9 +12,9 @@
 
 namespace glue {
 
-  using Any = lars::Any;
-  using AnyReference = lars::AnyReference;
-  using AnyFunction = lars::AnyFunction;
+  using Any = revisited::Any;
+  using AnyReference = revisited::AnyReference;
+  using AnyFunction = revisited::AnyFunction;
 
   struct ElementInterface;
   class Map;
@@ -35,7 +35,7 @@ namespace glue {
     typename std::enable_if<std::is_base_of<ElementInterface, typename std::decay<T>::type>::value,
                             AnyReference>::type
     convertArgument(T &&arg) {
-      return lars::AnyReference(arg.getValue());
+      return revisited::AnyReference(arg.getValue());
     }
     template <class T>
     typename std::enable_if<!std::is_base_of<ElementInterface, typename std::decay<T>::type>::value,
@@ -128,7 +128,7 @@ namespace glue {
     template <class T> Element &addValue(const std::string &key, T &&value);
   };
 
-  class Map : public lars::Visitable<Map>, public std::enable_shared_from_this<Map> {
+  class Map : public revisited::Visitable<Map>, public std::enable_shared_from_this<Map> {
   public:
     using Entry = ElementMapEntry;
 
@@ -146,16 +146,16 @@ namespace glue {
     virtual ~Map() {}
   };
 
-  using ClassMaps = std::unordered_map<lars::TypeIndex, std::shared_ptr<Map>>;
+  using ClassMaps = std::unordered_map<revisited::TypeIndex, std::shared_ptr<Map>>;
 
-  struct ElementMap : public lars::DerivedVisitable<ElementMap, Map> {
+  struct ElementMap : public revisited::DerivedVisitable<ElementMap, Map> {
     AnyReference getValue(const std::string &key) const final override;
     void setValue(const std::string &key, Any &&value) final override;
     std::vector<std::string> keys() const final override;
     std::unordered_map<std::string, Element> data;
     std::unordered_map<std::string, lars::Observer> elementObservers;
-    lars::Event<const lars::TypeIndex &, const std::shared_ptr<Map> &> onClassAdded;
-    void addClass(const lars::TypeIndex &, const std::shared_ptr<Map> &);
+    lars::Event<const revisited::TypeIndex &, const std::shared_ptr<Map> &> onClassAdded;
+    void addClass(const revisited::TypeIndex &, const std::shared_ptr<Map> &);
     ClassMaps classes;
   };
 
@@ -215,14 +215,14 @@ namespace glue {
   }
 
   template <class T> void setClass(ElementInterface &element) {
-    element[keys::classKey] = lars::getTypeIndex<T>();
-    element[keys::constClassKey] = lars::getTypeIndex<const T>();
-    element[keys::sharedClassKey] = lars::getTypeIndex<std::shared_ptr<T>>();
-    element[keys::sharedConstClassKey] = lars::getTypeIndex<std::shared_ptr<const T>>();
+    element[keys::classKey] = revisited::getTypeIndex<T>();
+    element[keys::constClassKey] = revisited::getTypeIndex<const T>();
+    element[keys::sharedClassKey] = revisited::getTypeIndex<std::shared_ptr<T>>();
+    element[keys::sharedConstClassKey] = revisited::getTypeIndex<std::shared_ptr<const T>>();
   }
 
-  inline std::shared_ptr<lars::TypeIndex> getClass(ElementInterface &element) {
-    return element[keys::classKey].tryGet<lars::TypeIndex>();
+  inline std::shared_ptr<revisited::TypeIndex> getClass(ElementInterface &element) {
+    return element[keys::classKey].tryGet<revisited::TypeIndex>();
   }
 
   template <class T> Element &Element::addValue(const std::string &key, T &&value) {

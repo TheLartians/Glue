@@ -27,7 +27,7 @@ include(cmake/CPM.cmake)
 CPMAddPackage(
   NAME PackageProject.cmake
   GITHUB_REPOSITORY TheLartians/PackageProject.cmake
-  VERSION 1.0
+  VERSION 1.2
 )
 
 CPMAddPackage(
@@ -37,22 +37,15 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME LHC
-  VERSION 0.8
-  GIT_REPOSITORY https://github.com/TheLartians/LHC.git
-)
-
-CPMAddPackage(
   NAME LarsEvent
   VERSION 2.1
-  GIT_REPOSITORY https://github.com/TheLartians/Event.git
+  GITHUB_REPOSITORY TheLartians/Event
 )
 
 CPMAddPackage(
-  NAME LarsVisitor
-  VERSION 1.7.6
-  GIT_TAG a108276cfb4c8b8b1b193d64ede783253d335d6d
-  GIT_REPOSITORY https://github.com/TheLartians/Visitor.git
+  NAME Revisited
+  VERSION 2.0
+  GITHUB_REPOSITORY TheLartians/Revisited
 )
 
 # ---- Add source files ----
@@ -76,7 +69,7 @@ set_target_properties(Glue PROPERTIES CXX_STANDARD 17)
 target_compile_options(Glue PUBLIC "$<$<BOOL:${MSVC}>:/permissive->")
 
 # Link dependencies (if required)
-target_link_libraries(Glue PUBLIC EasyIterator LarsVisitor LarsEvent LHC)
+target_link_libraries(Glue PUBLIC EasyIterator Revisited LarsEvent)
 
 target_include_directories(Glue
   PUBLIC

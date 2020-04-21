@@ -93,12 +93,12 @@ TEST_CASE("element for class") {
   Element base;
   setClass<Base>(base);
   REQUIRE(getClass(base) != nullptr);
-  REQUIRE(*getClass(base) == lars::getTypeIndex<Base>());
+  REQUIRE(*getClass(base) == revisited::getTypeIndex<Base>());
   base["value"] = [](Base &b) { return b.value; };
 
   Element a;
   setClass<A>(a);
-  REQUIRE(*getClass(a) == lars::getTypeIndex<A>());
+  REQUIRE(*getClass(a) == revisited::getTypeIndex<A>());
   setExtends(a, base);
   a["create"] = [](int v) { return Any::withBases<A, Base>(v); };
 
