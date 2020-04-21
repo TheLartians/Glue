@@ -65,6 +65,6 @@ doctest_discover_tests(GlueTests)
 # ---- code coverage ----
 
 if (ENABLE_TEST_COVERAGE)
-  target_compile_options(Glue PRIVATE -O0 -g -fprofile-arcs -ftest-coverage --coverage)
-  target_link_options(Glue PUBLIC "--coverage")
+  target_compile_options(Glue PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+  target_link_options(Glue PUBLIC -fprofile-arcs -ftest-coverage)
 endif()
