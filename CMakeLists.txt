@@ -19,11 +19,9 @@ endif()
 include(cmake/tools.cmake)
 
 # ---- Add dependencies via CPM ----
-# see https://github.com/TheLartians/CPM.cmake for more info
 
 include(cmake/CPM.cmake)
 
-# PackageProject.cmake will be used to make our target installable
 CPMAddPackage(
   NAME PackageProject.cmake
   GITHUB_REPOSITORY TheLartians/PackageProject.cmake
@@ -44,22 +42,16 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME Revisited
-  VERSION 2.0
+  VERSION 2.1
   GITHUB_REPOSITORY TheLartians/Revisited
 )
 
 # ---- Add source files ----
 
-# Note: globbing sources is considered bad practice as CMake's generators may not detect new files automatically.
-# Keep that in mind when changing files, or explicitly mention them here.
 FILE(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 FILE(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
 
 # ---- Create library ----
-
-# Note: for header-only libraries change all PUBLIC flags to INTERFACE and create an interface target:
-# add_library(Glue INTERFACE)  
-# set_target_properties(Glue PROPERTIES INTERFACE_COMPILE_FEATURES cxx_std_17)
 
 add_library(Glue ${headers} ${sources})
 
@@ -68,7 +60,6 @@ set_target_properties(Glue PROPERTIES CXX_STANDARD 17)
 # beeing a cross-platform target, we enforce enforce standards conformance on MSVC
 target_compile_options(Glue PUBLIC "$<$<BOOL:${MSVC}>:/permissive->")
 
-# Link dependencies (if required)
 target_link_libraries(Glue PUBLIC EasyIterator Revisited LarsEvent)
 
 target_include_directories(Glue
