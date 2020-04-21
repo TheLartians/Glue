@@ -100,7 +100,7 @@ namespace glue {
       }
       addConstMember(name, ptr);
       std::string setName = "set" + name;
-      setName[3] = toupper(setName[3]);
+      setName[3] = char(toupper(setName[3]));
       (*this)[setName] = [ptr](T &o, const O &v) { o.*ptr = v; };
       return *this;
     }
