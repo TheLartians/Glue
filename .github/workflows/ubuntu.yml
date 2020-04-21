@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v1
     
     - name: configure
-      run: CXX=g++-9 cmake -Htest -Bbuild -DENABLE_TEST_COVERAGE=1
+      run: CXX=g++-8 cmake -Htest -Bbuild -DENABLE_TEST_COVERAGE=1
 
     - name: build
       run: cmake --build build --config Debug -j4
@@ -25,5 +25,14 @@ jobs:
         cd build
         ctest --build-config Debug
 
+    - name: install code coverage tools
+      run: |
+        wget https://github.com/linux-test-project/lcov/releases/download/v1.14/lcov-1.14.tar.gz
+        tar xvfz lcov-1.14.tar.gz;
+        sudo make install -C lcov-1.14
+
     - name: collect code coverage
-      run: bash <(curl -s https://codecov.io/bash) -x gcov-9 || echo "Codecov did not collect coverage reports"
+      run: |
+        lcov --gcov-tool $(which gcov-8) --directory . --capture --no-external --exclude "*tests*" --exclude "*_deps*" --quiet --output-file coverage.info
+        lcov --gcov-tool $(which gcov-8) --list coverage.info
+        bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
