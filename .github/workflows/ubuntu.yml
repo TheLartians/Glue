@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v1
     
     - name: configure
-      run: cmake -Htest -Bbuild -DENABLE_TEST_COVERAGE=1
+      run: CXX=g++-9 cmake -Htest -Bbuild -DENABLE_TEST_COVERAGE=1
 
     - name: build
       run: cmake --build build --config Debug -j4
@@ -26,4 +26,4 @@ jobs:
         ctest --build-config Debug
 
     - name: collect code coverage
-      run: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+      run: bash <(curl -s https://codecov.io/bash) -x gcov-9 || echo "Codecov did not collect coverage reports"
