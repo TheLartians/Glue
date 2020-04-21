@@ -8,8 +8,8 @@ using easy_iterator::found;
 AnyReference ElementMap::getValue(const std::string &key) const {
   if (auto v = found(data.find(key), data)) {
     return v->second.getValue();
-  } else if (auto v = found(data.find(keys::extendsKey), data)) {
-    if (auto map = v->second.asMap()) {
+  } else if (auto ev = found(data.find(keys::extendsKey), data)) {
+    if (auto map = ev->second.asMap()) {
       return map->getValue(key);
     }
   }
