@@ -1,53 +1,47 @@
 #pragma once
 
-#include <glue/element.h>
+#include <glue/map.h>
+#include <glue/any_element.h>
+#include <glue/element_map_entry.h>
 
 #include <cctype>
 #include <exception>
 #include <unordered_map>
 
 namespace glue {
-
-  class BoundAny;
-
-  class ClassElementContext {
-  public:
-    void addMap(const std::shared_ptr<glue::Map> &);
-    void addElement(const ElementInterface &);
-    std::shared_ptr<glue::Map> getMapForType(const revisited::TypeIndex &) const;
-    BoundAny bind(revisited::Any &&v) const;
-
-  private:
-    std::unordered_map<revisited::TypeIndex, std::shared_ptr<glue::Map>> types;
+  
+  struct ClassInfo {
+    revisited::TypeID typeID;
+    revisited::TypeID constTypeID;
+    revisited::TypeID sharedTypeID;
+    revisited::TypeID sharedConstTypeID;
   };
+  
+  template <class T> ClassInfo createClassInfo() {
+    ClassInfo result;
+    result.typeID = revisited::getTypeID<T>();
+    result.constTypeID = revisited::getTypeID<const T>();
+    result.sharedTypeID = revisited::getTypeID<std::shared_ptr<T>>();
+    result.sharedConstTypeID = revisited::getTypeID<std::shared_ptr<const T>>();
+    return result;
+  }
+  
+  template <class T> void setClassInfo(Element &element) {
+    element[keys::classKey] = createClassInfo<T>();
+  }
 
-  class BoundAny {
+  inline auto getClassInfo(Element &element) {
+    return element[keys::classKey].tryGet<ClassInfo>();
+  }
+
+  template <class T> AnyElement &AnyElement::addValue(const std::string &key, T &&value) {
+    (*this)[key] = std::forward<T>(value);
+    return *this;
+  }
+  
+  template <class T> class ClassElement : public AnyElement {
   public:
-    BoundAny(const ClassElementContext &c, revisited::Any &&v)
-        : data(std::move(v)), context(c), map(context.getMapForType(data.type())) {}
-
-    auto operator[](const std::string &name) {
-      return [this, name](auto &&... args) -> BoundAny {
-        if (!map) {
-          throw std::runtime_error("called glue accessor on non-registered type");
-        } else {
-          return context.bind((*map)[name](data, args...));
-        }
-      };
-    }
-
-    const revisited::Any &operator*() const { return data; }
-    const revisited::Any *operator->() const { return &data; }
-
-  private:
-    revisited::Any data;
-    const ClassElementContext &context;
-    std::shared_ptr<glue::Map> map;
-  };
-
-  template <class T> class ClassElement : public Element {
-  public:
-    ClassElement() { setClass<T>(*this); }
+    ClassElement() { setClassInfo<T>(*this); }
 
     template <typename... Args>
     ClassElement &addConstructor(const std::string &name = keys::constructorKey) {
@@ -105,7 +99,7 @@ namespace glue {
       return *this;
     }
 
-    ClassElement &setExtends(const ElementInterface &e) {
+    ClassElement &setBase(const Element &e) {
       glue::setExtends(*this, e);
       return *this;
     }
@@ -115,5 +109,5 @@ namespace glue {
       return *this;
     }
   };
-
+  
 }  // namespace glue

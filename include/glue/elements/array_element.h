@@ -1,12 +1,12 @@
 #pragma once
 
-#include <glue/class_element.h>
+#include <glue/elements/class_element.h>
 
 #include <exception>
 
 namespace glue {
 
-  template <class T, class V = typename T::value_type> Element ArrayElement() {
+  template <class T, class V = typename T::value_type> AnyElement createArrayElement() {
     return glue::ClassElement<T>()
         .addConstructor()
         .addMethod("push", [](T &arr, V v) { arr.emplace_back(std::move(v)); })

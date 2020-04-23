@@ -1,12 +1,13 @@
 #include <doctest/doctest.h>
-#include <glue/element.h>
+#include <glue/any_element.h>
+#include <glue/map.h>
 
 #include <set>
 
 using namespace glue;
 
 TEST_CASE("Element") {
-  Element element;
+  AnyElement element;
 
   SUBCASE("empty element") {
     REQUIRE(!element);
@@ -66,7 +67,7 @@ TEST_CASE("Element") {
 
   SUBCASE("extends") {
     element["a"] = 5;
-    Element inner;
+    AnyElement inner;
     setExtends(inner, element);
     REQUIRE(inner["a"].get<int>() == 5);
     inner["a"] = 42;
@@ -77,48 +78,19 @@ TEST_CASE("Element") {
   }
 }
 
-TEST_CASE("element for class") {
-  struct Base {
-    int value;
-    Base() = default;
-    Base(Base &&) = default;
-    Base(const Base &other) = delete;
-  };
-
-  struct A : public Base {
-    A(int v) { value = v; }
-    int member(int v) { return value + v; };
-  };
-
-  Element base;
-  setClass<Base>(base);
-  REQUIRE(getClass(base) != nullptr);
-  REQUIRE(*getClass(base) == revisited::getTypeIndex<Base>());
-  base["value"] = [](Base &b) { return b.value; };
-
-  Element a;
-  setClass<A>(a);
-  REQUIRE(*getClass(a) == revisited::getTypeIndex<A>());
-  setExtends(a, base);
-  a["create"] = [](int v) { return Any::withBases<A, Base>(v); };
-
-  auto av = a["create"](42);
-  REQUIRE(a["value"](av).get<int>() == 42);
-}
-
 TEST_CASE("copy assignments") {
-  Element a;
+  AnyElement a;
 
-  SUBCASE("copy element") { Element b = a; }
+  SUBCASE("copy constructor") { AnyElement b = a; }
 
   SUBCASE("copy assignment") {
-    Element b;
+    AnyElement b;
     b = a;
   }
 
   SUBCASE("copy element entry") {
     a["x"] = 42;
-    Element b;
+    AnyElement b;
     b["x"] = a["x"];
   }
 }
