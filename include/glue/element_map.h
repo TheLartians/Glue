@@ -17,7 +17,7 @@ namespace glue {
   public:
     Any getValue(const std::string &key) const final override;
     void setValue(const std::string &key, Any &&value) final override;
-    std::vector<std::string> keys() const final override;
+    bool forEach(std::function<bool(const std::string &, const Any &)>) const final override;
   };
 
 }  // namespace glue

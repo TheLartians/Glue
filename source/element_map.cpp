@@ -29,12 +29,11 @@ void ElementMap::setValue(const std::string &key, Any &&value) {
   onValueChanged.emit(key, value);
 }
 
-std::vector<std::string> ElementMap::keys() const {
-  std::vector<std::string> result;
-  for (auto it = data.begin(), end = data.end(); it != end; ++it) {
-    result.push_back(it->first);
+bool ElementMap::forEach(std::function<bool(const std::string &, const Any &)> callback) const {
+  for (auto &&v: data) {
+    if (callback(v.first, v.second)) return true;
   }
-  return result;
+  return false;
 }
 
 ElementMapEntry Map::operator[](const std::string &key) { return ElementMapEntry(this, key); }
