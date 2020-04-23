@@ -1,5 +1,5 @@
-#include <glue/element_map_entry.h>
 #include <glue/element_map.h>
+#include <glue/element_map_entry.h>
 
 using namespace glue;
 

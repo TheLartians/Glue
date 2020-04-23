@@ -1,10 +1,11 @@
 #pragma once
 
 #include <glue/element.h>
-#include <unordered_map>
 #include <revisited/type_index.h>
-#include <vector>
+
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace glue {
 
@@ -19,4 +20,4 @@ namespace glue {
     std::unordered_map<revisited::TypeIndex, ContextClass> classes;
   };
 
-}
+}  // namespace glue

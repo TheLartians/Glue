@@ -24,7 +24,7 @@ template <> struct revisited::AnyVisitable<B> {
 
 TEST_CASE("element for class") {
   using namespace glue;
-  
+
   struct Base {
     int value;
     Base() = default;
@@ -66,35 +66,35 @@ TEST_CASE("class element") {
                                        .addMember("name", &B::name)
                                        .addConstMethod("description", &B::description)
                                        .setBase(AElement);
-// TODO
-//  SUBCASE("single element") {
-//    glue::ClassElementContext context;
-//    context.addElement(AElement);
-//
-//    auto a = context.bind(AElement["create"](42));
-//
-//    CHECK(AElement["data"](*a).get<int>() == 42);
-//    CHECK(a["data"]()->get<int>() == 42);
-//    CHECK_NOTHROW(a["setData"](3));
-//    CHECK(a["data"]()->get<int>() == 3);
-//    CHECK(a["custom"]()->get<int>() == 4);
-//
-//    auto b = context.bind(AElement["create"](5));
-//    CHECK(a["add"](*b)["data"]()->get<int>() == 8);
-//  }
-//
-//  SUBCASE("multiple elements") {
-//    glue::Element elements;
-//    elements["A"] = AElement;
-//    elements["B"] = BElement;
-//
-//    glue::ClassElementContext context;
-//    context.addElement(elements);
-//
-//    auto b = context.bind(BElement["create"](42));
-//    CHECK_NOTHROW(b["setName"]("BB"));
-//    CHECK(b["description"]()->get<std::string>() == "BB: 42");
-//    CHECK(b["data"]()->get<int>() == 42);
-//    CHECK(b["add"](*b)["data"]()->get<int>() == 84);
-//  }
+  // TODO
+  //  SUBCASE("single element") {
+  //    glue::ClassElementContext context;
+  //    context.addElement(AElement);
+  //
+  //    auto a = context.bind(AElement["create"](42));
+  //
+  //    CHECK(AElement["data"](*a).get<int>() == 42);
+  //    CHECK(a["data"]()->get<int>() == 42);
+  //    CHECK_NOTHROW(a["setData"](3));
+  //    CHECK(a["data"]()->get<int>() == 3);
+  //    CHECK(a["custom"]()->get<int>() == 4);
+  //
+  //    auto b = context.bind(AElement["create"](5));
+  //    CHECK(a["add"](*b)["data"]()->get<int>() == 8);
+  //  }
+  //
+  //  SUBCASE("multiple elements") {
+  //    glue::Element elements;
+  //    elements["A"] = AElement;
+  //    elements["B"] = BElement;
+  //
+  //    glue::ClassElementContext context;
+  //    context.addElement(elements);
+  //
+  //    auto b = context.bind(BElement["create"](42));
+  //    CHECK_NOTHROW(b["setName"]("BB"));
+  //    CHECK(b["description"]()->get<std::string>() == "BB: 42");
+  //    CHECK(b["data"]()->get<int>() == 42);
+  //    CHECK(b["add"](*b)["data"]()->get<int>() == 84);
+  //  }
 }

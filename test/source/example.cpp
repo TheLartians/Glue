@@ -24,7 +24,4 @@ void example() {
 }
 // clang-format on
 
-
-TEST_CASE("Example") {
-  CHECK_NOTHROW(example());
-}
+TEST_CASE("Example") { CHECK_NOTHROW(example()); }

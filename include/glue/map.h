@@ -1,12 +1,12 @@
 #pragma once
 
 #include <glue/types.h>
-#include <lars/event.h>
+#include <observe/event.h>
 
 namespace glue {
 
   class ElementMapEntry;
-  
+
   /**
    * Base class for element maps
    */
@@ -16,7 +16,7 @@ namespace glue {
     virtual void setValue(const Key &key, Any &&value) = 0;
     virtual std::vector<Key> keys() const = 0;
 
-    lars::Event<const Key &, const Any &> onValueChanged;
+    observe::Event<const Key &, const Any &> onValueChanged;
 
     Map() {}
     Map(const Map &) = delete;
@@ -25,4 +25,4 @@ namespace glue {
     ElementMapEntry operator[](const Key &key);
   };
 
-}
+}  // namespace glue

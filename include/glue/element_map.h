@@ -4,14 +4,14 @@
 #include <glue/element_map_entry.h>
 
 namespace glue {
-  
+
   /**
    * A Map implementation that stores it's data in Elements
    */
   class ElementMap : public revisited::DerivedVisitable<ElementMap, Map> {
   protected:
     std::unordered_map<std::string, AnyElement> data;
-    std::unordered_map<std::string, lars::Observer> elementObservers;
+    std::unordered_map<std::string, observe::Observer> elementObservers;
     std::shared_ptr<Map> extends;
 
   public:
@@ -20,4 +20,4 @@ namespace glue {
     std::vector<std::string> keys() const final override;
   };
 
-}
+}  // namespace glue

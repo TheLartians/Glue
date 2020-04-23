@@ -1,12 +1,13 @@
 #pragma once
 
+#include <glue/types.h>
+
 #include <type_traits>
 #include <utility>
-#include <glue/types.h>
 
 namespace glue {
 
-    namespace detail {
+  namespace detail {
     /**
      * detect callable types.
      * source: https://stackoverflow.com/questions/15393938/
@@ -23,7 +24,7 @@ namespace glue {
     convertArgument(T &&arg) {
       return revisited::Any(arg.getValue());
     }
-    
+
     template <class T>
     typename std::enable_if<!std::is_base_of<Element, typename std::decay<T>::type>::value,
                             T &&>::type
@@ -33,4 +34,4 @@ namespace glue {
 
   }  // namespace detail
 
-}
+}  // namespace glue

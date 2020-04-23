@@ -29,4 +29,4 @@ namespace glue {
     }  // namespace operators
   }    // namespace keys
 
-}
+}  // namespace glue

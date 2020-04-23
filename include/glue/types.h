@@ -4,7 +4,7 @@
 #include <revisited/any_function.h>
 
 namespace glue {
-  
+
   class AnyElement;
   class Element;
   class Map;
@@ -14,4 +14,4 @@ namespace glue {
   using AnyFunction = revisited::AnyFunction;
   using Key = std::string;
 
-} // namespace glue
+}  // namespace glue

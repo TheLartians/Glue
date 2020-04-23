@@ -1,22 +1,22 @@
 #pragma once
 
-#include <glue/map.h>
 #include <glue/any_element.h>
 #include <glue/element_map_entry.h>
+#include <glue/map.h>
 
 #include <cctype>
 #include <exception>
 #include <unordered_map>
 
 namespace glue {
-  
+
   struct ClassInfo {
     revisited::TypeID typeID;
     revisited::TypeID constTypeID;
     revisited::TypeID sharedTypeID;
     revisited::TypeID sharedConstTypeID;
   };
-  
+
   template <class T> ClassInfo createClassInfo() {
     ClassInfo result;
     result.typeID = revisited::getTypeID<T>();
@@ -25,20 +25,18 @@ namespace glue {
     result.sharedConstTypeID = revisited::getTypeID<std::shared_ptr<const T>>();
     return result;
   }
-  
+
   template <class T> void setClassInfo(Element &element) {
     element[keys::classKey] = createClassInfo<T>();
   }
 
-  inline auto getClassInfo(Element &element) {
-    return element[keys::classKey].tryGet<ClassInfo>();
-  }
+  inline auto getClassInfo(Element &element) { return element[keys::classKey].tryGet<ClassInfo>(); }
 
   template <class T> AnyElement &AnyElement::addValue(const std::string &key, T &&value) {
     (*this)[key] = std::forward<T>(value);
     return *this;
   }
-  
+
   template <class T> class ClassElement : public AnyElement {
   public:
     ClassElement() { setClassInfo<T>(*this); }
@@ -109,5 +107,5 @@ namespace glue {
       return *this;
     }
   };
-  
+
 }  // namespace glue

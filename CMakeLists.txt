@@ -35,9 +35,9 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME LarsEvent
-  VERSION 2.1
-  GITHUB_REPOSITORY TheLartians/Event
+  NAME Observe
+  VERSION 3.0
+  GITHUB_REPOSITORY TheLartians/Observe
 )
 
 CPMAddPackage(
@@ -67,7 +67,7 @@ set_target_properties(Glue PROPERTIES CXX_STANDARD 17)
 # beeing a cross-platform target, we enforce enforce standards conformance on MSVC
 target_compile_options(Glue PUBLIC "$<$<BOOL:${MSVC}>:/permissive->")
 
-target_link_libraries(Glue PUBLIC EasyIterator Revisited LarsEvent)
+target_link_libraries(Glue PUBLIC EasyIterator Revisited Observe)
 
 target_include_directories(Glue
   PUBLIC
@@ -84,5 +84,5 @@ packageProject(
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
   INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-  DEPENDENCIES "LarsEvent;Revisited;EasyIterator"
+  DEPENDENCIES "Observe;Revisited;EasyIterator"
 )
