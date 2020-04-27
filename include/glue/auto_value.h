@@ -2,9 +2,8 @@
 
 namespace glue {
 
-  struct AutoValue: public ValueBase {
+  struct AutoValue : public ValueBase {
     std::shared_ptr<Value> value;
-    
   };
-  
-}
+
+}  // namespace glue

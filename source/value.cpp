@@ -1,16 +1,12 @@
-#include <glue/value.h>
 #include <glue/anymap.h>
 #include <glue/keys.h>
+#include <glue/value.h>
 
 using namespace glue;
 
-MapValue glue::createAnyMap() {
-  return MapValue{std::make_shared<AnyMap>()};
-}
+MapValue glue::createAnyMap() { return MapValue{std::make_shared<AnyMap>()}; }
 
-MapValue Value::asMap() const {
-  return MapValue{data.getShared<Map>()};
-}
+MapValue Value::asMap() const { return MapValue{data.getShared<Map>()}; }
 
 AnyFunction Value::asFunction() const {
   if (auto f = data.as<AnyFunction>()) {
@@ -22,7 +18,10 @@ AnyFunction Value::asFunction() const {
 
 std::vector<std::string> MapValue::keys() const {
   std::vector<std::string> keys;
-  data->forEach([&](auto && key, auto &&){ keys.push_back(key); return false; });
+  data->forEach([&](auto &&key, auto &&) {
+    keys.push_back(key);
+    return false;
+  });
   return keys;
 }
 
@@ -39,6 +38,4 @@ Value MapValue::get(const std::string &key) const {
   return Value();
 }
 
-void MapValue::setExtends(Value v)const {
-  (*this)[keys::extendsKey] = std::move(v);
-}
+void MapValue::setExtends(Value v) const { (*this)[keys::extendsKey] = std::move(v); }

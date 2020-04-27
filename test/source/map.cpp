@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
-#include <glue/value.h>
+#include <glue/instance.h>
 #include <glue/keys.h>
+#include <glue/value.h>
 
 using namespace glue;
 
@@ -12,7 +13,7 @@ TEST_CASE("MapValue") {
   REQUIRE(map["value"]);
   CHECK(map["value"]->as<int>() == 3);
 
-  REQUIRE_NOTHROW(map["function"] = [](int x){ return 42 + x; });
+  REQUIRE_NOTHROW(map["function"] = [](int x) { return 42 + x; });
   CHECK(map["function"].asFunction());
   CHECK(map["function"].asFunction()(3).as<int>() == 45);
 
@@ -39,7 +40,7 @@ TEST_CASE("Extended map") {
   }
 
   SUBCASE("extends callback") {
-    map[glue::keys::extendsKey] = [](const glue::MapValue &, std::string key){ return key; };
+    map[glue::keys::extendsKey] = [](const glue::MapValue &, std::string key) { return key; };
     CHECK(map["a"]->as<std::string>() == "a");
     CHECK(map["b"]->as<std::string>() == "b");
   }
@@ -53,5 +54,4 @@ TEST_CASE("Extended map") {
     CHECK(map2["a"]->as<int>() == 4);
     CHECK(map2["b"]->as<int>() == 2);
   }
-
 }
