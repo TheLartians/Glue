@@ -33,7 +33,7 @@ Value MapValue::get(const std::string &key) const {
     if (MapValue map = extends.asMap()) {
       return map.get(key);
     } else if (auto callback = extends.asFunction()) {
-      return callback(key);
+      return callback(*this, key);
     }
   }
   return Value();

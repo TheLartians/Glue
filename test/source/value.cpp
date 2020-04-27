@@ -27,17 +27,3 @@ TEST_CASE("Value") {
   CHECK(value.asMap()["x"]->as<int>() == 42);
 }
 
-TEST_CASE("MapValue") {
-  auto map = createAnyMap();
-
-  CHECK(!map["value"]);
-  REQUIRE_NOTHROW(map["value"] = 3);
-  REQUIRE(map["value"]);
-  CHECK(map["value"]->as<int>() == 3);
-
-  REQUIRE_NOTHROW(map["function"] = [](int x){ return 42 + x; });
-  CHECK(map["function"].asFunction());
-  CHECK(map["function"].asFunction()(3).as<int>() == 45);
-
-  CHECK(map.keys() == std::vector<std::string>{"function", "value"});
-}
