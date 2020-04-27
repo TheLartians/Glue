@@ -1,46 +1,43 @@
 #include <doctest/doctest.h>
 #include <glue/value.h>
+#include <glue/anymap.h>
 
-#include <unordered_map>
-#include <easy_iterator.h>
+using namespace glue;
 
-using namespace glue2;
-
-struct AnyMap: public Map {
-  std::unordered_map<std::string, Any> data;
-
-  Any get(const std::string &key) const {
-    if (auto it = easy_iterator::find(data, key)) {
-      return it->second;
-    } else {
-      return Any();
-    }
-  }
-
-  void set(const std::string &key, const Any &value) {
-    data[key] = value;
-  }
-
-  bool forEach(std::function<bool(const std::string &, const Any &)> callback) const {
-    for (auto && v: data) {
-      if (callback(v.first, v.second)) return true;
-    }
-    return false;
-  }
-
-};
-
-TEST_CASE("value") {
+TEST_CASE("Value") {
   Value value;
-  *value = 42;
-
   CHECK(!value.asFunction());
   CHECK(!value.asMap());
-  CHECK(value->get<int>() == 42);
+  CHECK(!value);
 
-  MapValue map{std::make_shared<AnyMap>()};
+  value = 42;
+  CHECK(!value.asFunction());
+  CHECK(!value.asMap());
+  CHECK(value->as<int>() == 42);
+
+  value = [](int x){ return 42 + x; };
+  REQUIRE(value.asFunction());
+  CHECK(value.asFunction()(3).as<int>() == 45);
+  CHECK(!value.asMap());
+
+  value = createAnyMap();
+  CHECK(!value.asFunction());
+  REQUIRE(value.asMap());
+  CHECK_NOTHROW(value.asMap()["x"] = 42);
+  CHECK(value.asMap()["x"]->as<int>() == 42);
+}
+
+TEST_CASE("MapValue") {
+  auto map = createAnyMap();
+
   CHECK(!map["value"]);
   REQUIRE_NOTHROW(map["value"] = 3);
   REQUIRE(map["value"]);
-  CHECK(map["value"]->get<int>() == 3);
+  CHECK(map["value"]->as<int>() == 3);
+
+  REQUIRE_NOTHROW(map["function"] = [](int x){ return 42 + x; });
+  CHECK(map["function"].asFunction());
+  CHECK(map["function"].asFunction()(3).as<int>() == 45);
+
+  CHECK(map.keys() == std::vector<std::string>{"function", "value"});
 }

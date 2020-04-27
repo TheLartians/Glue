@@ -1,34 +1,17 @@
 #pragma once
 
-#include <glue/types.h>
-#include <observe/event.h>
-#include <functional>
+#include <revisited/any.h>
+#include <revisited/any_function.h>
 
-namespace glue {
+namespace  glue {
 
-  class ElementMapEntry;
+  using Any = revisited::Any;
+  using AnyFunction = revisited::AnyFunction;
 
-  /**
-   * Base class for element maps
-   */
-  class Map : public revisited::Visitable<Map> {
-  public:
-    virtual Any getValue(const Key &key) const = 0;
-    virtual void setValue(const Key &key, Any &&value) = 0;
-    
-    /**
-     * Iterate over all key/value pairs until the callback returns true
-     * Returns `true` if callback returned true, `false` otherwise
-     */
+  struct Map: public revisited::Visitable<Map> {
+    virtual Any get(const std::string &) const = 0;
+    virtual void set(const std::string &, const Any &) = 0;
     virtual bool forEach(std::function<bool(const std::string &, const Any &)>) const = 0;
-
-    observe::Event<const Key &, const Any &> onValueChanged;
-
-    Map() {}
-    Map(const Map &) = delete;
-    virtual ~Map() {}
-
-    ElementMapEntry operator[](const Key &key);
   };
 
-}  // namespace glue
+} // namespace  glue

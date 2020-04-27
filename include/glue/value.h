@@ -1,46 +1,115 @@
+#pragma once
 
-#include <revisited/any.h>
-#include <revisited/any_function.h>
 #include <optional>
 #include <functional>
+#include <vector>
+#include <glue/map.h>
 
-namespace glue2 {
+namespace glue {
 
-  using Any = revisited::Any;
-  using AnyFunction = revisited::AnyFunction;
-
-  struct Map: public revisited::Visitable<Map> {
-    virtual Any get(const std::string &) const = 0;
-    virtual void set(const std::string &, const Any &) = 0;
-    virtual bool forEach(std::function<bool(const std::string &, const Any &)>) const = 0;
-  };
+  namespace detail {
+    /**
+     * detect callable types.
+     * source: https://stackoverflow.com/questions/15393938/
+     */
+    template <class...> using void_t = void;
+    template <class T> using has_opr_t = decltype(&T::operator());
+    template <class T, class = void> struct is_callable : std::false_type {};
+    template <class T> struct is_callable<T, void_t<has_opr_t<typename std::decay<T>::type>>>
+        : std::true_type {};
+  }
 
   struct MapValue;
+  struct FunctionValue;
+  
+  /**
+   * The base class for value wrappers that store their actual data in a `data` member.
+   */
+  struct ValueBase {};
 
-  struct Value {
+  struct Value: public ValueBase {
     Any data;
 
+    Value() = default;
+    Value(const Value &) = default;
+    Value(Value &&) = default;
+    
+    template <class T> Value(T &&v) {
+      *this = std::forward<T>(v);
+    }
+
     Any value()const { return data; }
+
     MapValue asMap() const;
-    std::optional<AnyFunction> asFunction() const;
+    AnyFunction asFunction() const;
 
     explicit operator bool() const { return bool(this->data); }
     const auto *operator->() const { return &this->data; }
     auto *operator->() { return &this->data; }
     const auto &operator*() const { return this->data; }
     auto &operator*() { return this->data; }
+
+    template <class T, typename = typename std::enable_if<
+                          !std::is_base_of<ValueBase, typename std::decay<T>::type>::value>::type>
+    Value &operator=(T &&value) {
+      if constexpr (detail::is_callable<T>::value) {
+        **this = Any::create<AnyFunction>(value);
+      } else {
+        **this = std::forward<T>(value);
+      }
+      return *this;
+    }
+
+    template <class T> typename std::enable_if<std::is_base_of<ValueBase, typename std::decay<T>::type>::value, Value>::type &
+    operator=(T &&value) {
+      **this = value.data;
+      return *this;
+    }
+
+    Value &operator=(const Value &) = default;
   };
 
-  struct MapValue {
+  struct MapValue: public ValueBase {
     std::shared_ptr<Map> data;
+
+    MapValue() = default;
+    MapValue(const MapValue &) = default;
+    MapValue(MapValue &&) = default;
+    MapValue(std::shared_ptr<Map> d): data(std::move(d)) {}
 
     struct MappedValue: public Value {
       Map &parent;
       std::string key;
-      MappedValue &operator=(const Any &value){ parent.set(key, value); return *this; }
+
+      void set(const std::string &key, Any value) {
+        parent.set(key, std::move(value));
+      }
+  
+      template <class T>
+      typename std::enable_if<!std::is_base_of<ValueBase, typename std::decay<T>::type>::value,MappedValue &>::type 
+      operator=(T &&value) {
+        if constexpr (detail::is_callable<T>::value) {
+          set(key, Any::create<AnyFunction>(value));
+        } else {
+          set(key, std::forward<T>(value));
+        }
+        return *this;
+      }
+
+      template <class T>
+      typename std::enable_if<std::is_base_of<ValueBase, typename std::decay<T>::type>::value,MappedValue &>::type 
+      operator=(T &&value) {
+        set(key, value.data);
+        return *this;
+      }
+
     };
 
-    MappedValue operator[](const std::string &key) const { return MappedValue{{data->get(key)}, *data, key}; }
+    Value get(const std::string &key) const;
+    Value rawGet(const std::string &key) const { return data->get(key); }
+    MappedValue operator[](const std::string &key) const { return MappedValue{{get(key)}, *data, key}; }
+    std::vector<std::string> keys() const;
+    void setExtends(Value v)const;
 
     explicit operator bool() const { return bool(this->data); }
     const auto *operator->() const { return &this->data; }
@@ -48,5 +117,7 @@ namespace glue2 {
     const auto &operator*() const { return this->data; }
     auto &operator*() { return this->data; }
   };
+
+  MapValue createAnyMap();
 
 }
