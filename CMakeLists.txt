@@ -42,7 +42,7 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME Revisited
-  VERSION 2.2
+  VERSION 2.3
   GITHUB_REPOSITORY TheLartians/Revisited
 )
 

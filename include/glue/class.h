@@ -9,6 +9,8 @@
 namespace glue {
 
   using TypeID = revisited::TypeID;
+  using TypeIndex = revisited::TypeIndex;
+  template <class T> auto getTypeIndex() { return revisited::getTypeIndex<T>(); }
   template <class T> auto getTypeID() { return revisited::getTypeID<T>(); }
 
   struct ClassInfo {
