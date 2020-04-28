@@ -36,10 +36,10 @@ std::string DeclarationPrinter::getUnknownTypeName(const TypeID &type, State &) 
 
 void DeclarationPrinter::printTypeName(std::ostream &stream, const TypeID &type,
                                        State &state) const {
-  if (auto name = easy_iterator::find(state.typeNames, type.index)) {
-    stream << name->second;
-  } else if (auto name = easy_iterator::find(internalTypeNames, type.index)) {
-    stream << name->second;
+  if (auto name1 = easy_iterator::find(state.typeNames, type.index)) {
+    stream << name1->second;
+  } else if (auto name2 = easy_iterator::find(internalTypeNames, type.index)) {
+    stream << name2->second;
   } else {
     auto info = state.context ? state.context->getTypeInfo(type) : nullptr;
     auto typeName = info ? getLocalTypeName(*info, state) : getUnknownTypeName(type, state);
