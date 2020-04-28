@@ -29,16 +29,25 @@ TEST_CASE("Context") {
   root["createB"] = []() { return B("B"); };
 
   glue::Context context;
-  context.addRootMap(root);
 
-  REQUIRE(context.getTypeInfo(glue::getTypeID<A>()));
-  REQUIRE(context.getTypeInfo(glue::getTypeID<B>()));
-  CHECK(context.getTypeInfo(glue::getTypeID<A>())->path == glue::Context::Path{"A"});
-  CHECK(context.getTypeInfo(glue::getTypeID<B>())->path == glue::Context::Path{"B"});
+  SUBCASE("uninitialized") {
+    CHECK(!context.getTypeInfo(glue::getTypeID<A>()));
+    auto instance = context.createInstance(root["createB"].asFunction()());
+    CHECK(!instance);
+  }
 
-  auto instance = context.createInstance(root["createB"].asFunction()());
+  SUBCASE("initialized") {
+    context.addRootMap(root);
 
-  REQUIRE(instance);
-  CHECK(instance["method"]().get<int>() == 42);
-  CHECK(instance["member"]().get<std::string>() == "B");
+    REQUIRE(context.getTypeInfo(glue::getTypeID<A>()));
+    REQUIRE(context.getTypeInfo(glue::getTypeID<B>()));
+    CHECK(context.getTypeInfo(glue::getTypeID<A>())->path == glue::Context::Path{"A"});
+    CHECK(context.getTypeInfo(glue::getTypeID<B>())->path == glue::Context::Path{"B"});
+
+    auto instance = context.createInstance(root["createB"].asFunction()());
+
+    REQUIRE(instance);
+    CHECK(instance["method"]().get<int>() == 42);
+    CHECK(instance["member"]().get<std::string>() == "B");
+  }
 }
