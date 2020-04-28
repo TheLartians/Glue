@@ -31,7 +31,7 @@ endif()
 CPMAddPackage(
   NAME Format.cmake
   GITHUB_REPOSITORY TheLartians/Format.cmake
-  VERSION 1.0
+  VERSION 1.3
 )
 
 # ---- Create binary ----
@@ -54,10 +54,6 @@ endif()
 # ---- Add GlueTests ----
 
 ENABLE_TESTING() 
-
-# Note: doctest and similar testing frameworks can automatically configure CMake tests
-# For other testing frameworks add the tests target instead:
-# ADD_TEST(GlueTests GlueTests)
 
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 doctest_discover_tests(GlueTests)
