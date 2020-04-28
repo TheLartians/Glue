@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glue/detail/reference_visitable.h>
 #include <glue/instance.h>
 #include <glue/keys.h>
 #include <glue/value.h>
@@ -49,9 +50,18 @@ namespace glue {
       if constexpr (sizeof...(Bases) > 0) {
         classInfo.converter = [](Any value) {
           if (auto t = value.getShared<T>()) {
-            value.setWithBases<T, Bases...>(*t);
+            using namespace revisited;
+            using VisitableType =
+                typename detail::ReferenceVisitableWithBasesAndConversionsDefinition<
+                    T, TypeList<Bases...>, TypeList<>, T>::type;
+            // keep the original pointer alive and capture a reference to T
+            value = std::shared_ptr<VisitableType>(t, new VisitableType(*t));
           } else if (auto ts = value.getShared<const T>()) {
-            // value.setWithBases<std::shared_ptr<const T>, Bases...>(ts);
+            using namespace revisited;
+            using VisitableType =
+                typename detail::ReferenceVisitableWithBasesAndConversionsDefinition<
+                    const T, TypeList<Bases...>, TypeList<>, T>::type;
+            value = std::shared_ptr<VisitableType>(t, new VisitableType(*ts));
           }
           return value;
         };

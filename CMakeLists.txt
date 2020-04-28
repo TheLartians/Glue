@@ -46,12 +46,6 @@ CPMAddPackage(
   GITHUB_REPOSITORY TheLartians/Revisited
 )
 
-CPMAddPackage(
-  NAME GroupSourcesByFolder.cmake
-  GITHUB_REPOSITORY TheLartians/GroupSourcesByFolder.cmake
-  VERSION 1.0
-)
-
 # ---- Add source files ----
 
 FILE(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
@@ -60,7 +54,6 @@ FILE(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/
 # ---- Create library ----
 
 add_library(Glue ${headers} ${sources})
-GroupSourcesByFolder(Glue)
 
 set_target_properties(Glue PROPERTIES CXX_STANDARD 17)
 
