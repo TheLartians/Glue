@@ -83,7 +83,7 @@ namespace glue {
       Map &parent;
       std::string key;
 
-      void set(const std::string &key, Any value) { parent.set(key, std::move(value)); }
+      void set(const std::string &k, Any v) { parent.set(k, std::move(v)); }
 
       template <class T>
       typename std::enable_if<!std::is_base_of<ValueBase, typename std::decay<T>::type>::value,
