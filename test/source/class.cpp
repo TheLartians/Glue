@@ -24,7 +24,7 @@ TEST_CASE("ClassValue") {
                 .addMethod("lambda", [](A &a) { return a.method(3); })
                 .addMember("member", &A::member);
 
-  auto gB = glue::createClass<B, A>()
+  auto gB = glue::createClass<B>(glue::WithBases<A>())
                 .addConstructor<std::string>()
                 .addMethod("anotherMethod", &B::anotherMethod)
                 .setExtends(gA);
@@ -46,6 +46,7 @@ TEST_CASE("ClassValue") {
 
   SUBCASE("create instance of B") {
     auto vb = gB.construct("B");
+    CHECK(vb->type() == revisited::getTypeID<B>());
     CHECK(vb["method"](10).get<int>() == 52);
     CHECK(vb["anotherMethod"](*gB.construct("A"), "x").get<std::string>() == "BxA");
   }

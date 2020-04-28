@@ -8,6 +8,10 @@ namespace glue {
   using Any = revisited::Any;
   using AnyFunction = revisited::AnyFunction;
 
+  /**
+   * Base type for maps.
+   * Any map implementation must implement this interface.
+   */
   struct Map : public revisited::Visitable<Map> {
     virtual Any get(const std::string &) const = 0;
     virtual void set(const std::string &, const Any &) = 0;

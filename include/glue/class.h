@@ -8,34 +8,54 @@
 
 namespace glue {
 
+  using TypeID = revisited::TypeID;
+  template <class T> auto getTypeID() { return revisited::getTypeID<T>(); }
+
   struct ClassInfo {
-    revisited::TypeID typeID;
-    revisited::TypeID constTypeID;
-    revisited::TypeID sharedTypeID;
-    revisited::TypeID sharedConstTypeID;
+    TypeID typeID;
+    TypeID constTypeID;
+    TypeID sharedTypeID;
+    TypeID sharedConstTypeID;
+
+    /**
+     * Optional method that will be used to convert arbitrary Any objects of this type
+     * to Any objects supporting conversions.
+     */
+    std::function<Any(Any)> converter;
   };
 
   template <class T> ClassInfo createClassInfo() {
     ClassInfo result;
-    result.typeID = revisited::getTypeID<T>();
-    result.constTypeID = revisited::getTypeID<const T>();
-    result.sharedTypeID = revisited::getTypeID<std::shared_ptr<T>>();
-    result.sharedConstTypeID = revisited::getTypeID<std::shared_ptr<const T>>();
+    result.typeID = getTypeID<T>();
+    result.constTypeID = getTypeID<const T>();
+    result.sharedTypeID = getTypeID<std::shared_ptr<T>>();
+    result.sharedConstTypeID = getTypeID<std::shared_ptr<const T>>();
     return result;
   }
 
-  template <class T> void setClassInfo(const MapValue &value) {
-    value[keys::classKey] = createClassInfo<T>();
-  }
-
   inline auto getClassInfo(const MapValue &value) {
-    return value[keys::classKey]->as<const ClassInfo &>();
+    return value[keys::classKey]->getShared<ClassInfo>();
   }
 
-  template <class T, class... Bases> struct ClassGenerator : public glue::ValueBase {
+  template <typename... args> struct WithBases {};
+
+  template <class T> struct ClassGenerator : public ValueBase {
     MapValue data = createAnyMap();
 
-    ClassGenerator() { setClassInfo<T>(data); }
+    template <class... Bases> ClassGenerator(WithBases<Bases...>) {
+      auto classInfo = createClassInfo<T>();
+      if constexpr (sizeof...(Bases) > 0) {
+        classInfo.converter = [](Any value) {
+          if (auto t = value.getShared<T>()) {
+            value.setWithBases<T, Bases...>(*t);
+          } else if (auto ts = value.getShared<const T>()) {
+            // value.setWithBases<std::shared_ptr<const T>, Bases...>(ts);
+          }
+          return value;
+        };
+      }
+      data[keys::classKey] = classInfo;
+    }
 
     template <class B, class R, typename... Args>
     ClassGenerator &addMethod(const std::string &name, R (B::*f)(Args...)) {
@@ -55,20 +75,6 @@ namespace glue {
     }
 
     template <typename... Args> ClassGenerator &addConstructor() {
-      data[keys::constructorKey] = [](Args... args) {
-        revisited::Any v;
-        if constexpr (sizeof...(Bases) > 0) {
-          v.setWithBases<T, Bases...>(std::forward<Args>(args)...);
-        } else {
-          v = T(std::forward<Args>(args)...);
-        }
-        return v;
-      };
-      return *this;
-    }
-
-    template <typename... Args, class... B>
-    ClassGenerator &addConstructorWithBases(revisited::TypeList<B...>) {
       data[keys::constructorKey] = [](Args... args) { return T(std::forward<Args>(args)...); };
       return *this;
     }
@@ -91,18 +97,27 @@ namespace glue {
       return *this;
     }
 
-    template <class O> ClassGenerator &setExtends(const O &base) {
-      data[keys::extendsKey] = MapValue(base);
+    template <class O>
+    typename std::enable_if<std::is_base_of<ValueBase, O>::value, ClassGenerator &>::type
+    setExtends(const O &base) {
+      data[keys::extendsKey] = base.data;
       return *this;
     }
 
     explicit operator MapValue() const { return data; }
 
-    template <typename... Args> Instance construct(Args &&... args) {
-      return Instance(data, data[keys::constructorKey].asFunction()(std::forward<Args>(args)...));
+    template <typename... Args> Instance construct(Args &&... args) const {
+      auto classInfo = getClassInfo(data);
+      auto value = data[keys::constructorKey].asFunction()(std::forward<Args>(args)...);
+      if (classInfo && classInfo->converter) {
+        value = classInfo->converter(value);
+      }
+      return Instance(data, value);
     }
   };
 
-  template <class T, class... B> auto createClass() { return ClassGenerator<T, B...>(); }
+  template <class T, class... B> auto createClass(WithBases<B...> bases = WithBases<>()) {
+    return ClassGenerator<T>(bases);
+  }
 
 }  // namespace glue

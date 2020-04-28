@@ -77,6 +77,7 @@ namespace glue {
     MapValue(const MapValue &) = default;
     MapValue(MapValue &&) = default;
     MapValue(std::shared_ptr<Map> d) : data(std::move(d)) {}
+    MapValue &operator=(const MapValue &) = default;
 
     struct MappedValue : public Value {
       Map &parent;
@@ -100,8 +101,7 @@ namespace glue {
       typename std::enable_if<std::is_base_of<ValueBase, typename std::decay<T>::type>::value,
                               MappedValue &>::type
       operator=(T &&value) {
-        set(key, value.data);
-        return *this;
+        return *this = value.data;
       }
     };
 
@@ -111,6 +111,8 @@ namespace glue {
       return MappedValue{{get(key)}, *data, key};
     }
     std::vector<std::string> keys() const;
+    void forEach(std::function<bool(const std::string &, Value)>) const;
+
     void setExtends(Value v) const;
 
     explicit operator bool() const { return bool(this->data); }
