@@ -33,24 +33,24 @@ TEST_CASE("Extended map") {
   }
 
   SUBCASE("extends map") {
-    map[glue::keys::extendsKey] = base;
+    map.setExtends(base);
     map["a"] = 3;
     CHECK(map["a"]->as<int>() == 3);
     CHECK(map["b"]->as<int>() == 2);
   }
 
   SUBCASE("extends callback") {
-    map[glue::keys::extendsKey] = [](const glue::MapValue &, std::string key) { return key; };
+    map.setExtends([](const glue::MapValue &, std::string key) { return key; });
     CHECK(map["a"]->as<std::string>() == "a");
     CHECK(map["b"]->as<std::string>() == "b");
   }
 
-  SUBCASE("extends multiple maps") {
-    map[glue::keys::extendsKey] = base;
+  SUBCASE("recursive extends") {
+    map.setExtends(base);
     map["a"] = 3;
     auto map2 = createAnyMap();
     map2["a"] = 4;
-    map2[glue::keys::extendsKey] = map;
+    map2.setExtends(map);
     CHECK(map2["a"]->as<int>() == 4);
     CHECK(map2["b"]->as<int>() == 2);
   }

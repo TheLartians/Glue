@@ -3,7 +3,7 @@
 #include <glue/declarations.h>
 #include <glue/value.h>
 
-#include <iostream>
+#include <sstream>
 
 namespace {
 
@@ -20,8 +20,12 @@ namespace {
 
 TEST_CASE("Declarations") {
   auto root = glue::createAnyMap();
+  root["value"] = 42;
 
-  root["A"]
+  auto inner = glue::createAnyMap();
+  inner["value"] = "42";
+
+  inner["A"]
       = glue::createClass<A>()
             .addConstructor<>()
             .addMember("member", &A::member)
@@ -33,10 +37,13 @@ TEST_CASE("Declarations") {
   root["B"] = glue::createClass<B>(glue::WithBases<A>())
                   .addConstructor<std::string>()
                   .addMethod("method", &B::method)
-                  .setExtends(root["A"]);
+                  .setExtends(inner["A"]);
 
-  root["createB"] = []() { return B("B"); };
-  root["createBWithArgument"] = [](const std::string &name) { return B(name); };
+  inner["createB"] = []() { return B("B"); };
+  inner["createBWithArgument"] = [](const std::string &name) { return B(name); };
+
+  root["createA"] = []() { return A(); };
+  root["inner"] = inner;
 
   glue::Context context;
   context.addRootMap(root);
@@ -44,6 +51,29 @@ TEST_CASE("Declarations") {
   glue::DeclarationPrinter printer;
   printer.init();
 
-  printer.print(std::cout, root, &context);
-  std::cout << std::endl;
+  std::stringstream stream;
+  stream << '\n';
+  printer.print(stream, root, &context);
+  stream << '\n';
+  CAPTURE(stream.str());
+  CHECK(stream.str() == R"(
+declare class B extends inner.A {
+  constructor(arg0: string)
+  method(): number
+}
+declare const createA: (this: void) => inner.A
+declare module inner {
+  class A {
+    constructor()
+    member(): string
+    setMember(arg1: string): void
+    sharedMethod(arg1: string): string
+    static staticMethod(this: void): number
+  }
+  const createB: (this: void) => B
+  const createBWithArgument: (this: void, arg0: string) => B
+  const value: string
+}
+declare const value: number
+)");
 }

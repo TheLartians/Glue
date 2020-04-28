@@ -25,6 +25,7 @@ std::string DeclarationPrinter::getLocalTypeName(const Context::TypeInfo &info, 
   bool initial = true;
   for (auto &&p : info.path) {
     if (!initial) typeName += ".";
+    initial = false;
     typeName += p;
   }
   return typeName;
@@ -187,7 +188,6 @@ void DeclarationPrinter::printInnerBlock(std::ostream &stream, const MapValue &v
       } else {
         printValue(stream, k, v, state);
       }
-      stream << ';';
       needsBreak = true;
     }
   };
