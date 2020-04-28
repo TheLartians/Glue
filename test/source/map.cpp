@@ -3,6 +3,8 @@
 #include <glue/keys.h>
 #include <glue/value.h>
 
+#include <algorithm>
+
 using namespace glue;
 
 TEST_CASE("MapValue") {
@@ -17,7 +19,10 @@ TEST_CASE("MapValue") {
   CHECK(map["function"].asFunction());
   CHECK(map["function"].asFunction()(3).as<int>() == 45);
 
-  CHECK(map.keys() == std::vector<std::string>{"function", "value"});
+  auto keys = map.keys();
+  CHECK(keys.size() == 2);
+  CHECK(std::find(keys.begin(), keys.end(), "value") != keys.end());
+  CHECK(std::find(keys.begin(), keys.end(), "function") != keys.end());
 }
 
 TEST_CASE("Extended map") {

@@ -36,8 +36,14 @@ TEST_CASE("ClassValue") {
   CHECK(glue::getClassInfo(*gB.data)->typeID == revisited::getTypeID<B>());
   CHECK(gB.data["method"]);
 
+  SUBCASE("empty instance") {
+    Instance a;
+    CHECK(!a);
+  }
+
   SUBCASE("create instance of A") {
     auto va = gA.construct();
+    REQUIRE(va);
     CHECK(va["method"](10).get<int>() == 52);
     CHECK(va["lambda"]().get<int>() == 45);
     CHECK_NOTHROW(va["setMember"]("Hello!"));
