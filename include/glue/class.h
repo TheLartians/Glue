@@ -51,17 +51,17 @@ namespace glue {
         classInfo.converter = [](Any value) {
           if (auto t = value.getShared<T>()) {
             using namespace revisited;
-            using VisitableType =
-                typename detail::ReferenceVisitableWithBasesAndConversionsDefinition<
-                    T, TypeList<Bases...>, TypeList<>, T>::type;
+            using VisitableType = typename detail::SharedReferenceVisitable<T, TypeList<Bases...>,
+                                                                            TypeList<>, T>::type;
             // keep the original pointer alive and capture a reference to T
-            value = std::shared_ptr<VisitableType>(t, new VisitableType(*t));
+            value.set<VisitableType>(std::move(t));
           } else if (auto ts = value.getShared<const T>()) {
             using namespace revisited;
             using VisitableType =
-                typename detail::ReferenceVisitableWithBasesAndConversionsDefinition<
-                    const T, TypeList<Bases...>, TypeList<>, T>::type;
-            value = std::shared_ptr<VisitableType>(t, new VisitableType(*ts));
+                typename detail::SharedReferenceVisitable<const T, TypeList<Bases...>, TypeList<>,
+                                                          const T>::type;
+            // keep the original pointer alive and capture a reference to T
+            value.set<VisitableType>(std::move(ts));
           }
           return value;
         };

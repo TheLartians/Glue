@@ -11,7 +11,7 @@ namespace {
 
   struct B : public A {
     B(std::string m) : A{m} {}
-    auto method() { return 42; }
+    auto method() const { return 42; }
   };
 
 }  // namespace
@@ -27,6 +27,7 @@ TEST_CASE("Context") {
                   .setExtends(root["A"]);
 
   root["createB"] = []() { return B("B"); };
+  root["createConstB"] = []() -> std::shared_ptr<const B> { return std::make_shared<B>("B"); };
 
   glue::Context context;
 
@@ -44,10 +45,20 @@ TEST_CASE("Context") {
     CHECK(context.getTypeInfo(glue::getTypeID<A>())->path == glue::Context::Path{"A"});
     CHECK(context.getTypeInfo(glue::getTypeID<B>())->path == glue::Context::Path{"B"});
 
-    auto instance = context.createInstance(root["createB"].asFunction()());
+    SUBCASE("instance") {
+      auto instance = context.createInstance(root["createB"].asFunction()());
+      REQUIRE(instance);
+      CHECK(instance["method"]().get<int>() == 42);
+      CHECK(instance["member"]().get<std::string>() == "B");
+      CHECK_NOTHROW(instance["setMember"]("X"));
+    }
 
-    REQUIRE(instance);
-    CHECK(instance["method"]().get<int>() == 42);
-    CHECK(instance["member"]().get<std::string>() == "B");
+    SUBCASE("const instance") {
+      auto instance = context.createInstance(root["createConstB"].asFunction()());
+      REQUIRE(instance);
+      CHECK(instance["method"]().get<int>() == 42);
+      CHECK(instance["member"]().get<std::string>() == "B");
+      CHECK_THROWS(instance["setMember"]("X"));
+    }
   }
 }
