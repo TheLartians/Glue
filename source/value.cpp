@@ -16,7 +16,7 @@ AnyFunction Value::asFunction() const {
   }
 }
 
-void MapValue::forEach(std::function<bool(const std::string &, Value)> f) const {
+void MapValue::forEach(const std::function<bool(const std::string &, Value)> &f) const {
   data->forEach([&](auto &&key, auto &&value) { return f(key, value); });
 }
 

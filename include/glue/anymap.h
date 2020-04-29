@@ -11,7 +11,7 @@ namespace glue {
     std::unordered_map<std::string, Any> data;
     Any get(const std::string &key) const;
     void set(const std::string &key, const Any &value);
-    bool forEach(std::function<bool(const std::string &, const Any &)> callback) const;
+    bool forEach(const std::function<bool(const std::string &, const Any &)> &callback) const;
   };
 
 }  // namespace glue

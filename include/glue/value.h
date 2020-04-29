@@ -111,7 +111,7 @@ namespace glue {
       return MappedValue{{get(key)}, *data, key};
     }
     std::vector<std::string> keys() const;
-    void forEach(std::function<bool(const std::string &, Value)>) const;
+    void forEach(const std::function<bool(const std::string &, Value)> &) const;
 
     void setExtends(Value v) const;
 
