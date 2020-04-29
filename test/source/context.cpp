@@ -27,7 +27,7 @@ TEST_CASE("Context") {
                   .setExtends(root["A"]);
 
   root["createB"] = []() { return B("B"); };
-  root["createConstB"] = []() { return std::shared_ptr<const B>(new B("B")); };
+  root["createConstB"] = []() -> std::shared_ptr<const B> { return std::make_shared<B>("B"); };
 
   glue::Context context;
 
