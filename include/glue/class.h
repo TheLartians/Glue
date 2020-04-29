@@ -59,7 +59,7 @@ namespace glue {
             using namespace revisited;
             using VisitableType =
                 typename detail::SharedReferenceVisitable<const T, TypeList<Bases...>, TypeList<>,
-                                                          T>::type;
+                                                          const T>::type;
             // keep the original pointer alive and capture a reference to T
             value.set<VisitableType>(std::move(ts));
           }
