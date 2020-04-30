@@ -19,7 +19,9 @@ namespace glue {
       Path path;
       std::shared_ptr<const ClassInfo> classInfo;
     };
+
     std::unordered_map<TypeID, TypeInfo> types;
+    std::vector<TypeID> uniqueTypes;
 
     const TypeInfo *getTypeInfo(const TypeID &type) const;
     void addRootMap(const MapValue &map);

@@ -10,6 +10,7 @@ void Context::addMap(const MapValue &map, std::vector<std::string> &path) {
     typeInfo.classInfo = info;
     typeInfo.path = path;
     typeInfo.data = map;
+    uniqueTypes.push_back(info->typeID);
     types[info->typeID] = typeInfo;
     types[info->constTypeID] = typeInfo;
     types[info->sharedTypeID] = typeInfo;
