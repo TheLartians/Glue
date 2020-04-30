@@ -144,9 +144,22 @@ declare class B extends A {
 
 Currently supported languages are 
 
-- [x] Lua
+- [x] [Lua](https://github.com/TheLartians/LuaGlue)
 - [ ] Emscripten
 - [ ] Duktape
 - [ ] Python
 - [ ] Node
 
+## Usage
+
+Glue can be easily added to your project through [CPM.cmake](https://github.com/TheLartians/CPM.cmake).
+
+```cmake
+CPMAddPackage(
+  NAME Glue
+  VERSION 1.0
+  GIT_REPOSITORY https://github.com/TheLartians/Glue.git
+)
+
+target_link_libraries(myLibrary Glue)
+```
