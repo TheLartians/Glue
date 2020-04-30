@@ -1,29 +1,8 @@
-[![Actions Status](https://github.com/TheLartians/Glue/workflows/MacOS/badge.svg)](https://github.com/TheLartians/Glue/actions)
-[![Actions Status](https://github.com/TheLartians/Glue/workflows/Windows/badge.svg)](https://github.com/TheLartians/Glue/actions)
-[![Actions Status](https://github.com/TheLartians/Glue/workflows/Ubuntu/badge.svg)](https://github.com/TheLartians/Glue/actions)
-[![Actions Status](https://github.com/TheLartians/Glue/workflows/Style/badge.svg)](https://github.com/TheLartians/Glue/actions)
-[![Actions Status](https://github.com/TheLartians/Glue/workflows/Install/badge.svg)](https://github.com/TheLartians/Glue/actions)
-[![codecov](https://codecov.io/gh/TheLartians/Glue/branch/master/graph/badge.svg)](https://codecov.io/gh/TheLartians/Glue)
+#include <doctest/doctest.h>
 
-# Glue
+#include <vector>
 
-A common interface for C++ to other language bindings.
-
-## Motivation
-
-C++ is a great language for writing algorithms and high-performance code. 
-However, once it comes to building applications, servers or websites, simple things become complex and we settle for a scripting language to glue C++ components together.
-The bindings usually need to be hand-crafted for every exposed type and language.
-This project aims to create a generic language binding interface in pure standard C++, which allows two-way interactions, automatic declaration creation and relatively short compile times.
-
-## API
-
-### Maps and values
-
-Glue is based on the [Revisited framework](https://github.com/thelartians/Revisited) and provides convenient wrapper methods.
-The most important types for creating the API and are `glue::Value` and `glue::MapValue`.
-
-```cpp
+// clang-format off
 #include <glue/value.h>
 #include <iostream>
 
@@ -56,17 +35,14 @@ void valueExample() {
   // inner maps are also `glue::MapValue`s.
   map["myMap"].asMap()["inner"] = "inner value";
 }
-```
+// clang-format on
 
-### Classes
-
-Glue also has built-in support for maps representing classes and inheritance.
-
-```cpp
+// clang-format off
 #include <glue/class.h>
 #include <glue/context.h>
 #include <glue/view.h>
 #include <iostream>
+#include <glue/declarations.h>
 
 struct A {
   std::string member;
@@ -112,41 +88,17 @@ void classExample() {
   std::cout << b["member"]().get<std::string>() << std::endl;
   b["setMember"]("new value");
   std::cout << b["lambda"](10).get<int>() << std::endl;
+
+  glue::DeclarationPrinter printer;
+  printer.init();
+  printer.print(std::cout, map, &context);
 }
-```
+// clang-format on
 
-### Declarations
-
-Glue can automatically generate declarations for type-safe scripting.
-
-```cpp
-glue::DeclarationPrinter printer;
-printer.init();
-printer.print(std::cout, map, &context);
-```
-
-In the example above, this would result in the following declarations.
-
-```ts
-declare class A {
-  constructor()
-  member(): string
-  setMember(arg1: string): void
+TEST_CASE("Example") {
+  std::cout << "readme example 1" << std::endl;
+  CHECK_NOTHROW(valueExample());
+  std::cout << "readme example 2" << std::endl;
+  CHECK_NOTHROW(classExample());
+  std::cout << "end examples" << std::endl;
 }
-declare class B extends A {
-  constructor(arg0: string)
-  lambda(arg1: number): number
-  method(arg1: number): number
-}
-```
-
-## Supported bindings
-
-Currently supported languages are 
-
-- [x] Lua
-- [ ] Emscripten
-- [ ] Duktape
-- [ ] Python
-- [ ] Node
-

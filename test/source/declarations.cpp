@@ -49,7 +49,6 @@ TEST_CASE("Declarations") {
   context.addRootMap(root);
 
   glue::DeclarationPrinter printer;
-
   printer.init();
 
   std::stringstream stream;
