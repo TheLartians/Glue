@@ -9,10 +9,12 @@ namespace glue {
   struct View : public ValueBase {
     Value data;
 
+    View() = default;
+    View(const View &) = default;
+
     template <class T,
               class Enable = typename std::enable_if<std::is_base_of<ValueBase, T>::value>::type>
     View(const T &d) : data(*d) {}
-
     template <class T,
               class Enable = typename std::enable_if<!std::is_base_of<ValueBase, T>::value>::type>
     View(T d) : data(std::move(d)) {}

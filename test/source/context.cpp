@@ -45,6 +45,11 @@ TEST_CASE("Context") {
     CHECK(context.getTypeInfo(glue::getTypeIndex<A>())->path == glue::Context::Path{"A"});
     CHECK(context.getTypeInfo(glue::getTypeIndex<B>())->path == glue::Context::Path{"B"});
 
+    SUBCASE("undefined instance") {
+      glue::Instance instance;
+      CHECK_THROWS(instance["test"]());
+    }
+
     SUBCASE("instance") {
       auto instance = context.createInstance(root["createB"].asFunction()());
       REQUIRE(instance);

@@ -10,7 +10,10 @@ TEST_CASE("Value") {
   root["inner"] = inner;
   root["value"] = 42;
 
-  View view(*root);
+  View view;
+  CHECK_THROWS(view["inner"]);
+
+  view = View(*root);
   CHECK(view["value"]->get<int>() == 42);
   CHECK(!*view["xxx"]);
   CHECK_THROWS(view["inner"]());
