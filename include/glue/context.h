@@ -20,14 +20,14 @@ namespace glue {
       std::shared_ptr<const ClassInfo> classInfo;
     };
 
+    std::unordered_map<TypeID, TypeInfo> types;
+    std::vector<TypeID> uniqueTypes;
+
     const TypeInfo *getTypeInfo(const TypeID &type) const;
     void addRootMap(const MapValue &map);
     void addMap(const MapValue &map, std::vector<std::string> &path);
 
     Instance createInstance(Value value) const;
-
-  private:
-    std::unordered_map<TypeID, TypeInfo> types;
   };
 
 }  // namespace glue
