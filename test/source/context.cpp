@@ -32,7 +32,7 @@ TEST_CASE("Context") {
   glue::Context context;
 
   SUBCASE("uninitialized") {
-    CHECK(!context.getTypeInfo(glue::getTypeID<A>()));
+    CHECK(!context.getTypeInfo(glue::getTypeIndex<A>()));
     auto instance = context.createInstance(root["createB"].asFunction()());
     CHECK(!instance);
   }
@@ -40,10 +40,15 @@ TEST_CASE("Context") {
   SUBCASE("initialized") {
     context.addRootMap(root);
 
-    REQUIRE(context.getTypeInfo(glue::getTypeID<A>()));
-    REQUIRE(context.getTypeInfo(glue::getTypeID<B>()));
-    CHECK(context.getTypeInfo(glue::getTypeID<A>())->path == glue::Context::Path{"A"});
-    CHECK(context.getTypeInfo(glue::getTypeID<B>())->path == glue::Context::Path{"B"});
+    REQUIRE(context.getTypeInfo(glue::getTypeIndex<A>()));
+    REQUIRE(context.getTypeInfo(glue::getTypeIndex<B>()));
+    CHECK(context.getTypeInfo(glue::getTypeIndex<A>())->path == glue::Context::Path{"A"});
+    CHECK(context.getTypeInfo(glue::getTypeIndex<B>())->path == glue::Context::Path{"B"});
+
+    SUBCASE("undefined instance") {
+      glue::Instance instance;
+      CHECK_THROWS(instance["test"]());
+    }
 
     SUBCASE("instance") {
       auto instance = context.createInstance(root["createB"].asFunction()());

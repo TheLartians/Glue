@@ -14,7 +14,9 @@ namespace glue {
 
     auto operator[](const std::string &key) const {
       return [=](auto &&... args) {
-        assert(*this);
+        if (!*this) {
+          throw std::runtime_error("called method on undefined instance");
+        }
         return classMap[key].asFunction()(**this, std::forward<decltype(args)>(args)...);
       };
     }

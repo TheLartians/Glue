@@ -11,10 +11,10 @@ void Context::addMap(const MapValue &map, std::vector<std::string> &path) {
     typeInfo.path = path;
     typeInfo.data = map;
     uniqueTypes.push_back(info->typeID);
-    types[info->typeID] = typeInfo;
-    types[info->constTypeID] = typeInfo;
-    types[info->sharedTypeID] = typeInfo;
-    types[info->sharedConstTypeID] = typeInfo;
+    types[info->typeID.index] = typeInfo;
+    types[info->constTypeID.index] = typeInfo;
+    types[info->sharedTypeID.index] = typeInfo;
+    types[info->sharedConstTypeID.index] = typeInfo;
   } else {
     map.forEach([&](auto &&key, auto &&value) {
       if (auto m = value.asMap()) {
@@ -32,7 +32,7 @@ void Context::addRootMap(const MapValue &map) {
   addMap(map, path);
 }
 
-const Context::TypeInfo *Context::getTypeInfo(const TypeID &type) const {
+const Context::TypeInfo *Context::getTypeInfo(TypeIndex type) const {
   if (auto it = easy_iterator::find(types, type)) {
     return &it->second;
   } else {
@@ -41,7 +41,7 @@ const Context::TypeInfo *Context::getTypeInfo(const TypeID &type) const {
 }
 
 Instance Context::createInstance(Value value) const {
-  if (auto type = getTypeInfo(value->type())) {
+  if (auto type = getTypeInfo(value->type().index)) {
     if (type->classInfo->converter) {
       value = type->classInfo->converter(*value);
     }

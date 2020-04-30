@@ -42,7 +42,7 @@ void DeclarationPrinter::printTypeName(std::ostream &stream, const TypeID &type,
   } else if (auto name2 = easy_iterator::find(internalTypeNames, type.index)) {
     stream << name2->second;
   } else {
-    auto info = state.context ? state.context->getTypeInfo(type) : nullptr;
+    auto info = state.context ? state.context->getTypeInfo(type.index) : nullptr;
     auto typeName = info ? getLocalTypeName(*info, state) : getUnknownTypeName(type, state);
     state.typeNames[type.index] = typeName;
     stream << typeName;

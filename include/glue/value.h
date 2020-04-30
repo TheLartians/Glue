@@ -63,8 +63,7 @@ namespace glue {
     typename std::enable_if<std::is_base_of<ValueBase, typename std::decay<T>::type>::value,
                             Value>::type &
     operator=(T &&value) {
-      **this = value.data;
-      return *this;
+      return *this = value.data;
     }
 
     Value &operator=(const Value &) = default;
