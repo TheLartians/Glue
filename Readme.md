@@ -142,7 +142,7 @@ declare class B extends A {
 
 ## Supported bindings
 
-Currently supported languages are 
+Currently planned and supported languages are 
 
 - [x] [Lua](https://github.com/TheLartians/LuaGlue)
 - [ ] Emscripten
