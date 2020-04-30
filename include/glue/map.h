@@ -7,6 +7,7 @@ namespace glue {
 
   using Any = revisited::Any;
   using AnyFunction = revisited::AnyFunction;
+  using AnyArguments = revisited::AnyArguments;
 
   /**
    * Base type for maps.
