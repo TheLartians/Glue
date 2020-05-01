@@ -4,8 +4,8 @@
 #include <glue/enum.h>
 #include <glue/value.h>
 
-#include <sstream>
 #include <regex>
+#include <sstream>
 
 namespace {
 
@@ -66,7 +66,7 @@ TEST_CASE("Declarations") {
   auto declarations = stream.str();
   CAPTURE(declarations);
 
-  // TODO: add a more thorough check of the declarations 
+  // TODO: add a more thorough check of the declarations
   CHECK(declarations.find("declare class B extends inner.A") != std::string::npos);
   CHECK(declarations.find("method(): number") != std::string::npos);
   CHECK(declarations.find("constructor(arg0: string)") != std::string::npos);
@@ -75,5 +75,6 @@ TEST_CASE("Declarations") {
   CHECK(declarations.find("static A: inner.E") != std::string::npos);
   CHECK(declarations.find("declare let value: number") != std::string::npos);
   CHECK(declarations.find("static staticMethod(this: void): number") != std::string::npos);
-  CHECK(declarations.find("const createBWithArgument: (this: void, arg0: string) => B") != std::string::npos);
+  CHECK(declarations.find("const createBWithArgument: (this: void, arg0: string) => B")
+        != std::string::npos);
 }
