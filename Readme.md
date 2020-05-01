@@ -154,7 +154,7 @@ Here you can find current and planned bindings for Glue.
 
 ## Usage
 
-Glue can be easily added to your project through [CPM.cmake](https://github.com/TheLartians/CPM.cmake).
+Glue can be easily added to your project using [CPM.cmake](https://github.com/TheLartians/CPM.cmake).
 
 ```cmake
 CPMAddPackage(
