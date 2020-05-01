@@ -19,7 +19,12 @@ void DeclarationPrinter::printValue(std::ostream &stream, const std::string &nam
   if (state.depth == 0) {
     stream << "declare ";
   }
-  stream << "const " << name << ": ";
+  if (state.currentClass) {
+    stream << "static ";
+  } else {
+    stream << "let ";
+  }
+  stream << name << ": ";
   printTypeName(stream, value->type(), state);
 }
 
@@ -131,12 +136,15 @@ void DeclarationPrinter::printMap(std::ostream &stream, const std::string &name,
 
 void DeclarationPrinter::printClassMap(std::ostream &stream, const std::string &name,
                                        const MapValue &value, State &state) const {
-  stream << "/** @customConstructor ";
-  printTypeName(stream, value[keys::classKey]->get<ClassInfo>().typeID, state);
-  stream << ".__new"
-         << " */";
-  printLineBreak(stream, state);
-  printIndent(stream, state);
+  auto classInfo = value[keys::classKey]->get<ClassInfo>();
+  if (value[keys::constructorKey]) {
+    stream << "/** @customConstructor ";
+    printTypeName(stream, classInfo.typeID, state);
+    stream << ".__new"
+           << " */";
+    printLineBreak(stream, state);
+    printIndent(stream, state);
+  }
   if (state.depth == 0) {
     stream << "declare ";
   }
@@ -150,8 +158,12 @@ void DeclarationPrinter::printClassMap(std::ostream &stream, const std::string &
     }
   }
   stream << " {";
-  printLineBreak(stream, state);
   state.depth++;
+  printLineBreak(stream, state);
+  printIndent(stream, state);
+  stream << "private "
+         << "unique_" << classInfo.typeID.index << ": " << '"' << classInfo.typeID.name << '"';
+  printLineBreak(stream, state);
   printInnerBlock(stream, value, state);
   state.depth--;
   printLineBreak(stream, state);

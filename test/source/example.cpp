@@ -96,9 +96,9 @@ void classExample() {
 // clang-format on
 
 TEST_CASE("Example") {
-  std::cout << "readme example 1" << std::endl;
+  auto orig_buf = std::cout.rdbuf();
+  std::cout.rdbuf(NULL);
   CHECK_NOTHROW(valueExample());
-  std::cout << "readme example 2" << std::endl;
   CHECK_NOTHROW(classExample());
-  std::cout << "end examples" << std::endl;
+  std::cout.rdbuf(orig_buf);
 }

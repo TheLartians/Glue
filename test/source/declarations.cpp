@@ -1,8 +1,10 @@
 #include <doctest/doctest.h>
 #include <glue/context.h>
 #include <glue/declarations.h>
+#include <glue/enum.h>
 #include <glue/value.h>
 
+#include <regex>
 #include <sstream>
 
 namespace {
@@ -15,6 +17,8 @@ namespace {
     B(std::string m) : A{m} {}
     auto method() { return 42; }
   };
+
+  enum class E { A, B, C };
 
 }  // namespace
 
@@ -37,7 +41,10 @@ TEST_CASE("Declarations") {
   root["B"] = glue::createClass<B>(glue::WithBases<A>())
                   .addConstructor<std::string>()
                   .addMethod("method", &B::method)
+                  .addValue("value", E::A)
                   .setExtends(inner["A"]);
+
+  inner["E"] = glue::createEnum<E>().addValue("A", E::A).addValue("B", E::B).addValue("C", E::C);
 
   inner["createB"] = []() { return B("B"); };
   inner["createBWithArgument"] = [](const std::string &name) { return B(name); };
@@ -55,27 +62,19 @@ TEST_CASE("Declarations") {
   stream << '\n';
   printer.print(stream, root, &context);
   stream << '\n';
-  CAPTURE(stream.str());
-  CHECK(stream.str() == R"(
-/** @customConstructor B.__new */
-declare class B extends inner.A {
-  constructor(arg0: string)
-  method(): number
-}
-declare const createA: (this: void) => inner.A
-declare module inner {
-  /** @customConstructor inner.A.__new */
-  class A {
-    constructor()
-    member(): string
-    setMember(arg1: string): void
-    sharedMethod(arg1: string): string
-    static staticMethod(this: void): number
-  }
-  const createB: (this: void) => B
-  const createBWithArgument: (this: void, arg0: string) => B
-  const value: string
-}
-declare const value: number
-)");
+
+  auto declarations = stream.str();
+  CAPTURE(declarations);
+
+  // TODO: add a more thorough check of the declarations
+  CHECK(declarations.find("declare class B extends inner.A") != std::string::npos);
+  CHECK(declarations.find("method(): number") != std::string::npos);
+  CHECK(declarations.find("constructor(arg0: string)") != std::string::npos);
+  CHECK(declarations.find("static value: inner.E") != std::string::npos);
+  CHECK(declarations.find("/** @customConstructor inner.A.__new */") != std::string::npos);
+  CHECK(declarations.find("static A: inner.E") != std::string::npos);
+  CHECK(declarations.find("declare let value: number") != std::string::npos);
+  CHECK(declarations.find("static staticMethod(this: void): number") != std::string::npos);
+  CHECK(declarations.find("const createBWithArgument: (this: void, arg0: string) => B")
+        != std::string::npos);
 }
