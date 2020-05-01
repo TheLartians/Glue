@@ -165,3 +165,5 @@ CPMAddPackage(
 
 target_link_libraries(myLibrary Glue)
 ```
+
+See [here](https://github.com/TheLartians/TypeScriptXX) for an example project using Glue for type-safe scripting.
