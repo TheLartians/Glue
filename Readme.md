@@ -147,10 +147,12 @@ declare class B extends A {
 Here you can find current and planned bindings for Glue.
 
 - [x] Lua: [LuaGlue](https://github.com/TheLartians/LuaGlue)
-- [ ] Emscripten
+- [ ] Wasm
 - [ ] Duktape
 - [ ] Python
 - [ ] Node
+- [ ] Java
+- [ ] Swift
 
 ## Usage
 
