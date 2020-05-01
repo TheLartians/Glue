@@ -16,6 +16,9 @@ void DeclarationPrinter::print(std::ostream &stream, const MapValue &value,
 
 void DeclarationPrinter::printValue(std::ostream &stream, const std::string &name,
                                     const Value &value, State &state) const {
+  if (state.depth == 0) {
+    stream << "declare ";
+  }
   stream << "const " << name << ": ";
   printTypeName(stream, value->type(), state);
 }
@@ -51,6 +54,9 @@ void DeclarationPrinter::printTypeName(std::ostream &stream, const TypeID &type,
 
 void DeclarationPrinter::printFunction(std::ostream &stream, const std::string &name,
                                        const AnyFunction &f, State &state) const {
+  if (state.depth == 0) {
+    stream << "declare ";
+  }
   stream << "const " << name << ": (this: void";
   auto N = f.argumentCount();
   for (size_t i = 0; i < N; ++i) {
@@ -122,6 +128,15 @@ void DeclarationPrinter::printMap(std::ostream &stream, const std::string &name,
 
 void DeclarationPrinter::printClassMap(std::ostream &stream, const std::string &name,
                                        const MapValue &value, State &state) const {
+  stream << "/** @customConstructor ";
+  printTypeName(stream, value[keys::classKey]->get<ClassInfo>().typeID, state);
+  stream << ".__new"
+         << " */";
+  printLineBreak(stream, state);
+  printIndent(stream, state);
+  if (state.depth == 0) {
+    stream << "declare ";
+  }
   stream << "class " << name;
   if (auto extends = value[keys::extendsKey]) {
     if (auto extendedMap = Value(*extends).asMap()) {
@@ -154,15 +169,9 @@ void DeclarationPrinter::printInnerBlock(std::ostream &stream, const MapValue &v
     if (initial) {
       initial = false;
       printIndent(stream, state);
-      if (state.depth == 0) {
-        stream << "declare ";
-      }
     } else if (needsBreak) {
       stream << '\n';
       printIndent(stream, state);
-      if (state.depth == 0) {
-        stream << "declare ";
-      }
     }
     if (auto keyPrinter = easy_iterator::find(keyPrinters, k)) {
       needsBreak = keyPrinter->second(stream, k, v, state);

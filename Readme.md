@@ -117,7 +117,7 @@ void classExample() {
 
 ### Declarations
 
-Glue can automatically generate declarations for type-safe scripting.
+Glue can automatically generate declarations for type-safe scripting using TypeScript or [TypeScriptToLua](https://typescripttolua.github.io).
 
 ```cpp
 glue::DeclarationPrinter printer;
@@ -128,11 +128,13 @@ printer.print(std::cout, map, &context);
 In the example above, this would result in the following declarations.
 
 ```ts
+/** @customConstructor A.__new */
 declare class A {
   constructor()
   member(): string
   setMember(arg1: string): void
 }
+/** @customConstructor B.__new */
 declare class B extends A {
   constructor(arg0: string)
   lambda(arg1: number): number
@@ -144,7 +146,7 @@ declare class B extends A {
 
 Here you can find current planned and supported bindings.
 
-- [x] [Lua](https://github.com/TheLartians/LuaGlue)
+- [x] Lua: [GlueLua](https://github.com/TheLartians/LuaGlue)
 - [ ] Emscripten
 - [ ] Duktape
 - [ ] Python
