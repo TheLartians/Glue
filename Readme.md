@@ -153,6 +153,12 @@ Here you can find current and planned bindings for Glue.
 - [ ] Java
 - [ ] Swift
 
+## Limitations
+
+- No support for pointer or optional arguments in callbacks (yet)
+- Class bindings aren't as sophisticated as native bindings such as [sol2](https://github.com/ThePhD/sol2)
+- There is an overhead through the additional abstraction layer (but hey, we're using a scripting language!)
+
 ## Usage
 
 Glue can be easily added to your project using [CPM.cmake](https://github.com/TheLartians/CPM.cmake).
