@@ -144,9 +144,9 @@ declare class B extends A {
 
 ## Supported bindings
 
-Here you can find current planned and supported bindings.
+Here you can find current and planned bindings for Glue.
 
-- [x] Lua: [GlueLua](https://github.com/TheLartians/LuaGlue)
+- [x] Lua: [LuaGlue](https://github.com/TheLartians/LuaGlue)
 - [ ] Emscripten
 - [ ] Duktape
 - [ ] Python
