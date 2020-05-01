@@ -63,7 +63,7 @@ declare class B extends inner.A {
   method(): number
 }
 declare const createA: (this: void) => inner.A
-module inner {
+declare module inner {
   /** @customConstructor inner.A.__new */
   class A {
     constructor()
