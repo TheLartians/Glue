@@ -19,5 +19,7 @@ TEST_CASE("Value") {
   CHECK_THROWS(view["inner"]());
   CHECK_NOTHROW(view["inner"]);
   CHECK_NOTHROW(view["inner"]["a"]);
+
   CHECK(view["inner"]["a"](6)->get<int>() == 48);
+  CHECK(view["inner"]["a"].call(glue::AnyArguments{8})->get<int>() == 50);
 }

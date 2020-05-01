@@ -57,12 +57,14 @@ TEST_CASE("Declarations") {
   stream << '\n';
   CAPTURE(stream.str());
   CHECK(stream.str() == R"(
+/** @customConstructor B.__new */
 declare class B extends inner.A {
   constructor(arg0: string)
   method(): number
 }
 declare const createA: (this: void) => inner.A
 declare module inner {
+  /** @customConstructor inner.A.__new */
   class A {
     constructor()
     member(): string
