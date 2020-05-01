@@ -36,6 +36,10 @@ namespace glue {
     return result;
   }
 
+  template <class T> void setClassInfo(const MapValue &value) {
+    value[keys::classKey] = createClassInfo<T>();
+  }
+
   inline auto getClassInfo(const MapValue &value) {
     return value[keys::classKey]->getShared<ClassInfo>();
   }
@@ -113,6 +117,11 @@ namespace glue {
     typename std::enable_if<std::is_base_of<ValueBase, O>::value, ClassGenerator &>::type
     setExtends(const O &base) {
       data[keys::extendsKey] = base.data;
+      return *this;
+    }
+
+    template <class O> ClassGenerator &addValue(const std::string &key, O &&value) {
+      data[key] = std::forward<O>(value);
       return *this;
     }
 

@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 #include <glue/context.h>
 #include <glue/declarations.h>
+#include <glue/enum.h>
 #include <glue/value.h>
 
 #include <sstream>
@@ -15,6 +16,8 @@ namespace {
     B(std::string m) : A{m} {}
     auto method() { return 42; }
   };
+
+  enum class E { A, B, C };
 
 }  // namespace
 
@@ -37,7 +40,10 @@ TEST_CASE("Declarations") {
   root["B"] = glue::createClass<B>(glue::WithBases<A>())
                   .addConstructor<std::string>()
                   .addMethod("method", &B::method)
+                  .addValue("value", E::A)
                   .setExtends(inner["A"]);
+
+  inner["E"] = glue::createEnum<E>().addValue("A", E::A).addValue("B", E::B).addValue("C", E::C);
 
   inner["createB"] = []() { return B("B"); };
   inner["createBWithArgument"] = [](const std::string &name) { return B(name); };
@@ -61,6 +67,7 @@ TEST_CASE("Declarations") {
 declare class B extends inner.A {
   constructor(arg0: string)
   method(): number
+  static value: inner.E
 }
 declare const createA: (this: void) => inner.A
 declare module inner {
@@ -72,10 +79,16 @@ declare module inner {
     sharedMethod(arg1: string): string
     static staticMethod(this: void): number
   }
+  class E {
+    static A: inner.E
+    static B: inner.E
+    static C: inner.E
+    
+  }
   const createB: (this: void) => B
   const createBWithArgument: (this: void, arg0: string) => B
-  const value: string
+  let value: string
 }
-declare const value: number
+declare let value: number
 )");
 }
