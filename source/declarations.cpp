@@ -136,9 +136,10 @@ void DeclarationPrinter::printMap(std::ostream &stream, const std::string &name,
 
 void DeclarationPrinter::printClassMap(std::ostream &stream, const std::string &name,
                                        const MapValue &value, State &state) const {
+  auto classInfo = value[keys::classKey]->get<ClassInfo>();
   if (value[keys::constructorKey]) {
     stream << "/** @customConstructor ";
-    printTypeName(stream, value[keys::classKey]->get<ClassInfo>().typeID, state);
+    printTypeName(stream, classInfo.typeID, state);
     stream << ".__new"
            << " */";
     printLineBreak(stream, state);
@@ -157,8 +158,12 @@ void DeclarationPrinter::printClassMap(std::ostream &stream, const std::string &
     }
   }
   stream << " {";
-  printLineBreak(stream, state);
   state.depth++;
+  printLineBreak(stream, state);
+  printIndent(stream, state);
+  stream << "private "
+         << "unique_" << classInfo.typeID.index << ": " << '"' << classInfo.typeID.name << '"';
+  printLineBreak(stream, state);
   printInnerBlock(stream, value, state);
   state.depth--;
   printLineBreak(stream, state);
