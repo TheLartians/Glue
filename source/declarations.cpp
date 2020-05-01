@@ -116,6 +116,9 @@ void DeclarationPrinter::printLineBreak(std::ostream &stream, State &) const { s
 
 void DeclarationPrinter::printMap(std::ostream &stream, const std::string &name,
                                   const MapValue &value, State &state) const {
+  if (state.depth == 0) {
+    stream << "declare ";
+  }
   stream << "module " << name << " " << '{';
   printLineBreak(stream, state);
   state.depth++;

@@ -27,13 +27,19 @@ namespace glue {
       }
     }
 
-    template <typename... Args> View operator()(Args &&... args) const {
+    AnyFunction asFunction() const {
       if (auto f = data.asFunction()) {
-        return View(f(std::forward<Args>(args)...));
+        return f;
       } else {
         throw std::runtime_error("value is not a map");
       }
     }
+
+    template <typename... Args> View operator()(Args &&... args) const {
+      return View(asFunction()(std::forward<Args>(args)...));
+    }
+
+    View call(const AnyArguments &args) const { return View(asFunction().call(args)); }
 
     auto operator*() const { return *data; }
     auto operator-> () const { return data; }
