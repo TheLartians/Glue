@@ -148,10 +148,10 @@ Here you can find current and planned bindings for Glue.
 
 - [x] Lua: [LuaGlue](https://github.com/TheLartians/LuaGlue)
 - [ ] JavaScript (Wasm)
-- [ ] Duktape
 - [ ] Python
 - [ ] Java
 - [ ] Swift
+- [ ] Rust
 
 ## Limitations
 
