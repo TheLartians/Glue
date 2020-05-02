@@ -156,8 +156,8 @@ Here you can find current and planned bindings for Glue.
 ## Limitations
 
 - No support for pointer or optional arguments in callbacks (yet)
-- Class bindings aren't as sophisticated as native bindings such as [sol2](https://github.com/ThePhD/sol2)
-- There is an overhead through the additional abstraction layer (but hey, we're using a scripting language!)
+- Class bindings aren't as sophisticated as other libraries bindings such as [sol2](https://github.com/ThePhD/sol2)
+- There is a small overhead through the additional abstraction layer compared to native bindings
 
 ## Usage
 
@@ -173,4 +173,4 @@ CPMAddPackage(
 target_link_libraries(myLibrary Glue)
 ```
 
-See [here](https://github.com/TheLartians/TypeScriptXX) for an example project using Glue for type-safe scripting.
+See [here](https://github.com/TheLartians/TypeScriptXX) for an example project using Glue to create TypeScript bindings for C++.
