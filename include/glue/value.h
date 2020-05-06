@@ -46,7 +46,7 @@ namespace glue {
     Value(const Value &) = default;
     Value(Value &&) = default;
 
-    template <class T> Value(T &&v) { *this = std::forward<T>(v); }
+    template <class T> Value(T &&v) { *this = detail::convertArgumentToAny(std::forward<T>(v)); }
 
     Any value() const { return data; }
 
@@ -62,11 +62,7 @@ namespace glue {
     template <class T, typename = typename std::enable_if<
                            !std::is_base_of<ValueBase, typename std::decay<T>::type>::value>::type>
     Value &operator=(T &&value) {
-      if constexpr (detail::is_callable<T>::value) {
-        **this = Any::create<AnyFunction>(value);
-      } else {
-        **this = std::forward<T>(value);
-      }
+      **this = detail::convertArgumentToAny(std::forward<T>(value));
       return *this;
     }
 
@@ -98,7 +94,7 @@ namespace glue {
     void set(const std::string &k, Any v);
 
     template <class T> MappedValue &operator=(T &&value) {
-      set(key, detail::convertArgumentToAny(value));
+      set(key, detail::convertArgumentToAny(std::forward<T>(value)));
       return *this;
     }
   };
