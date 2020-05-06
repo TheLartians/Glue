@@ -151,6 +151,9 @@ Here you can find current and planned bindings for Glue.
 - [ ] Swift
 - [ ] Rust
 
+As you can see, many bindings are still missing from the list.
+If you've created Glue bindings for any language, feel free to open a PR to add them here.
+
 ## Limitations
 
 - No support for pointer or optional arguments in callbacks (yet)
