@@ -65,7 +65,6 @@ Glue also has built-in support for maps representing classes and inheritance.
 ```cpp
 #include <glue/class.h>
 #include <glue/context.h>
-#include <glue/view.h>
 #include <iostream>
 
 struct A {
@@ -103,10 +102,8 @@ void classExample() {
   glue::Context context;
   context.addRootMap(map);
 
-  // `glue::View` allows convinient introspection into maps
   // `glue::Instance` captures a value and behaves as a class instance
-  glue::View view(map);
-  auto b = context.createInstance(view["B"][glue::keys::constructorKey]("arg"));
+  auto b = context.createInstance(map["B"][glue::keys::constructorKey]("arg"));
 
   // calls will be treated as member functions
   std::cout << b["member"]().get<std::string>() << std::endl;

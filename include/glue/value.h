@@ -8,6 +8,15 @@
 
 namespace glue {
 
+  /**
+   * The base class for value wrappers that store their actual data in a `data` member.
+   */
+  struct ValueBase {};
+
+  struct MapValue;
+  struct MappedValue;
+  struct FunctionValue;
+
   namespace detail {
     /**
      * detect callable types.
@@ -18,15 +27,17 @@ namespace glue {
     template <class T, class = void> struct is_callable : std::false_type {};
     template <class T> struct is_callable<T, void_t<has_opr_t<typename std::decay<T>::type>>>
         : std::true_type {};
+
+    template <class T> Any convertArgumentToAny(T &&arg) {
+      if constexpr (is_callable<T>::value) {
+        return Any::create<AnyFunction>(std::forward<T>(arg));
+      } else if constexpr (std::is_base_of<ValueBase, typename std::decay<T>::type>::value) {
+        return convertArgumentToAny(arg.data);
+      } else {
+        return Any(std::forward<T>(arg));
+      }
+    }
   }  // namespace detail
-
-  struct MapValue;
-  struct FunctionValue;
-
-  /**
-   * The base class for value wrappers that store their actual data in a `data` member.
-   */
-  struct ValueBase {};
 
   struct Value : public ValueBase {
     Any data;
@@ -67,6 +78,29 @@ namespace glue {
     }
 
     Value &operator=(const Value &) = default;
+
+    // convenience access functions (throw exceptions when not applicable)
+    MappedValue operator[](const std::string &key) const;
+
+    template <typename... Args> Value operator()(Args &&... args) const {
+      if (auto f = asFunction()) {
+        return Value(f(detail::convertArgumentToAny(std::forward<Args>(args))...));
+      } else {
+        throw std::runtime_error("value is not a function");
+      }
+    }
+  };
+
+  struct MappedValue : public Value {
+    Map &parent;
+    std::string key;
+
+    void set(const std::string &k, Any v);
+
+    template <class T> MappedValue &operator=(T &&value) {
+      set(key, detail::convertArgumentToAny(value));
+      return *this;
+    }
   };
 
   struct MapValue : public ValueBase {
@@ -77,32 +111,6 @@ namespace glue {
     MapValue(MapValue &&) = default;
     MapValue(std::shared_ptr<Map> d) : data(std::move(d)) {}
     MapValue &operator=(const MapValue &) = default;
-
-    struct MappedValue : public Value {
-      Map &parent;
-      std::string key;
-
-      void set(const std::string &k, Any v) { parent.set(k, std::move(v)); }
-
-      template <class T>
-      typename std::enable_if<!std::is_base_of<ValueBase, typename std::decay<T>::type>::value,
-                              MappedValue &>::type
-      operator=(T &&value) {
-        if constexpr (detail::is_callable<T>::value) {
-          set(key, Any::create<AnyFunction>(value));
-        } else {
-          set(key, std::forward<T>(value));
-        }
-        return *this;
-      }
-
-      template <class T>
-      typename std::enable_if<std::is_base_of<ValueBase, typename std::decay<T>::type>::value,
-                              MappedValue &>::type
-      operator=(T &&value) {
-        return *this = value.data;
-      }
-    };
 
     Value get(const std::string &key) const;
     Value rawGet(const std::string &key) const { return data->get(key); }
