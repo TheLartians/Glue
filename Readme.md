@@ -66,7 +66,6 @@ Glue also has built-in support for maps representing classes and inheritance.
 #include <glue/class.h>
 #include <glue/context.h>
 #include <iostream>
-#include <glue/declarations.h>
 
 struct A {
   std::string member;
