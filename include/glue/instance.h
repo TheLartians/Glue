@@ -17,7 +17,8 @@ namespace glue {
         if (!*this) {
           throw std::runtime_error("called method on undefined instance");
         }
-        return classMap[key].asFunction()(**this, detail::convertArgumentToAny(std::forward<decltype(args)>(args))...);
+        return classMap[key].asFunction()(
+            **this, detail::convertArgumentToAny(std::forward<decltype(args)>(args))...);
       };
     }
   };
