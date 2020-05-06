@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 # Note: update this to your new project's name and version
 project(Glue 
-  VERSION 1.2
+  VERSION 1.2.1
   LANGUAGES CXX
 )
 
@@ -31,12 +31,6 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME Observe
-  VERSION 3.0
-  GITHUB_REPOSITORY TheLartians/Observe
-)
-
-CPMAddPackage(
   NAME Revisited
   VERSION 2.3
   GITHUB_REPOSITORY TheLartians/Revisited
@@ -56,7 +50,7 @@ set_target_properties(Glue PROPERTIES CXX_STANDARD 17)
 # beeing a cross-platform target, we enforce enforce standards conformance on MSVC
 target_compile_options(Glue PUBLIC "$<$<BOOL:${MSVC}>:/permissive->")
 
-target_link_libraries(Glue PUBLIC EasyIterator Revisited Observe)
+target_link_libraries(Glue PUBLIC EasyIterator Revisited)
 
 target_include_directories(Glue
   PUBLIC
@@ -73,5 +67,5 @@ packageProject(
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
   INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-  DEPENDENCIES "Observe;Revisited;EasyIterator"
+  DEPENDENCIES "Revisited;EasyIterator"
 )
