@@ -31,12 +31,6 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME Observe
-  VERSION 3.0
-  GITHUB_REPOSITORY TheLartians/Observe
-)
-
-CPMAddPackage(
   NAME Revisited
   VERSION 2.3
   GITHUB_REPOSITORY TheLartians/Revisited
