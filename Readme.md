@@ -145,10 +145,14 @@ Here you can find current and planned bindings for Glue.
 
 - [x] Lua: [LuaGlue](https://github.com/TheLartians/LuaGlue)
 - [x] JavaScript (Wasm): [EmGlue](https://github.com/TheLartians/EmGlue)
+- [ ] JavaScript (Duktape)
 - [ ] Python
 - [ ] Java
 - [ ] Swift
 - [ ] Rust
+
+As you can see, many bindings are still missing from the list.
+If you've created Glue bindings for any language, feel free to open a PR to add them here.
 
 ## Limitations
 
