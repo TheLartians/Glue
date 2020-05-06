@@ -33,8 +33,9 @@ namespace glue {
         return Any::create<AnyFunction>(std::forward<T>(arg));
       } else if constexpr (std::is_base_of<ValueBase, typename std::decay<T>::type>::value) {
         return convertArgumentToAny(arg.data);
+      } else {
+        return Any(std::forward<T>(arg));
       }
-      { return Any(std::forward<T>(arg)); }
     }
   }  // namespace detail
 
