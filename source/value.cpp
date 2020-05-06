@@ -17,12 +17,12 @@ AnyFunction Value::asFunction() const {
 }
 
 void MapValue::forEach(const std::function<bool(const std::string &, Value)> &f) const {
-  data->forEach([&](auto &&key, auto &&value) { return f(key, value); });
+  data->forEach([&](auto &&key) { return f(key, data->get(key)); });
 }
 
 std::vector<std::string> MapValue::keys() const {
   std::vector<std::string> keys;
-  data->forEach([&](auto &&key, auto &&) {
+  data->forEach([&](auto &&key) {
     keys.push_back(key);
     return false;
   });
