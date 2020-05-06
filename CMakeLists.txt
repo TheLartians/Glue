@@ -50,7 +50,7 @@ set_target_properties(Glue PROPERTIES CXX_STANDARD 17)
 # beeing a cross-platform target, we enforce enforce standards conformance on MSVC
 target_compile_options(Glue PUBLIC "$<$<BOOL:${MSVC}>:/permissive->")
 
-target_link_libraries(Glue PUBLIC EasyIterator Revisited Observe)
+target_link_libraries(Glue PUBLIC EasyIterator Revisited)
 
 target_include_directories(Glue
   PUBLIC
