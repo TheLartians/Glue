@@ -67,5 +67,5 @@ packageProject(
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
   INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-  DEPENDENCIES "Observe;Revisited;EasyIterator"
+  DEPENDENCIES "Revisited;EasyIterator"
 )
