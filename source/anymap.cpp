@@ -13,9 +13,9 @@ Any AnyMap::get(const std::string &key) const {
 
 void AnyMap::set(const std::string &key, const Any &value) { data[key] = value; }
 
-bool AnyMap::forEach(const std::function<bool(const std::string &, const Any &)> &callback) const {
+bool AnyMap::forEach(const std::function<bool(const std::string &)> &callback) const {
   for (auto &&v : data) {
-    if (callback(v.first, v.second)) return true;
+    if (callback(v.first)) return true;
   }
   return false;
 }
