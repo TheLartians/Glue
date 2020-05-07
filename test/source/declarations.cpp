@@ -20,6 +20,7 @@ namespace {
 
   enum class E { A, B, C };
 
+  struct F {};
 }  // namespace
 
 TEST_CASE("Declarations") {
@@ -51,6 +52,7 @@ TEST_CASE("Declarations") {
   inner["createBWithArgument"] = [](const std::string &name) { return B(name); };
   inner["variadic"] = [](const glue::AnyArguments &args) { return args.size(); };
   inner["takesCallback"] = [](glue::AnyFunction f) { return f(); };
+  inner["returnsUnknown"] = []() { return F(); };
 
   root["createA"] = []() { return A(); };
   root["inner"] = inner;
@@ -69,9 +71,9 @@ TEST_CASE("Declarations") {
   auto declarations = stream.str();
   CAPTURE(declarations);
 
-  // TODO: add a more thorough check of the declarations
   CHECK(declarations.find("declare class B extends inner.A") != std::string::npos);
   CHECK(declarations.find("method(): number") != std::string::npos);
+  CHECK(declarations.find("returnsUnknown: (this: void) => unknown") != std::string::npos);
   CHECK(declarations.find("constructor(arg0: string)") != std::string::npos);
   CHECK(declarations.find("static value: inner.E") != std::string::npos);
   CHECK(declarations.find("/** @customConstructor inner.A.__new */") != std::string::npos);
