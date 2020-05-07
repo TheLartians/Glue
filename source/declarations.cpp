@@ -40,7 +40,7 @@ std::string DeclarationPrinter::getLocalTypeName(const Context::TypeInfo &info, 
 }
 
 std::string DeclarationPrinter::getUnknownTypeName(const TypeID &type, State &) const {
-  return "any /* " + std::string(type.name) + " */";
+  return "unknown /* " + std::string(type.name) + " */";
 }
 
 void DeclarationPrinter::printTypeName(std::ostream &stream, const TypeID &type,
@@ -65,7 +65,7 @@ void DeclarationPrinter::printFunction(std::ostream &stream, const std::string &
   stream << "const " << name << ": (this: void";
 
   if (f.isVariadic()) {
-    stream << ", ...args: any";
+    stream << ", ...args: any[]";
   } else {
     auto N = f.argumentCount();
     for (size_t i = 0; i < N; ++i) {
@@ -81,11 +81,12 @@ void DeclarationPrinter::printFunction(std::ostream &stream, const std::string &
 void DeclarationPrinter::printMemberFunction(std::ostream &stream, const std::string &name,
                                              const AnyFunction &f, State &state) const {
   auto N = f.argumentCount();
-  bool isStatic = N == 0
-                  || (f.argumentType(0) != state.currentClass->typeID
-                      && f.argumentType(0) != state.currentClass->constTypeID
-                      && f.argumentType(0) != state.currentClass->sharedTypeID
-                      && f.argumentType(0) != state.currentClass->sharedConstTypeID);
+  bool isStatic = (!f.isVariadic())
+                  && (N == 0
+                      || (f.argumentType(0) != state.currentClass->typeID
+                          && f.argumentType(0) != state.currentClass->constTypeID
+                          && f.argumentType(0) != state.currentClass->sharedTypeID
+                          && f.argumentType(0) != state.currentClass->sharedConstTypeID));
   bool initial = true;
   if (isStatic) {
     stream << "static " << name;
@@ -95,9 +96,9 @@ void DeclarationPrinter::printMemberFunction(std::ostream &stream, const std::st
     stream << name << '(';
   }
   if (f.isVariadic()) {
-    stream << ", ...args: any";
+    stream << "...args: any[]";
   } else {
-    for (size_t i = 1; i < N; ++i) {
+    for (size_t i = isStatic ? 0 : 1; i < N; ++i) {
       if (!initial) stream << ", ";
       initial = false;
       stream << "arg" << i << ": ";
@@ -246,6 +247,9 @@ void DeclarationPrinter::init() {
                       double, long double>(*this, "number");
   addInternalTypeName<std::string>(*this, "string");
   internalTypeNames[getTypeIndex<void>()] = "void";
+  internalTypeNames[getTypeIndex<Any>()] = "any";
+  internalTypeNames[getTypeIndex<bool>()] = "boolean";
+  internalTypeNames[getTypeIndex<AnyFunction>()] = "(this: void, ...args: any[]) => any";
 
   keyPrinters[keys::classKey] = [](auto &&, auto &&, auto &&, auto &&) { return false; };
   keyPrinters[keys::extendsKey] = [](auto &&, auto &&, auto &&, auto &&) { return false; };
