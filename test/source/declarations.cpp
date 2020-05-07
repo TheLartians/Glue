@@ -20,6 +20,7 @@ namespace {
 
   enum class E { A, B, C };
 
+  struct F {};
 }  // namespace
 
 TEST_CASE("Declarations") {
@@ -34,6 +35,7 @@ TEST_CASE("Declarations") {
             .addConstructor<>()
             .addMember("member", &A::member)
             .addMethod("staticMethod", [](int x) { return x * 0.5f; })
+            .addMethod("variadicMethod", [](const glue::AnyArguments &args) { return args.size(); })
             .addMethod("sharedMethod", [](const std::shared_ptr<A> &a, const std::string &other) {
               return a->member + other;
             });
@@ -48,6 +50,9 @@ TEST_CASE("Declarations") {
 
   inner["createB"] = []() { return B("B"); };
   inner["createBWithArgument"] = [](const std::string &name) { return B(name); };
+  inner["variadic"] = [](const glue::AnyArguments &args) { return args.size(); };
+  inner["takesCallback"] = [](glue::AnyFunction f) { return f(); };
+  inner["returnsUnknown"] = []() { return F(); };
 
   root["createA"] = []() { return A(); };
   root["inner"] = inner;
@@ -66,15 +71,21 @@ TEST_CASE("Declarations") {
   auto declarations = stream.str();
   CAPTURE(declarations);
 
-  // TODO: add a more thorough check of the declarations
   CHECK(declarations.find("declare class B extends inner.A") != std::string::npos);
   CHECK(declarations.find("method(): number") != std::string::npos);
+  CHECK(declarations.find("returnsUnknown: (this: void) => unknown") != std::string::npos);
   CHECK(declarations.find("constructor(arg0: string)") != std::string::npos);
   CHECK(declarations.find("static value: inner.E") != std::string::npos);
   CHECK(declarations.find("/** @customConstructor inner.A.__new */") != std::string::npos);
   CHECK(declarations.find("static A: inner.E") != std::string::npos);
   CHECK(declarations.find("declare let value: number") != std::string::npos);
-  CHECK(declarations.find("static staticMethod(this: void): number") != std::string::npos);
+  CHECK(declarations.find("static staticMethod(this: void, arg0: number): number")
+        != std::string::npos);
   CHECK(declarations.find("const createBWithArgument: (this: void, arg0: string) => B")
+        != std::string::npos);
+  CHECK(declarations.find("variadic: (this: void, ...args: any[]) => number") != std::string::npos);
+  CHECK(declarations.find("variadicMethod(...args: any[]): number") != std::string::npos);
+  CHECK(declarations.find(
+            "const takesCallback: (this: void, arg0: (this: void, ...args: any[]) => any) => any")
         != std::string::npos);
 }
