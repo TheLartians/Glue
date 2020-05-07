@@ -63,11 +63,16 @@ void DeclarationPrinter::printFunction(std::ostream &stream, const std::string &
     stream << "declare ";
   }
   stream << "const " << name << ": (this: void";
-  auto N = f.argumentCount();
-  for (size_t i = 0; i < N; ++i) {
-    stream << ", ";
-    stream << "arg" << i << ": ";
-    printTypeName(stream, f.argumentType(i), state);
+
+  if (f.isVariadic()) {
+    stream << ", ...args: any";
+  } else {
+    auto N = f.argumentCount();
+    for (size_t i = 0; i < N; ++i) {
+      stream << ", ";
+      stream << "arg" << i << ": ";
+      printTypeName(stream, f.argumentType(i), state);
+    }
   }
   stream << ") => ";
   printTypeName(stream, f.returnType(), state);
@@ -89,11 +94,15 @@ void DeclarationPrinter::printMemberFunction(std::ostream &stream, const std::st
   } else {
     stream << name << '(';
   }
-  for (size_t i = 1; i < N; ++i) {
-    if (!initial) stream << ", ";
-    initial = false;
-    stream << "arg" << i << ": ";
-    printTypeName(stream, f.argumentType(i), state);
+  if (f.isVariadic()) {
+    stream << ", ...args: any";
+  } else {
+    for (size_t i = 1; i < N; ++i) {
+      if (!initial) stream << ", ";
+      initial = false;
+      stream << "arg" << i << ": ";
+      printTypeName(stream, f.argumentType(i), state);
+    }
   }
   stream << "): ";
   printTypeName(stream, f.returnType(), state);

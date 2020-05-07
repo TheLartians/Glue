@@ -34,6 +34,7 @@ TEST_CASE("Declarations") {
             .addConstructor<>()
             .addMember("member", &A::member)
             .addMethod("staticMethod", [](int x) { return x * 0.5f; })
+            .addMethod("variadicMethod", [](const glue::AnyArguments &args) { return args.size(); })
             .addMethod("sharedMethod", [](const std::shared_ptr<A> &a, const std::string &other) {
               return a->member + other;
             });
@@ -48,6 +49,7 @@ TEST_CASE("Declarations") {
 
   inner["createB"] = []() { return B("B"); };
   inner["createBWithArgument"] = [](const std::string &name) { return B(name); };
+  inner["variadic"] = [](const glue::AnyArguments &args) { return args.size(); };
 
   root["createA"] = []() { return A(); };
   root["inner"] = inner;
@@ -76,5 +78,8 @@ TEST_CASE("Declarations") {
   CHECK(declarations.find("declare let value: number") != std::string::npos);
   CHECK(declarations.find("static staticMethod(this: void): number") != std::string::npos);
   CHECK(declarations.find("const createBWithArgument: (this: void, arg0: string) => B")
+        != std::string::npos);
+  CHECK(declarations.find("variadic: (this: void, ...args: any) => number") != std::string::npos);
+  CHECK(declarations.find("static variadicMethod(this: void, ...args: any): number")
         != std::string::npos);
 }
