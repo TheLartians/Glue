@@ -104,7 +104,11 @@ namespace glue {
       addConstMember(name, ptr);
       std::string setName = "set" + name;
       setName[3] = char(toupper(setName[3]));
-      data[setName] = [ptr](T &o, const O &v) { o.*ptr = v; };
+      if constexpr (std::is_fundamental<O>::value) {
+        data[setName] = [ptr](T &o, O v) { o.*ptr = std::move(v); };
+      } else {
+        data[setName] = [ptr](T &o, const O &v) { o.*ptr = v; };
+      }
       return *this;
     }
 

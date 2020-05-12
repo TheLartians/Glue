@@ -11,6 +11,7 @@ namespace {
   };
 
   struct B : public A {
+    int intMember = 0;
     B(std::string m) : A{m} {}
     std::string anotherMethod(const A &x, std::string sep) const { return member + sep + x.member; }
   };
@@ -25,9 +26,10 @@ TEST_CASE("ClassValue") {
                 .addMember("member", &A::member);
 
   auto gB = glue::createClass<B>(glue::WithBases<A>())
+                .setExtends(gA)
                 .addConstructor<std::string>()
                 .addMethod("anotherMethod", &B::anotherMethod)
-                .setExtends(gA);
+                .addMember("intMember", &B::intMember);
 
   REQUIRE(glue::getClassInfo(*gA.data));
   CHECK(glue::getClassInfo(*gA.data)->typeID == revisited::getTypeID<A>());
@@ -54,6 +56,8 @@ TEST_CASE("ClassValue") {
     auto vb = gB.construct("B");
     CHECK(vb->type() == revisited::getTypeID<B>());
     CHECK(vb["method"](10).get<int>() == 52);
+    CHECK_NOTHROW(vb["setIntMember"](10.0));
+    CHECK(vb["intMember"]().get<int>() == 10);
     CHECK(vb["anotherMethod"](*gB.construct("A"), "x").get<std::string>() == "BxA");
   }
 }
