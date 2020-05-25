@@ -60,3 +60,10 @@ TEST_CASE("Extended map") {
     CHECK(map2["b"]->as<int>() == 2);
   }
 }
+
+TEST_CASE("Inplace creation") {
+  auto map = createAnyMap();
+  map["a"] = createAnyMap().setValue("x", 1).setValue("y", 2);
+  CHECK(map["a"]["x"]->as<int>() == 1);
+  CHECK(map["a"]["y"]->as<int>() == 2);
+}
