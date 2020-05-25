@@ -74,7 +74,7 @@ namespace glue {
     }
 
     template <class B, class R, typename... Args>
-    ClassGenerator &addMethod(const std::string &name, R (B::*f)(Args...)) {
+    ClassGenerator &addNonConstMethod(const std::string &name, R (B::*f)(Args...)) {
       static_assert(std::is_base_of<B, T>::value);
       data[name]
           = [f](T &o, Args... args) { return std::invoke(f, o, std::forward<Args>(args)...); };
@@ -82,12 +82,22 @@ namespace glue {
     }
 
     template <class B, class R, typename... Args>
-    ClassGenerator &addMethod(const std::string &name, R (B::*f)(Args...) const) {
+    ClassGenerator &addConstMethod(const std::string &name, R (B::*f)(Args...) const) {
       static_assert(std::is_base_of<B, T>::value);
       data[name] = [f](const T &o, Args... args) {
         return std::invoke(f, o, std::forward<Args>(args)...);
       };
       return *this;
+    }
+
+    template <class B, class R, typename... Args>
+    ClassGenerator &addMethod(const std::string &name, R (B::*f)(Args...)) {
+      return addNonConstMethod(name, f);
+    }
+
+    template <class B, class R, typename... Args>
+    ClassGenerator &addMethod(const std::string &name, R (B::*f)(Args...) const) {
+      return addConstMethod(name, f);
     }
 
     template <typename... Args> ClassGenerator &addConstructor() {

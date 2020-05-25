@@ -54,8 +54,8 @@ namespace glue {
     AnyFunction asFunction() const;
 
     explicit operator bool() const { return bool(this->data); }
-    const auto *operator-> () const { return &this->data; }
-    auto *operator-> () { return &this->data; }
+    const auto *operator->() const { return &this->data; }
+    auto *operator->() { return &this->data; }
     const auto &operator*() const { return this->data; }
     auto &operator*() { return this->data; }
 
@@ -119,8 +119,8 @@ namespace glue {
     void setExtends(Value v) const;
 
     explicit operator bool() const { return bool(this->data); }
-    const auto *operator-> () const { return &this->data; }
-    auto *operator-> () { return &this->data; }
+    const auto *operator->() const { return &this->data; }
+    auto *operator->() { return &this->data; }
     const auto &operator*() const { return this->data; }
     auto &operator*() { return this->data; }
   };
