@@ -8,6 +8,8 @@ namespace {
   struct A {
     std::string member;
     int method(int x) { return 42 + x; }
+    void ambiguousMethod(){};
+    void ambiguousMethod() const {};
   };
 
   struct B : public A {
@@ -22,6 +24,8 @@ TEST_CASE("ClassValue") {
   auto gA = glue::createClass<A>()
                 .addConstructor<>()
                 .addMethod("method", &A::method)
+                .addConstMethod("constMethod", &A::ambiguousMethod)
+                .addNonConstMethod("nonConstMethod", &A::ambiguousMethod)
                 .addMethod("lambda", [](A &a) { return a.method(3); })
                 .addMember("member", &A::member);
 
