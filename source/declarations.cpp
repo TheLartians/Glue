@@ -112,14 +112,19 @@ void DeclarationPrinter::printMemberFunction(std::ostream &stream, const std::st
 void DeclarationPrinter::printConstructor(std::ostream &stream, const AnyFunction &f,
                                           State &state) const {
   stream << "constructor(";
-  auto N = f.argumentCount();
-  bool initial = true;
-  for (size_t i = 0; i < N; ++i) {
-    if (!initial) stream << ", ";
-    initial = false;
-    stream << "arg" << i << ": ";
-    printTypeName(stream, f.argumentType(i), state);
+  if (f.isVariadic()) {
+    stream << "...args: any[]";
+  } else {
+    auto N = f.argumentCount();
+    bool initial = true;
+    for (size_t i = 0; i < N; ++i) {
+      if (!initial) stream << ", ";
+      initial = false;
+      stream << "arg" << i << ": ";
+      printTypeName(stream, f.argumentType(i), state);
+    }
   }
+
   stream << ")";
 }
 
