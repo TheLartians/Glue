@@ -53,3 +53,8 @@ Value MapValue::get(const std::string &key) const {
 void MapValue::setExtends(Value v) const { (*this)[keys::extendsKey] = std::move(v); }
 
 void MappedValue::set(const std::string &k, Any v) { parent.set(k, std::move(v)); }
+
+const MapValue &MapValue::setValue(const std::string &key, Value value) const {
+  (*this)[key] = value;
+  return *this;
+}
