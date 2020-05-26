@@ -21,6 +21,8 @@ namespace {
   enum class E { A, B, C };
 
   struct F {};
+
+  struct G {};
 }  // namespace
 
 TEST_CASE("Declarations") {
@@ -47,6 +49,11 @@ TEST_CASE("Declarations") {
                   .setExtends(inner["A"]);
 
   inner["E"] = glue::createEnum<E>().addValue("A", E::A).addValue("B", E::B).addValue("C", E::C);
+
+  inner["G"] = glue::createClass<G>().addMethod(glue::keys::constructorKey,
+                                                [](const glue::AnyArguments &) {
+
+                                                });
 
   inner["createB"] = []() { return B("B"); };
   inner["createBWithArgument"] = [](const std::string &name) { return B(name); };
@@ -88,4 +95,5 @@ TEST_CASE("Declarations") {
   CHECK(declarations.find(
             "const takesCallback: (this: void, arg0: (this: void, ...args: any[]) => any) => any")
         != std::string::npos);
+  CHECK(declarations.find("constructor(...args: any[])") != std::string::npos);
 }

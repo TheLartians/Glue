@@ -4,12 +4,20 @@
 #include <glue/keys.h>
 #include <glue/value.h>
 
+#include <string>
+#include <type_traits>
+
 namespace glue {
 
   template <class T> struct EnumGenerator : public ValueBase {
     MapValue data = createAnyMap();
 
-    EnumGenerator() { setClassInfo<T>(data); }
+    EnumGenerator() {
+      setClassInfo<T>(data);
+      data[keys::operators::eq] = [](T a, T b) { return a == b; };
+      data["value"]
+          = [](const T &a) { return static_cast<typename std::underlying_type<T>::type>(a); };
+    }
 
     EnumGenerator &addValue(const std::string &key, T value) {
       data[key] = value;
