@@ -6,7 +6,7 @@ using namespace glue;
 
 namespace {
 
-  enum class E { A, B, C };
+  enum class E: int { A, B, C };
 
 }  // namespace
 
@@ -25,5 +25,6 @@ TEST_CASE("EnumValue") {
     context.addMap(enumGlue, path);
     auto instance = context.createInstance(enumGlue["A"]);
     CHECK(instance[glue::keys::operators::eq](enumGlue["B"]).as<bool>());
+    CHECK(instance["value"]().as<int>() == int(E::A));
   }
 }

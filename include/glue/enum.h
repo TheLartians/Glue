@@ -3,6 +3,7 @@
 #include <glue/class.h>
 #include <glue/keys.h>
 #include <glue/value.h>
+#include <type_traits>
 
 namespace glue {
 
@@ -11,7 +12,8 @@ namespace glue {
 
     EnumGenerator() {
       setClassInfo<T>(data);
-      data[keys::operators::eq] = [](T a, T b) { return a == b; };
+      data[keys::operators::eq] = [](const T &a, const T &b) { return a == b; };
+      data["value"] = [](const T &a) { return static_cast<typename std::underlying_type<T>::type>(a); };
     }
 
     EnumGenerator &addValue(const std::string &key, T value) {
