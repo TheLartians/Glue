@@ -9,7 +9,10 @@ namespace glue {
   template <class T> struct EnumGenerator : public ValueBase {
     MapValue data = createAnyMap();
 
-    EnumGenerator() { setClassInfo<T>(data); }
+    EnumGenerator() {
+      setClassInfo<T>(data);
+      data[keys::operators::eq] = [](T a, T b) { return a == b; };
+    }
 
     EnumGenerator &addValue(const std::string &key, T value) {
       data[key] = value;
