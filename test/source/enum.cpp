@@ -6,7 +6,7 @@ using namespace glue;
 
 namespace {
 
-  enum class E: int { A, B, C };
+  enum class E : int { A = 0, B, C };
 
 }  // namespace
 
