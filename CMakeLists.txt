@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 # Note: update this to your new project's name and version
 project(Glue 
-  VERSION 1.4.1
+  VERSION 1.5
   LANGUAGES CXX
 )
 
