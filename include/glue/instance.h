@@ -13,7 +13,7 @@ namespace glue {
     Instance(MapValue c, Value v) : Value(std::move(v)), classMap(std::move(c)) {}
 
     auto operator[](const std::string &key) const {
-      return [=](auto &&... args) {
+      return [=](auto &&...args) {
         if (!*this) {
           throw std::runtime_error("called method on undefined instance");
         }
