@@ -141,7 +141,7 @@ namespace glue {
 
     explicit operator MapValue() const { return data; }
 
-    template <typename... Args> Instance construct(Args &&... args) const {
+    template <typename... Args> Instance construct(Args &&...args) const {
       auto classInfo = getClassInfo(data);
       auto value = data[keys::constructorKey].asFunction()(std::forward<Args>(args)...);
       if (classInfo && classInfo->converter) {

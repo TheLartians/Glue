@@ -54,10 +54,10 @@ namespace glue {
     AnyFunction asFunction() const;
 
     explicit operator bool() const { return bool(this->data); }
-    const auto *operator->() const { return &this->data; }
-    auto *operator->() { return &this->data; }
-    const auto &operator*() const { return this->data; }
-    auto &operator*() { return this->data; }
+    const Any *operator->() const { return &this->data; }
+    Any *operator->() { return &this->data; }
+    const Any &operator*() const { return this->data; }
+    Any &operator*() { return this->data; }
 
     template <class T, typename = typename std::enable_if<
                            !std::is_base_of<ValueBase, typename std::decay<T>::type>::value>::type>
@@ -78,7 +78,7 @@ namespace glue {
     // convenience access functions (throw exceptions when not applicable)
     MappedValue operator[](const std::string &key) const;
 
-    template <typename... Args> Value operator()(Args &&... args) const {
+    template <typename... Args> Value operator()(Args &&...args) const {
       if (auto f = asFunction()) {
         return Value(f(detail::convertArgumentToAny(std::forward<Args>(args))...));
       } else {
@@ -120,10 +120,10 @@ namespace glue {
     void setExtends(Value v) const;
 
     explicit operator bool() const { return bool(this->data); }
-    const auto *operator->() const { return &this->data; }
-    auto *operator->() { return &this->data; }
-    const auto &operator*() const { return this->data; }
-    auto &operator*() { return this->data; }
+    const std::shared_ptr<Map> *operator->() const { return &this->data; }
+    std::shared_ptr<Map> *operator->() { return &this->data; }
+    const std::shared_ptr<Map> &operator*() const { return this->data; }
+    std::shared_ptr<Map> &operator*() { return this->data; }
   };
 
   MapValue createAnyMap();
